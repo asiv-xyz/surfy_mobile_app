@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/ui/history/history_view.dart';
 import 'package:surfy_mobile_app/ui/map/map_view.dart';
 import 'package:surfy_mobile_app/ui/qr/qr_view.dart';
@@ -7,6 +8,8 @@ import 'package:surfy_mobile_app/ui/splash/splash_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/wallet_view.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MapboxOptions.setAccessToken("pk.eyJ1IjoiYm9vc2lrIiwiYSI6ImNsdm9xZmc4OTByOHoycm9jOWE5eHl6bnQifQ.Di5Upe8BfD8olr5r6wldNw");
   runApp(const SurfyApp());
 }
 
