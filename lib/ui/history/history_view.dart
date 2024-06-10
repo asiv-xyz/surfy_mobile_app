@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 
-class QRPage extends StatefulWidget {
-  const QRPage({super.key});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return _QRPageState();
+    return _HistoryPageState();
   }
-
 }
 
-class _QRPageState extends State<QRPage> {
+class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text('QR Page')
+        child: Text('History Page')
       )
     );
   }
