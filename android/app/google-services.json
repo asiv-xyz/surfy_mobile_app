@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531916739928",
+    "project_id": "surfy-c7efb",
+    "storage_bucket": "surfy-c7efb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531916739928:android:b639c1207c32fd968fc12d",
+        "android_client_info": {
+          "package_name": "com.example.surfy_mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvL9KVQY7JpBVz3ZOs1KImb7CNBJEXdts"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
