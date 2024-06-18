@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:surfy_mobile_app/domain/token/get_balance.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
+import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
-import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/ui/components/user_header.dart';
 import 'package:surfy_mobile_app/ui/components/wallet_item.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
-import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class WalletPage extends StatefulWidget {
@@ -20,12 +16,9 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage> {
-  late final TorusUserInfo web3AuthInfo;
-  String _ethAddress = "";
-  String _solAddress = "";
   String _profileImageUrl = "";
   String _profileName = "";
-  Map<Token, BigInt> _tokenData = {};
+  final GetWalletBalances getWalletBalancesUseCase = Get.find();
 
   @override
   void initState() {
@@ -34,8 +27,6 @@ class _WalletPageState extends State<WalletPage> {
   }
 
   Future<void> loadWallet() async {
-    final secp256k1 = await Web3AuthFlutter.getPrivKey();
-    final ed25519 = await Web3AuthFlutter.getEd25519PrivKey();
     Web3AuthFlutter.getUserInfo().then((user) {
       setState(() {
         _profileName = user.name ?? "";
@@ -76,7 +67,7 @@ class _WalletPageState extends State<WalletPage> {
                           children: Token.values.map((token) {
                             return Container(
                               margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: WalletItem(token: token, amount: _tokenData[token] ?? BigInt.zero)
+                              child: WalletItem(token: token),
                             );
                           }).toList(),
                         )
@@ -84,6 +75,22 @@ class _WalletPageState extends State<WalletPage> {
                     )
                   ),
                 ),
+                Obx(() {
+                  if (getWalletBalancesUseCase.isLoading.value == true) {
+                    return Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(color: Color(0xFF3B85F3)),
+                      ),
+                    );
+                  }
+
+                  return Container();
+                })
               ],
             ))
         );

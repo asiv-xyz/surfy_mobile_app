@@ -40,11 +40,16 @@ class TokenIconWithNetwork extends StatelessWidget {
            child: Align(
                alignment: Alignment.bottomRight,
                child: Container(
-                   width: width / 2.5,
-                   height: height / 2.5,
+                   width: width / 2,
+                   height: height / 2,
+                   decoration: BoxDecoration(
+                     borderRadius: BorderRadius.circular(100),
+                     border: Border.all(color: Colors.white),
+                     color: Colors.white,
+                   ),
                    child: ClipRRect(
                        borderRadius: BorderRadius.circular(100),
-                       child: Image.asset(blockchainData.icon, width: width / 2.5, height: height / 2.5)
+                       child: Image.asset(blockchainData.icon, width: width / 2, height: height / 2)
                    )
                )
            )

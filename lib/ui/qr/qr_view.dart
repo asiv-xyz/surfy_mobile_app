@@ -52,7 +52,7 @@ class _QRPageState extends State<QRPage> {
             );
           } else {
             // Otherwise, display a loading indicator.
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF3B85F3)));
           }
         },
       )

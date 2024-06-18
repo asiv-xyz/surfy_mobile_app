@@ -50,6 +50,9 @@ dependencies:
   logger: ^2.3.0
   camera: ^0.11.0+1
   dio: ^5.4.3+1
+  flutter_native_splash: ^2.4.0
+  app_links: ^6.1.1
+  dartx: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +69,13 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+flutter_native_splash:
+  image: "assets/images/surfy_logo_black.png"
+  color: "#000000"
+  android_12:
+    image: "assets/images/surfy_logo_black.png"
+    color: "#000000"
 
 # The following section is specific to Flutter packages.
 flutter:

@@ -12,10 +12,9 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class WalletItem extends StatefulWidget {
-  const WalletItem({super.key, required this.token, required this.amount});
+  const WalletItem({super.key, required this.token});
 
   final Token token;
-  final BigInt amount;
 
   @override
   State<StatefulWidget> createState() {
@@ -24,7 +23,7 @@ class WalletItem extends StatefulWidget {
 }
 
 class _WalletItemState extends State<WalletItem> {
-  final getWalletBalances = GetWalletBalances();
+  final GetWalletBalances getWalletBalances = Get.find();
   final GetTokenPrice getTokenPrice = Get.find();
   List<UserTokenData> _userTokenData = [];
 
@@ -39,31 +38,22 @@ class _WalletItemState extends State<WalletItem> {
   Future<void> loadTotalBalances() async {
     final secp256k1 = await Web3AuthFlutter.getPrivKey();
     final ed25519 = await Web3AuthFlutter.getEd25519PrivKey();
-    final balances = await getWalletBalances.getAggregatedTokenData(widget.token, secp256k1, ed25519);
+    final balances = getWalletBalances.getTokenDataList(widget.token, secp256k1, ed25519);
     setState(() {
       _userTokenData = balances;
     });
   }
 
-  // Future<double> getTotalFiatValue() async {
-  //   final tokenPrice = await getTokenPrice.getTokenPrice([widget.token], 'usd');
-  //   final priceData = tokenPrice[widget.token];
-  //   if (priceData == null) {
-  //     return 0.0;
-  //   }
-  // }
-
   Future<Widget> _buildTotalBalanceTab() async {
     if (_userTokenData.isEmpty) {
-      return Text('...');
+      return const CircularProgressIndicator(color: Color(0xFF3B85F3));
     }
 
     final tokenPrice = await getTokenPrice.getTokenPrice([widget.token], 'usd');
-    print('tokenPrice: $tokenPrice');
     final priceData = tokenPrice[widget.token];
     if (priceData == null) {
       return Container(
-        child: Text('??'),
+        child: Text('ERROR!'),
       );
     }
 
@@ -73,6 +63,7 @@ class _WalletItemState extends State<WalletItem> {
         token: prev.token,
         amount: prev.amount + current.amount,
         decimal: prev.decimal,
+        address: prev.address,
       );
     });
     final totalFiatAmount = accumulated.toVisibleAmount() * priceData.price;
@@ -81,10 +72,10 @@ class _WalletItemState extends State<WalletItem> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Container(
-            child: Text("\$${totalFiatAmount.toStringAsFixed(2)}", style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 14),)
+            child: Text("\$${totalFiatAmount.toStringAsFixed(2)}", style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),)
         ),
         Container(
-            child: Text("${accumulated.toUiString()} ${tokens[accumulated.token]?.symbol ?? '???'}", style: GoogleFonts.sora(fontSize: 14))
+            child: Text("${accumulated.toUiString()} ${tokens[accumulated.token]?.symbol ?? '???'}", style: GoogleFonts.sora(color: Color(0xFFA0A0A0), fontSize: 14))
         )
       ],
     );
@@ -109,7 +100,7 @@ class _WalletItemState extends State<WalletItem> {
       child: Container(
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: Colors.white
+              color: const Color(0xFF1E1E1E),
           ),
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -136,7 +127,7 @@ class _WalletItemState extends State<WalletItem> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(tokens[widget.token]?.name ?? "", style: GoogleFonts.sora(fontWeight: FontWeight.bold, fontSize: 16))
+                          Text(tokens[widget.token]?.name ?? "", style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))
                         ],
                       ),
                       Wrap(
@@ -179,7 +170,7 @@ class _WalletItemState extends State<WalletItem> {
                     return Text('Error...');
                   }
 
-                  return Text('...');
+                  return const CircularProgressIndicator(color: Color(0xFF3B85F3));
                 },
               )
             ],

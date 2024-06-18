@@ -4,19 +4,22 @@ import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class UserTokenData {
-  const UserTokenData({required this.blockchain, required this.token, required this.amount, required this.decimal});
+  const UserTokenData({required this.blockchain, required this.token, required this.amount, required this.decimal, required this.address});
 
   final Blockchain blockchain;
   final Token token;
   final BigInt amount;
   final int decimal;
+  final String address;
 
   @override
   String toString() {
     return {
       "token": token,
+      "blockchain": blockchain,
       "amount": amount,
       "decimal": decimal,
+      "address": address,
     }.toString();
   }
 

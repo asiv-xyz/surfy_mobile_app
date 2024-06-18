@@ -13,9 +13,8 @@ class TokenPriceRepository {
 
 
   Future<Map<Token, TokenPrice>> getTokenPrice(List<Token> tokenList, String currency) async {
-    logger.i('getTokenPrice');
+    logger.d('getTokenPrice');
     int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
-    print('current: $currentTimestamp, lastuptaed: $_lastUpdated');
     if (_lastUpdated == 0 || currentTimestamp - _lastUpdated > updateThreshold) {
       logger.i('Cache expired. Update token price');
       final cgIdentifiers = tokenList
