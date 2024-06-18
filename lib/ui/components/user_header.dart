@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
+import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
+import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class UserHeader extends StatelessWidget {
   const UserHeader({super.key, required this.profileImageUrl, required this.profileName});
@@ -18,6 +23,7 @@ class UserHeader extends StatelessWidget {
       width: double.infinity,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             child: Row(
@@ -42,14 +48,30 @@ class UserHeader extends StatelessWidget {
             )
           ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              IconButton(
-                onPressed: () {
-                  context.push('/settings');
-                },
-                icon: Icon(Icons.settings_outlined, color: Colors.white, size: 24)),
+              Container(
+                width: 24,
+                height: 24,
+                child: IconButton(
+                    onPressed: () {
+                      context.push('/settings');
+                    },
+                    icon: Icon(Icons.settings_outlined, color: Colors.white, size: 24))
+              ),
               SizedBox(width: 20),
-              Image.asset('assets/images/ic_camera.png', width: 24, height: 24)
+              Container(
+                width: 24,
+                height: 24,
+                child: IconButton(
+                    onPressed: () async {
+                      final GetWalletBalances getWalletBalancesUseCase = Get.find();
+                      getWalletBalancesUseCase.loadNewTokenDataList(
+                          Token.values, await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey());
+                    },
+                    icon: Icon(Icons.refresh_outlined, color: Colors.white, size: 24)
+                )
+              )
             ],
           )
         ],

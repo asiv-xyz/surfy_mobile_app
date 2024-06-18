@@ -24,7 +24,7 @@ class EthereumBalanceHandler implements BalanceHandler {
     final httpClient = Client();
     final client = Web3Client(blockchainData.rpc, httpClient);
     final balance = await client.getBalance(EthereumAddress.fromHex(address));
-    return UserTokenData(blockchain: blockchain, token: token, amount: balance.getInWei, decimal: 18);
+    return UserTokenData(blockchain: blockchain, token: token, amount: balance.getInWei, decimal: 18, address: address);
   }
 }
 
@@ -70,7 +70,7 @@ class Erc20BalanceHandler implements BalanceHandler {
     final erc20 = Erc20(address: EthereumAddress.fromHex(tokenContractAddress), client: client);
     final ownerAddress = EthereumAddress.fromHex(address);
     final balance = await erc20.balanceOf((owner: ownerAddress));
-    return UserTokenData(blockchain: blockchain, token: token, amount: balance, decimal: tokenData.decimal);
+    return UserTokenData(blockchain: blockchain, token: token, amount: balance, decimal: tokenData.decimal, address: address);
   }
 }
 
@@ -91,7 +91,7 @@ class SolanaBalanceHandler implements BalanceHandler {
     final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
     final balance = await client.rpcClient.getBalance(address);
     logger.d('Solana balance: ${balance.value}');
-    return UserTokenData(blockchain: blockchain, token: token, amount: BigInt.from(balance.value), decimal: tokenData.decimal);
+    return UserTokenData(blockchain: blockchain, token: token, amount: BigInt.from(balance.value), decimal: tokenData.decimal, address: address);
   }
 }
 
@@ -117,6 +117,6 @@ class SplBalanceHandler implements BalanceHandler {
       owner: Ed25519HDPublicKey.fromBase58(address),
       mint: Ed25519HDPublicKey.fromBase58(tokenData.tokenContractAddress[blockchain] ?? "")
     );
-    return UserTokenData(blockchain: blockchain, token: token, amount: BigInt.parse(balance.amount), decimal: balance.decimals);
+    return UserTokenData(blockchain: blockchain, token: token, amount: BigInt.parse(balance.amount), decimal: balance.decimals, address: address);
   }
 }

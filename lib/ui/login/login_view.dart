@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
+import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/output.dart';
@@ -18,6 +22,25 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  Future<void> loadData(String secp256k1, String ed25519) async {
+    GetWalletBalances getWalletBalances = Get.find();
+    await getWalletBalances.loadNewTokenDataList(Token.values, secp256k1, ed25519);
+  }
+
+  Future<void> initApp() async {
+    final GetTokenPrice getTokenPrice = Get.find();
+    logger.i('Initialize token price data');
+    await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), 'usd');
+    logger.i('Price data loading completed');
+
+    logger.i('Initialize wallet balance');
+    await loadData(await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey());
+    logger.i('Wallet balance loading completed');
+
+    if (mounted) {
+      context.go('/wallet');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,9 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
-                                  if (mounted) {
-                                    context.go('/wallet');
-                                  }
+                                  await initApp();
                                 }
                               },
                               child: Container(
@@ -124,9 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
-                                  if (mounted) {
-                                    context.go('/wallet');
-                                  }
+                                  await initApp();
                                 }
                               },
                               child: Container(

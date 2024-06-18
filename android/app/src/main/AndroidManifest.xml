@@ -26,11 +26,18 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="surfy" android:host="com.riverbank.surfy_mobile_app" android:path="/auth" />
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="surfy" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="com.riverbank.surfy_mobile_app" />
+                <data android:host="store.surfy.network" />
+                <data android:path="/auth" />
+                <data android:path="/qr" />
+                <data android:pathPrefix="/payment/" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

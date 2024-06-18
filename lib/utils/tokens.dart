@@ -33,7 +33,7 @@ class TokenData {
   final Map<Blockchain, String> tokenContractAddress;
   final int decimal;
   final String cgIdentifier;
-  final double fixedDecimal;
+  final int fixedDecimal;
 }
 
 const Map<Token, TokenData> tokens = {

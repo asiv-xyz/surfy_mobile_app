@@ -1,7 +1,5 @@
-
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:surfy_mobile_app/domain/wallet/handlers/address_handlers.dart';
+import 'package:surfy_mobile_app/service/wallet/address_handlers/address_handlers.dart';
 
 void main() {
   test('solana key generation test', () async {
