@@ -5,7 +5,10 @@ import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/repository/place/place_repository.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
+import 'package:surfy_mobile_app/service/place/place_service.dart';
+import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
@@ -35,21 +38,31 @@ class _SplashPageState extends State<SplashPage> {
       redirectUrl: redirectUrl,
     ));
     await Web3AuthFlutter.initialize();
-    await Web3AuthFlutter.getUserInfo();
+    // await Web3AuthFlutter.getUserInfo();
 
     final GetTokenPrice getTokenPrice = Get.find();
     logger.i('Initialize token price data');
-    await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), 'usd');
-    logger.i('Price data loading completed');
 
-    logger.i('Initialize wallet balance');
-    await loadData(await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey());
-    logger.i('Wallet balance loading completed');
+    final SettingsPreference preference = Get.find();
+    final currencyType = await preference.getCurrencyType();
+
+    final List<Future> jobList = [
+      getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType),
+      loadData(await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey()),
+      loadPlace()
+    ];
+    await Future.wait(jobList);
   }
 
   Future<void> loadData(String secp256k1, String ed25519) async {
     GetWalletBalances getWalletBalances = Get.find();
     await getWalletBalances.loadNewTokenDataList(Token.values, secp256k1, ed25519);
+  }
+
+  Future<bool> loadPlace() async {
+    PlaceRepository repository = Get.find();
+    await repository.getPlaceList();
+    return true;
   }
 
   @override

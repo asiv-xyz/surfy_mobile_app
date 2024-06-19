@@ -5,7 +5,7 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class TokenPriceService {
   Future<dynamic> getTokenBalance(List<String> cgIdentifierList, String currency) async {
-    final result = await dio.get(
+    final result = await dioObject.get(
       'https://slq250cw87.execute-api.ap-northeast-2.amazonaws.com/Prod/price?ids=${cgIdentifierList.join(',')}&vs_currency=$currency',
       options: Options(responseType: ResponseType.json),
     );
