@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-final dio = Dio();
+final dioObject = Dio();
 
-Map<String, dynamic> _parseAndDecode(String response) {
-  return jsonDecode(response) as Map<String, dynamic>;
+dynamic _parseAndDecode(String response) {
+  return jsonDecode(response);
 }
 
-Future<Map<String, dynamic>> parseJson(String text) {
+Future<dynamic> parseJson(String text) {
   return compute(_parseAndDecode, text);
 }

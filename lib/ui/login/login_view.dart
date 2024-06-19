@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/settings/settings_preference.dart';
+import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
@@ -22,6 +24,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _isLoading = false.obs;
+
   Future<void> loadData(String secp256k1, String ed25519) async {
     GetWalletBalances getWalletBalances = Get.find();
     await getWalletBalances.loadNewTokenDataList(Token.values, secp256k1, ed25519);
@@ -30,16 +34,15 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> initApp() async {
     final GetTokenPrice getTokenPrice = Get.find();
     logger.i('Initialize token price data');
-    await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), 'usd');
+    await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), CurrencyType.usd);
     logger.i('Price data loading completed');
+
+    final SettingsPreference preference = Get.find();
+    await preference.changeCurrencyType(CurrencyType.usd);
 
     logger.i('Initialize wallet balance');
     await loadData(await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey());
     logger.i('Wallet balance loading completed');
-
-    if (mounted) {
-      context.go('/wallet');
-    }
   }
   @override
   Widget build(BuildContext context) {
@@ -72,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         const Image(
                             image: AssetImage('assets/images/surfy_logo.png')),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Text('Nice to see you!',
                             style: GoogleFonts.sora(
                                 color: Colors.white,
@@ -107,7 +110,12 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
+                                  _isLoading.value = true;
                                   await initApp();
+                                  _isLoading.value = false;
+                                  if (mounted) {
+                                    context.go('/wallet');
+                                  }
                                 }
                               },
                               child: Container(
@@ -145,7 +153,12 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
+                                  _isLoading.value = true;
                                   await initApp();
+                                  _isLoading.value = false;
+                                  if (mounted) {
+                                    context.go('/wallet');
+                                  }
                                 }
                               },
                               child: Container(
@@ -176,7 +189,21 @@ class _LoginPageState extends State<LoginPage> {
                                       ))))
                         ],
                       )
-                    ))
+                    )),
+                Obx(() {
+                  if (_isLoading.isTrue) {
+                    return Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      color: SurfyColor.black.withOpacity(0.5),
+                      child: Center(
+                        child: CircularProgressIndicator(color: SurfyColor.blue,)
+                      ),
+                    );
+                  } else {
+                    return Container();
+                  }
+                })
               ],
             )));
   }
