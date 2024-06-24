@@ -8,8 +8,9 @@ import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsPage extends StatelessWidget {
-  final SettingsPreference _preference = Get.find();
+  SettingsPage({super.key});
 
+  final SettingsPreference _preference = Get.find();
   final _processLogout = false.obs;
 
   @override

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/ui/components/user_header.dart';
 import 'package:surfy_mobile_app/ui/components/wallet_item.dart';
+import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
@@ -15,22 +16,24 @@ class WalletPage extends StatefulWidget {
   }
 }
 
-class _WalletPageState extends State<WalletPage> {
-  String _profileImageUrl = "";
-  String _profileName = "";
-  final GetWalletBalances getWalletBalancesUseCase = Get.find();
+class _WalletPageState extends State<WalletPage> implements INavigationLifeCycle {
+  final Rx<String> _profileImageUrl = "".obs;
+  final Rx<String> _profileName = "".obs;
+  final GetWalletBalances _getWalletBalancesUseCase = Get.find();
 
   @override
   void initState() {
     super.initState();
+    final NavigationController controller = Get.find();
+    controller.addListener(0, this);
     loadWallet();
   }
 
   Future<void> loadWallet() async {
     Web3AuthFlutter.getUserInfo().then((user) {
       setState(() {
-        _profileName = user.name ?? "";
-        _profileImageUrl = user.profileImage ?? "";
+        _profileName.value = user.name ?? "";
+        _profileImageUrl.value = user.profileImage ?? "";
       });
     });
   }
@@ -61,7 +64,7 @@ class _WalletPageState extends State<WalletPage> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: Column(
                       children: [
-                        UserHeader(profileImageUrl: _profileImageUrl, profileName: _profileName),
+                        Obx(() => UserHeader(profileImageUrl: _profileImageUrl.value, profileName: _profileName.value)),
                         const SizedBox(height: 8),
                         Column(
                           children: Token.values.map((token) {
@@ -76,7 +79,7 @@ class _WalletPageState extends State<WalletPage> {
                   ),
                 ),
                 Obx(() {
-                  if (getWalletBalancesUseCase.isLoading.value == true) {
+                  if (_getWalletBalancesUseCase.isLoading.value == true) {
                     return Container(
                       width: double.infinity,
                       height: double.infinity,
@@ -94,5 +97,15 @@ class _WalletPageState extends State<WalletPage> {
               ],
             ))
         );
+  }
+
+  @override
+  void onPageEnd() {
+    print('onPageEnd');
+  }
+
+  @override
+  void onPageStart() {
+    print('onPageStart');
   }
 }

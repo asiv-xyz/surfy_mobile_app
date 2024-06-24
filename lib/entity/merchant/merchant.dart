@@ -1,7 +1,8 @@
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 
-class Place {
-  const Place({
+class Merchant {
+  const Merchant({
+    required this.id,
     required this.storeName,
     required this.owner,
     required this.latitude,
@@ -15,6 +16,7 @@ class Place {
     required this.sns,
   });
 
+  final String id;
   final String storeName;
   final String owner;
   final double latitude;
@@ -30,6 +32,7 @@ class Place {
   @override
   String toString() {
     return {
+      "id": id,
       "storeName": storeName,
       "owner": owner,
       "latitude": latitude,
@@ -42,6 +45,23 @@ class Place {
       "nation": nation,
       "sns": sns
     }.toString();
+  }
+
+  factory Merchant.fromJson(Map<String, dynamic> json) {
+    return Merchant(
+      id: json['id'],
+      storeName: json['storeName'],
+      owner: json['owner'],
+      latitude: json['latitude'],
+      longitude: json['longitude'],
+      thumbnail: json['thumbnail'],
+      address: json['address'],
+      phone: json['phone'],
+      email: json['email'],
+      category: json['category'],
+      nation: json['nation'],
+      sns: json['sns']?.map((item) => MerchantSns.fromJson(item)).toList() ?? [],
+    );
   }
 }
 
@@ -64,6 +84,14 @@ class MerchantWallet {
       "blockchain": blockchain,
     }.toString();
   }
+
+  factory MerchantWallet.fromJson(Map<String, dynamic> json) {
+    return MerchantWallet(
+        walletAddress: json['walletAddress'],
+        walletCategory: json['walletCategory'],
+        blockchain: json['blockchain']
+    );
+  }
 }
 
 class MerchantSns {
@@ -81,5 +109,9 @@ class MerchantSns {
       "type": type,
       "url": url,
     }.toString();
+  }
+
+  factory MerchantSns.fromJson(Map<String, dynamic> json) {
+    return MerchantSns(type: json['type'], url: json['url']);
   }
 }

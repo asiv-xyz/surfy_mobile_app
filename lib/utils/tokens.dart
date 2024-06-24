@@ -10,6 +10,15 @@ enum Token {
   // TON,
 }
 
+Token findTokenByName(String name) {
+  final list = Token.values.where((t) => t.name.toLowerCase() == name.toLowerCase());
+  if (list.isEmpty) {
+    throw Exception('No token');
+  }
+
+  return list.first;
+}
+
 class TokenData {
   const TokenData({
     required this.token,
@@ -53,7 +62,7 @@ const Map<Token, TokenData> tokens = {
     tokenContractAddress: {},
     decimal: 18,
     cgIdentifier: "ethereum",
-    fixedDecimal: 2,
+    fixedDecimal: 5,
   ),
   Token.USDC: TokenData(
     token: Token.USDC,

@@ -56,6 +56,13 @@ dependencies:
   shared_preferences: ^2.2.3
   intl: ^0.19.0
   geolocator: ^12.0.0
+  flutter_swipe_button: ^2.1.3
+  url_launcher: ^6.3.0
+  qr_code_scanner:
+    git:
+      url: https://github.com/dola99/qr_code_scanner
+      ref: update
+  vibration: ^1.9.0
 
 dev_dependencies:
   flutter_test:

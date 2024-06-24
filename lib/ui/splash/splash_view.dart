@@ -2,12 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
+import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/repository/place/place_repository.dart';
-import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
-import 'package:surfy_mobile_app/service/place/place_service.dart';
+import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
+import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/enums.dart';
@@ -38,7 +39,7 @@ class _SplashPageState extends State<SplashPage> {
       redirectUrl: redirectUrl,
     ));
     await Web3AuthFlutter.initialize();
-    // await Web3AuthFlutter.getUserInfo();
+    await Web3AuthFlutter.getUserInfo();
 
     final GetTokenPrice getTokenPrice = Get.find();
     logger.i('Initialize token price data');
@@ -48,21 +49,41 @@ class _SplashPageState extends State<SplashPage> {
 
     final List<Future> jobList = [
       getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType),
-      loadData(await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey()),
+      loadData(),
       loadPlace()
     ];
     await Future.wait(jobList);
   }
 
-  Future<void> loadData(String secp256k1, String ed25519) async {
+  Future<void> loadData() async {
+    logger.i('loadData');
     GetWalletBalances getWalletBalances = Get.find();
-    await getWalletBalances.loadNewTokenDataList(Token.values, secp256k1, ed25519);
+    KeyService keyService = Get.find();
+    final key = await keyService.getKey();
+    await getWalletBalances.loadNewTokenDataList(Token.values, key.first, key.second);
+    logger.i('loadData end');
   }
 
   Future<bool> loadPlace() async {
-    PlaceRepository repository = Get.find();
+    logger.i('loadPlace');
+    MerchantRepository repository = Get.find();
     await repository.getPlaceList();
+    logger.i('loadPlace end');
     return true;
+  }
+
+  Future<bool> loadMerchant() async {
+    logger.i('loadMerchat: is this user merchant?');
+    IsMerchant isMerchant = Get.find();
+    final isMerchantFlag = await isMerchant.isMerchant();
+    if (isMerchantFlag == true) {
+      logger.i('This user is merchant!');
+      isMerchant.userMerchantInfo.value = await isMerchant.getMyMerchantData();
+      return true;
+    } else {
+      logger.i('This user is not merchant.');
+      return false;
+    }
   }
 
   @override
@@ -70,7 +91,9 @@ class _SplashPageState extends State<SplashPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       initApp().then((_) {
-        context.go('/wallet');
+        loadMerchant().then((_) {
+          context.go('/wallet');
+        });
       }).catchError((e) {
         if (e.toString().contains('No user found')) {
           logger.i('Not logged in, go to login page');

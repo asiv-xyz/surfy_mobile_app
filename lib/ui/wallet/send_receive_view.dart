@@ -1,11 +1,14 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
+import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
+import 'package:surfy_mobile_app/ui/components/address_badge.dart';
 import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -27,10 +30,13 @@ class _SendReceivePageState extends State<SendReceivePage> {
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
   final GetWalletBalances _getWalletBalances = Get.find();
   final SettingsPreference _preference = Get.find();
+  final GetWalletAddress _getWalletAddressUseCase = Get.find();
+  final _address = "".obs;
 
   Future<Pair<TokenPrice?, Pair<String, String>>> _getMetadata() async {
     final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(widget.token, _preference.userCurrencyType.value);
     final userBalance = await _getWalletBalances.getUiTokenBalanceWithNetwork(widget.token, widget.blockchain, _preference.userCurrencyType.value);
+    _address.value = await _getWalletAddressUseCase.getAddress(widget.blockchain);
     return Pair(tokenPrice, userBalance);
   }
 
@@ -81,7 +87,18 @@ class _SendReceivePageState extends State<SendReceivePage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   tokenName: tokens[widget.token]?.name ?? "",
                                   price: tokenPrice?.price ?? 0.0,
-                                  currency: _preference.userCurrencyType.value)
+                                  currency: _preference.userCurrencyType.value),
+                              const SizedBox(height: 5,),
+                              Obx(() {
+                                if (_address.value.isNullOrEmpty) {
+                                  return Container();
+                                } else {
+                                  return AddressBadge(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    address: _address.value
+                                  );
+                                }
+                              })
                             ],
                           )
                         );
@@ -99,7 +116,9 @@ class _SendReceivePageState extends State<SendReceivePage> {
                         children: [
                           InkWell(
                             onTap: () {
-
+                              if (mounted) {
+                                context.push('/send', extra: Pair(widget.token, widget.blockchain));
+                              }
                             },
                             child: Container(
                               width: 50,
@@ -120,7 +139,9 @@ class _SendReceivePageState extends State<SendReceivePage> {
                         children: [
                           InkWell(
                             onTap: () {
-
+                              if (mounted) {
+                                context.push('/receive', extra: Pair(widget.token, widget.blockchain));
+                              }
                             },
                             child: Container(
                                 width: 50,
