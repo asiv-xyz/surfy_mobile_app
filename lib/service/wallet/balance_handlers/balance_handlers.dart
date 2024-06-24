@@ -1,5 +1,4 @@
 import 'package:http/http.dart';
-import 'package:solana/base58.dart';
 import 'package:solana/solana.dart';
 import 'package:surfy_mobile_app/abi/erc20.g.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';

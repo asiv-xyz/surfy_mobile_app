@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
@@ -25,6 +27,21 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _isLoading = false.obs;
+  final KeyService _keyService = Get.find();
+
+  Future<bool> loadMerchant() async {
+    logger.i('loadMerchat: is this user merchant?');
+    IsMerchant isMerchant = Get.find();
+    final isMerchantFlag = await isMerchant.isMerchant();
+    if (isMerchantFlag == true) {
+      logger.i('This user is merchant!');
+      isMerchant.userMerchantInfo.value = await isMerchant.getMyMerchantData();
+      return true;
+    } else {
+      logger.i('This user is not merchant.');
+      return false;
+    }
+  }
 
   Future<void> loadData(String secp256k1, String ed25519) async {
     GetWalletBalances getWalletBalances = Get.find();
@@ -41,8 +58,12 @@ class _LoginPageState extends State<LoginPage> {
     await preference.changeCurrencyType(CurrencyType.usd);
 
     logger.i('Initialize wallet balance');
-    await loadData(await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey());
+    final key = await _keyService.getKey();
+    await loadData(key.first, key.second);
     logger.i('Wallet balance loading completed');
+
+    logger.i('loadMerchant');
+    await loadMerchant();
   }
   @override
   Widget build(BuildContext context) {

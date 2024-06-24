@@ -7,6 +7,24 @@ enum CurrencyType {
   usd, krw,
 }
 
+Map<CurrencyType, dynamic> currencyTypes = {
+  CurrencyType.usd: {
+    "fixedDecimal": 2
+  },
+  CurrencyType.krw: {
+    "fixedDecimal": 0,
+  }
+};
+
+CurrencyType findCurrencyTypeByName(String name) {
+  print('currency name: $name');
+  final list = CurrencyType.values.where((ct) => ct.name.toLowerCase() == name.toLowerCase());
+  if (list.isEmpty) {
+    throw Exception('No currency type');
+  }
+  return list.first;
+}
+
 String getCurrencySymbol(CurrencyType currencyType) {
   switch (currencyType) {
     case CurrencyType.usd:

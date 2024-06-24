@@ -7,13 +7,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
+import 'package:surfy_mobile_app/entity/token/token_price.dart';
+import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
-import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class WalletItem extends StatefulWidget {
-  const WalletItem({super.key, required this.token});
+  WalletItem({super.key, required this.token});
 
   final Token token;
 
@@ -27,7 +28,8 @@ class _WalletItemState extends State<WalletItem> {
   final GetWalletBalances getWalletBalances = Get.find();
   final GetTokenPrice getTokenPrice = Get.find();
   final SettingsPreference preference = Get.find();
-  List<UserTokenData> _userTokenData = [];
+  final Rx<List<UserTokenData>> _userTokenData = Rx<List<UserTokenData>>([]);
+  final Rx<TokenPrice?> _tokenPrice = Rx<TokenPrice?>(null);
 
   String visualizeAmount(Token token, BigInt amount) {
     final tokenData = tokens[token];
@@ -37,17 +39,19 @@ class _WalletItemState extends State<WalletItem> {
     return (amount / BigInt.from(pow(10, tokenData.decimal))).toStringAsFixed(2);
   }
 
-  Future<void> loadTotalBalances() async {
-    final secp256k1 = await Web3AuthFlutter.getPrivKey();
-    final ed25519 = await Web3AuthFlutter.getEd25519PrivKey();
-    final balances = await getWalletBalances.getTokenDataList(widget.token, secp256k1, ed25519);
-    setState(() {
-      _userTokenData = balances;
-    });
+  Future<void> loadData() async {
+    final balances = await getWalletBalances.getTokenDataList(widget.token);
+    _userTokenData.value = balances;
+
+    final prices = await getTokenPrice.getSingleTokenPrice(widget.token, preference.userCurrencyType.value);
+    _tokenPrice.value = prices;
   }
 
   Future<Widget> _buildTotalBalanceTab() async {
-    final uiBalancePair = await getWalletBalances.getUiTokenBalance(widget.token, preference.userCurrencyType.value);
+    final uiBalancePair = getWalletBalances.parseTotalTokenBalanceForUi(widget.token,
+        _userTokenData.value,
+        _tokenPrice.value?.price ?? 0,
+        preference.userCurrencyType.value);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -66,7 +70,7 @@ class _WalletItemState extends State<WalletItem> {
   @override
   void initState() {
     super.initState();
-    loadTotalBalances();
+    loadData();
   }
 
   @override
@@ -75,7 +79,7 @@ class _WalletItemState extends State<WalletItem> {
         onTap: () {
           final token = tokens[widget.token];
           if (token != null) {
-            context.go("/wallet/${token.name}", extra: _userTokenData);
+            context.go("/wallet/${token.name}");
           }
         },
         child: Container(

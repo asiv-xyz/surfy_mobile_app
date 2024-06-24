@@ -10,7 +10,7 @@ class WalletBalancesRepository {
   final WalletService walletService;
 
   bool needToUpdate = true;
-  static const updateThreshold = 300000; // 5 minutes
+  static const updateThreshold = 60000; // 5 minutes
   int _lastUpdateTimestamp = 0;
   List<UserTokenData> data = [];
 
@@ -20,9 +20,14 @@ class WalletBalancesRepository {
   }
 
   Future<UserTokenData> _getSingleWalletBalance(({Token token, Blockchain blockchain, String key}) arg) async {
-    final address = await walletService.getWalletAddress(arg.blockchain, arg.key);
-    final balance = await walletService.getBalance(arg.token, arg.blockchain, address);
-    return balance;
+    try {
+      final address = await walletService.getWalletAddress(arg.blockchain, arg.key);
+      final balance = await walletService.getBalance(arg.token, arg.blockchain, address);
+      return balance;
+    } catch (e) {
+      logger.e('get wallet balance failed, token=${arg.token}, blockchain=${arg.blockchain}');
+      rethrow;
+    }
   }
 
   Future<List<UserTokenData>> _loadNewData(List<Token> tokenList, String secp256k1, String ed25519) async {

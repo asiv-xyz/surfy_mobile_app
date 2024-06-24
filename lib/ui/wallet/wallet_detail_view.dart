@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
+import 'package:surfy_mobile_app/ui/components/address_badge.dart';
 import 'package:surfy_mobile_app/ui/components/balance_view.dart';
 import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
@@ -18,10 +18,9 @@ import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class WalletDetailPage extends StatefulWidget {
-  const WalletDetailPage({super.key, required this.token, required this.data});
+  const WalletDetailPage({super.key, required this.token});
 
   final Token token;
-  final List<UserTokenData> data;
 
   @override
   State<StatefulWidget> createState() {
@@ -30,202 +29,54 @@ class WalletDetailPage extends StatefulWidget {
 }
 
 class _WalletDetailPageState extends State<WalletDetailPage> {
-  final GetWalletAddress getWalletAddressUseCase = Get.find();
-  final GetTokenPrice getTokenPriceUseCase = Get.find();
-  final GetWalletBalances getWalletBalancesUseCase = Get.find();
-  final SettingsPreference preference = Get.find();
-  final _totalTokenAmount = 0.0.obs;
-  final _totalCurrencyAmount = 0.0.obs;
-  final _onlyHeldShow = true.obs;
+  final GetTokenPrice _getTokenPriceUseCase = Get.find();
+  final GetWalletBalances _getWalletBalancesUseCase = Get.find();
+  final SettingsPreference _preference = Get.find();
 
-  String shortAddress(String address) {
-    return "${address.substring(0, 8)}...${address.substring(address.length - 8, address.length - 1)}";
-  }
+  final Rx<List<UserTokenData>> _balanceList = Rx<List<UserTokenData>>([]);
+  final Rx<TokenPrice?> _tokenPrice = Rx<TokenPrice?>(null);
+  final Rx<bool> _isLoading = Rx<bool>(false);
+  final Rx<bool> _onlyHeldShow = Rx<bool>(true);
+  final Rx<String> _totalCryptoBalance = Rx<String>("");
+  final Rx<String> _totalFiatBalance = Rx<String>("");
 
-  Widget _buildItem(Blockchain blockchain, Token token, String address, String fiat, String crypto) {
-    return Container(
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                TokenIconWithNetwork(blockchain: blockchain, token: token, width: 40, height: 40),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(tokens[token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),),
-                        // TODO : for debugging
-                        Text("(${blockchain.name})", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 10))
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(shortAddress(address), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
-                        const SizedBox(width: 4),
-                        SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: 14,
-                              onPressed: () {
-                                Clipboard.setData(ClipboardData(text: address));
-                              },
-                              icon: const Icon(Icons.copy_outlined, color: SurfyColor.lightGrey),
-                            )
-                        )
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
-            FutureBuilder<Pair<String, String>>(
-              future: getWalletBalancesUseCase.getUiTokenBalanceWithNetwork(token, blockchain, preference.userCurrencyType.value),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text("${snapshot.data?.second}", style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
-                      Text("${snapshot.data?.first}", style: GoogleFonts.sora(color: const Color(0xFFBAC2C7), fontSize: 14, fontWeight: FontWeight.w500),)
-                    ],
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 20,
-                      decoration: BoxDecoration(
-                          color: SurfyColor.lightGrey,
-                          borderRadius: BorderRadius.circular(10)
-                      ),
-                    ),
-                    const SizedBox(height: 6,),
-                    Container(
-                      width: 60,
-                      height: 20,
-                      decoration: BoxDecoration(
-                          color: SurfyColor.lightGrey,
-                          borderRadius: BorderRadius.circular(10)
-                      ),
-                    )
-                  ],
-                );
-              })
-          ],
-        )
-    );
-  }
-
-  Widget _buildEachItem() {
-    var cloneData = [...widget.data];
-    cloneData.sort((a, b) {
-      if (a.amount < b.amount) {
-        return 1;
-      } else if (a.amount == b.amount) {
-        return 0;
-      } else {
-        return -1;
-      }
-    });
-
+  List<UserTokenData> _getDrawList() {
     if (_onlyHeldShow.isTrue) {
-      cloneData = cloneData.where((item) => item.amount > BigInt.zero).toList();
+      return _balanceList.value.where((item) => item.amount > BigInt.zero).toList();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: cloneData.map((item) {
-        return FutureBuilder(
-          future: getWalletBalancesUseCase.getUiTokenBalanceWithNetwork(item.token, item.blockchain, preference.userCurrencyType.value),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return InkWell(
-                onTap: () {
-                  context.push('/send', extra: Pair<Token, Blockchain>(item.token, item.blockchain));
-                },
-                child: Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Row(
-                          children: [
-                            TokenIconWithNetwork(blockchain: item.blockchain, token: item.token, width: 40, height: 40),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(tokens[item.token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),),
-                                    Text("(${item.blockchain.name})", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 8)),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(shortAddress(item.address), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
-                                    const SizedBox(width: 4),
-                                    Container(
-                                        width: 14,
-                                        height: 14,
-                                        child: IconButton(
-                                          padding: EdgeInsets.zero,
-                                          iconSize: 14,
-                                          onPressed: () {
-                                            Clipboard.setData(ClipboardData(text: item.address));
-                                          },
-                                          icon: Icon(Icons.copy_outlined, color: SurfyColor.lightGrey),
-                                        )
-                                    )
-                                  ],
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text("${snapshot.data?.second}", style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
-                            Text("${snapshot.data?.first}", style: GoogleFonts.sora(color: const Color(0xFFBAC2C7), fontSize: 14, fontWeight: FontWeight.w500),)
-                          ],
-                        )
-                      ],
-                    )
-                )
-              );
-            }
+    return _balanceList.value;
+  }
 
-            return Container();
-          });
-      }).toList(),
-    );
+  Future<void> _loadData() async {
+    final loadBalanceAndSortJob = _getWalletBalancesUseCase.getTokenDataList(widget.token).then((result) {
+      result.sort((a, b) {
+        if (a.amount < b.amount) {
+          return 1;
+        } else if (a.amount == b.amount) {
+          return 0;
+        } else {
+          return -1;
+        }
+      });
+      _balanceList.value = result;
+    });
+    final loadTokenPriceData = _getTokenPriceUseCase.getSingleTokenPrice(widget.token, _preference.userCurrencyType.value).then((result) {
+      _tokenPrice.value = result;
+    });
+    final jobList = Future.wait([loadBalanceAndSortJob, loadTokenPriceData]);
+    await jobList;
 
+    final totalBalancePair = _getWalletBalancesUseCase.parseTotalTokenBalanceForUi(widget.token, _balanceList.value, _tokenPrice.value?.price ?? 0.0, _preference.userCurrencyType.value);
+    _totalCryptoBalance.value = totalBalancePair.first;
+    _totalFiatBalance.value = totalBalancePair.second;
   }
 
   @override
   void initState() {
     super.initState();
+    _isLoading.value = true;
+    _loadData().then((_) => _isLoading.value = false);
   }
 
   @override
@@ -233,7 +84,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
     final tokenData = tokens[widget.token];
     if (tokenData == null) {
       return Container(
-        child: Text('404'),
+        child: Text('Unknown token: ${widget.token}'),
       );
     }
 
@@ -253,64 +104,128 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
         iconTheme: const IconThemeData(color: SurfyColor.white),
       ),
       backgroundColor: SurfyColor.black,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FutureBuilder(
-              future: getWalletBalancesUseCase.getUiTokenBalance(widget.token, preference.userCurrencyType.value),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: BalanceView(fiatBalance: snapshot.data?.second ?? "", cryptoBalance: snapshot.data?.first ?? "")
-                  );
-                }
+      body: Obx(() {
+        if (_isLoading.isTrue) {
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: SurfyColor.black,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(color: SurfyColor.blue,),
+                const SizedBox(height: 10,),
+                Text('Session timeout, reload token data...', style: GoogleFonts.sora(color: SurfyColor.white),)
+              ],
+            )
+          );
+        }
 
-                return Container();
-              }),
-            FutureBuilder<TokenPrice?>(
-              future: getTokenPriceUseCase.getSingleTokenPrice(widget.token, preference.userCurrencyType.value),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final price = snapshot.data;
+        return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Obx(() {
                   return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: BalanceView(
+                        fiatBalance: _totalFiatBalance.value,
+                        cryptoBalance: _totalCryptoBalance.value,
+                      )
+                  );
+                }),
+                Obx(() => Container(
                     width: double.infinity,
                     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: CurrentPrice(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        tokenName: tokens[price?.token]?.name ?? "",
-                        price: price?.price ?? 0.0,
-                        currency: preference.userCurrencyType.value),
-                  );
-                }
-
-                return Container();
-              },
-            ),
-            Container(
-              width: double.infinity,
-              height: 6,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              color: SurfyColor.darkGrey,
-            ),
-            Row(
-              children: [
-                Obx(() => Checkbox(value: _onlyHeldShow.value, onChanged: (value) {
-                  _onlyHeldShow.value = value ?? false;
-                }),),
-                InkWell(
-                    onTap: () {
-                      _onlyHeldShow.value = !_onlyHeldShow.value;
-                    },
-                    child: Text('Only coins held', style: GoogleFonts.sora(fontSize: 14, color: SurfyColor.white),)
-                )
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      tokenName: tokens[widget.token]?.name ?? "",
+                      price: _tokenPrice.value?.price ?? 0.0,
+                      currency: _preference.userCurrencyType.value,
+                    )
+                )),
+                Container(
+                  width: double.infinity,
+                  height: 6,
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  color: SurfyColor.darkGrey,
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Obx(() => Transform.scale(
+                      scale: 1.2,
+                      child: Checkbox(
+                          activeColor: SurfyColor.blue,
+                          shape: const CircleBorder(),
+                          value: _onlyHeldShow.value,
+                          onChanged: (value) {
+                            _onlyHeldShow.value = value ?? false;
+                          }
+                      ),
+                    )),
+                    InkWell(
+                        onTap: () {
+                          _onlyHeldShow.value = !_onlyHeldShow.value;
+                        },
+                        child: Text('Only coins held', style: GoogleFonts.sora(fontSize: 14, color: SurfyColor.white),)
+                    )
+                  ],
+                ),
+                Obx(() => Column(
+                  children: _getDrawList().map((item) {
+                    final balanceItem = _getWalletBalancesUseCase.parseSingleTokenBalanceForUi(widget.token, item.blockchain, _balanceList.value, _tokenPrice.value?.price ?? 0, _preference.userCurrencyType.value);
+                    return InkWell(
+                        onTap: () {
+                          context.push('/sendAndReceive', extra: Pair<Token, Blockchain>(item.token, item.blockchain));
+                        },
+                        child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    TokenIconWithNetwork(blockchain: item.blockchain, token: item.token, width: 40, height: 40),
+                                    const SizedBox(width: 10),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Text(tokens[item.token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text("(${item.blockchain.name})", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 8)),
+                                        const SizedBox(height: 2),
+                                        AddressBadge(address: item.address, mainAxisAlignment: MainAxisAlignment.start,)
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(balanceItem.second, style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                                    Text(balanceItem.first, style: GoogleFonts.sora(color: const Color(0xFFBAC2C7), fontSize: 14, fontWeight: FontWeight.w500),)
+                                  ],
+                                )
+                              ],
+                            )
+                        )
+                    );
+                  }).toList(),
+                )),
               ],
-            ),
-            Obx(() => _buildEachItem()),
-          ],
-        )
-      ),
+            )
+        );
+      }),
     );
   }
 }

@@ -4,14 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
+import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class UserHeader extends StatelessWidget {
-  const UserHeader({super.key, required this.profileImageUrl, required this.profileName});
+  UserHeader({super.key, required this.profileImageUrl, required this.profileName});
 
   final String profileImageUrl;
   final String profileName;
+  final KeyService keyService = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +68,9 @@ class UserHeader extends StatelessWidget {
                 child: IconButton(
                     onPressed: () async {
                       final GetWalletBalances getWalletBalancesUseCase = Get.find();
+                      final key = await keyService.getKey();
                       getWalletBalancesUseCase.loadNewTokenDataList(
-                          Token.values, await Web3AuthFlutter.getPrivKey(), await Web3AuthFlutter.getEd25519PrivKey());
+                          Token.values, key.first, key.second);
                     },
                     icon: Icon(Icons.refresh_outlined, color: Colors.white, size: 24)
                 )

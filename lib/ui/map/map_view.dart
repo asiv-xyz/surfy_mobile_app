@@ -5,9 +5,10 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:surfy_mobile_app/domain/place/click_place.dart';
-import 'package:surfy_mobile_app/entity/place/place.dart';
-import 'package:surfy_mobile_app/repository/place/place_repository.dart';
+import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
+import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
+import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
+import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class MapPage extends StatefulWidget {
@@ -26,7 +27,7 @@ class AnnotationClickListener extends OnPointAnnotationClickListener {
     required this.moveCameraFunction,
   });
 
-  final Map<String, Place> annotationMap;
+  final Map<String, Merchant> annotationMap;
   final ClickPlace clickPlaceUseCase;
   final Function moveCameraFunction;
 
@@ -44,11 +45,11 @@ class AnnotationClickListener extends OnPointAnnotationClickListener {
   }
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
   // TODO : access token to env var
   static const String ACCESS_TOKEN =
       "pk.eyJ1IjoiYm9vc2lrIiwiYSI6ImNsdm9xZmc4OTByOHoycm9jOWE5eHl6bnQifQ.Di5Upe8BfD8olr5r6wldNw";
-  final PlaceRepository _placeRepository = Get.find();
+  final MerchantRepository _placeRepository = Get.find();
   final ClickPlace _clickPlaceUseCase = Get.find();
   MapboxMap? mapboxMap;
 
@@ -82,13 +83,11 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _setCurrentUserPosition(MapboxMap mapboxMap) async {
     final position = await geolocator.Geolocator.getCurrentPosition();
+    print('position: $position');
     mapboxMap.easeTo(mapbox.CameraOptions(
         center: Point(
             coordinates: Position(position.longitude, position.latitude)),
         zoom: 12.0), MapAnimationOptions(duration: 1000, startDelay: 0));
-
-    _userLatitude.value = position.latitude;
-    _userLongitude.value = position.longitude;
   }
 
   _onMapCreated(MapboxMap mapboxMap) {
@@ -260,5 +259,15 @@ class _MapPageState extends State<MapPage> {
     return Center(
       child: Text('Access token is not valid.'),
     );
+  }
+
+  @override
+  void onPageEnd() {
+    print('onPageEnd');
+  }
+
+  @override
+  void onPageStart() {
+    print('onPageStart');
   }
 }
