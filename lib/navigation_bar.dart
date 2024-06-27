@@ -12,6 +12,7 @@ import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/ui/payment/payment_view.dart';
 import 'package:surfy_mobile_app/ui/payment/wallet_select_view.dart';
 import 'package:surfy_mobile_app/ui/pos/confirm_pay_view.dart';
+import 'package:surfy_mobile_app/ui/pos/payment_complete_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pos_qr_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pos_view.dart';
 import 'package:surfy_mobile_app/ui/pos/select_payment_token_page.dart';
@@ -27,16 +28,12 @@ import 'package:surfy_mobile_app/ui/wallet/send_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/wallet_detail_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/wallet_view.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
-
-class NavigationItem {
-  
-}
 
 Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationController controller) async {
   final GoRouter goRouter =
-  GoRouter(initialLocation: '/splash', routes: <RouteBase>[
+  GoRouter(initialLocation: '/splash',
+      routes: <RouteBase>[
     GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     StatefulShellRoute.indexedStack(
@@ -45,10 +42,9 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
           return Scaffold(
             body: navigationShell,
             bottomNavigationBar: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
               showUnselectedLabels: true,
               showSelectedLabels: true,
-              unselectedItemColor: Colors.white,
-              selectedItemColor: SurfyColor.blue,
               onTap: (index) {
                 if (index != 1) {
                   GetQRController qrController = Get.find();
@@ -83,56 +79,21 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                     break;
                 }
               },
-              items: [
+              items: const [
                 BottomNavigationBarItem(
-                    icon: Image.asset(
-                      'assets/images/ic_home.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    backgroundColor: Colors.black,
-                    activeIcon: Image.asset('assets/images/ic_home.png',
-                        width: 24, height: 24, color: const Color(0xFF3B85F3)),
+                    icon: ImageIcon(AssetImage('assets/images/ic_home.png')),
                     label: 'Home'),
                 BottomNavigationBarItem(
-                    icon: Image.asset(
-                      'assets/images/ic_camera.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    backgroundColor: Colors.black,
-                    activeIcon: Image.asset('assets/images/ic_camera.png',
-                        width: 24, height: 24, color: const Color(0xFF3B85F3)),
+                    icon: ImageIcon(AssetImage('assets/images/ic_camera.png')),
                     label: 'QR'),
                 BottomNavigationBarItem(
-                    icon: Image.asset(
-                      'assets/images/ic_history.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    backgroundColor: Colors.black,
-                    activeIcon: Image.asset('assets/images/ic_history.png',
-                        width: 24, height: 24, color: const Color(0xFF3B85F3)),
+                    icon: ImageIcon(AssetImage('assets/images/ic_history.png')),
                     label: 'History'),
                 BottomNavigationBarItem(
-                    icon: Image.asset(
-                      'assets/images/ic_map.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    backgroundColor: Colors.black,
-                    activeIcon: Image.asset('assets/images/ic_map.png',
-                        width: 24, height: 24, color: const Color(0xFF3B85F3)),
+                    icon: ImageIcon(AssetImage('assets/images/ic_map.png')),
                     label: 'Map'),
                 BottomNavigationBarItem(
-                    icon: Image.asset(
-                      'assets/images/ic_pos.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    backgroundColor: Colors.black,
-                    activeIcon: Image.asset('assets/images/ic_pos.png',
-                        width: 24, height: 24, color: const Color(0xFF3B85F3)),
+                    icon: ImageIcon(AssetImage('assets/images/ic_pos.png')),
                     label: 'POS'),
               ],
               currentIndex: navigationShell.currentIndex,
@@ -153,7 +114,6 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                           if (token == null) {
                             return Container();
                           }
-
                           return WalletDetailPage(
                               token: findTokenByName(token)
                           );
@@ -211,6 +171,19 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                           wantToReceiveAmount: props.wantToReceiveAmount,
                         );
                       }
+                  ),
+                  GoRoute(
+                    path: 'check',
+                    builder: (context, state) {
+                      final extra = state.extra as PaymentCompletePageProps;
+                      return PaymentCompletePage(
+                          storeName: extra.storeName,
+                          fiatAmount: extra.fiatAmount,
+                          currencyType: extra.currencyType,
+                          blockchain: extra.blockchain,
+                          txHash: extra.txHash,
+                      );
+                    }
                   )
                 ]
             ),
@@ -232,7 +205,7 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                   }
               ),
             ]),
-            GoRoute(path: '/select', builder: (context, state) => const WalletSelectPage())
+            GoRoute(path: '/select', builder: (context, state) => const WalletSelectPage()),
           ]),
           StatefulShellBranch(
               routes: <RouteBase>[
@@ -299,6 +272,7 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                         currency: extra.currency,
                         sessionTime: extra.sessionTime,
                         gas: extra.gas,
+                        gasAsFiat: extra.gasAsFiat,
                       );
                     }
                 ),

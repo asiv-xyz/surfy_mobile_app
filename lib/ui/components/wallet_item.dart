@@ -3,14 +3,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/entity/token/token_price.dart';
-import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class WalletItem extends StatefulWidget {
@@ -45,22 +44,21 @@ class _WalletItemState extends State<WalletItem> {
 
     final prices = await getTokenPrice.getSingleTokenPrice(widget.token, preference.userCurrencyType.value);
     _tokenPrice.value = prices;
+    print('loadData: $balances, $prices');
   }
 
   Future<Widget> _buildTotalBalanceTab() async {
-    final uiBalancePair = getWalletBalances.parseTotalTokenBalanceForUi(widget.token,
-        _userTokenData.value,
-        _tokenPrice.value?.price ?? 0,
-        preference.userCurrencyType.value);
-
+    final balance = getWalletBalances.aggregateUserTokenAmount(widget.token, getWalletBalances.userDataObs.value);
+    final fiat = balance * (_tokenPrice.value?.price ?? 0);
+    print('_buildTotalBalanceTab, token=${widget.token}, balance=$balance, fiat=$fiat');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Container(
-            child: Text(uiBalancePair.second, style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),)
+            child: Text(formatFiat(fiat, preference.userCurrencyType.value), style: Theme.of(context).textTheme.titleLarge)
         ),
         Container(
-            child: Text(uiBalancePair.first, style: GoogleFonts.sora(color: Color(0xFFA0A0A0), fontSize: 14))
+            child: Text(formatCrypto(widget.token, balance), style: Theme.of(context).textTheme.labelLarge)
         )
       ],
     );
@@ -70,6 +68,7 @@ class _WalletItemState extends State<WalletItem> {
   @override
   void initState() {
     super.initState();
+    print('wallet_item initState()');
     loadData();
   }
 
@@ -85,7 +84,7 @@ class _WalletItemState extends State<WalletItem> {
         child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFF1E1E1E),
+              color: Theme.of(context).cardColor,
             ),
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -94,11 +93,15 @@ class _WalletItemState extends State<WalletItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(
+                    Container(
                         width: 40,
                         height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          // color: SurfyColor.white,
+                        ),
                         child: ClipRRect(
                             borderRadius: BorderRadius.circular(100),
                             child: Image.asset(tokens[widget.token]?.iconAsset ?? "", width: 40, height: 40,)
@@ -106,15 +109,16 @@ class _WalletItemState extends State<WalletItem> {
                     ),
                     const SizedBox(width: 10),
                     Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(tokens[widget.token]?.name ?? "", style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))
+                            Text(tokens[widget.token]?.name ?? "", style: Theme.of(context).textTheme.titleLarge)
                           ],
                         ),
+                        const SizedBox(height: 5,),
                         Wrap(
                           direction: Axis.horizontal,
                           spacing: 5,
@@ -152,6 +156,7 @@ class _WalletItemState extends State<WalletItem> {
                     }
 
                     if (state.hasError) {
+                      print('error: ${state.error}');
                       return Text('Error...');
                     }
 

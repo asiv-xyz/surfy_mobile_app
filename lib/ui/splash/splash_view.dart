@@ -27,9 +27,11 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   Future<void> initApp() async {
+    var startTime = DateTime.now().millisecondsSinceEpoch;
+    logger.i('initApp start');
     late final Uri redirectUrl;
     if (Platform.isAndroid) {
-      redirectUrl = Uri.parse('surfy://com.riverbank.surfy_mobile_app/auth');
+      redirectUrl = Uri.parse('surfy://com.riverbank.surfy/auth');
     } else {
       redirectUrl = Uri.parse('com.example.surfyMobileApp://auth');
     }
@@ -50,18 +52,20 @@ class _SplashPageState extends State<SplashPage> {
     final List<Future> jobList = [
       getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType),
       loadData(),
-      loadPlace()
+      // loadPlace()
     ];
     await Future.wait(jobList);
+    logger.i('initApp end, duration=${DateTime.now().millisecondsSinceEpoch - startTime}');
   }
 
   Future<void> loadData() async {
+    var startTime = DateTime.now().millisecondsSinceEpoch;
     logger.i('loadData');
     GetWalletBalances getWalletBalances = Get.find();
     KeyService keyService = Get.find();
     final key = await keyService.getKey();
     await getWalletBalances.loadNewTokenDataList(Token.values, key.first, key.second);
-    logger.i('loadData end');
+    logger.i('loadData end, duration: ${DateTime.now().millisecondsSinceEpoch - startTime}');
   }
 
   Future<bool> loadPlace() async {

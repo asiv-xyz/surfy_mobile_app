@@ -7,24 +7,23 @@ import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class CurrentPrice extends StatelessWidget {
   const CurrentPrice({super.key,
-    required this.mainAxisAlignment,
+    required this.crossAxisAlignment,
     required this.tokenName,
     required this.price,
     required this.currency});
   final String tokenName;
   final double price;
   final CurrencyType currency;
-  final MainAxisAlignment mainAxisAlignment;
+  final CrossAxisAlignment crossAxisAlignment;
 
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.decimalPattern('en_US');
-    return Row(
-      mainAxisAlignment: mainAxisAlignment,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: crossAxisAlignment,
       children: [
-        Text("1 $tokenName = ", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 15)),
-        Text("${getCurrencySymbol(currency)} ${formatter.format(price)}", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 20))
+        Text("1 $tokenName", style: Theme.of(context).textTheme.bodyLarge),
+        Text("= ${getCurrencySymbol(currency)} ${formatter.format(price)}", style: Theme.of(context).textTheme.displaySmall)
       ],
     );
   }

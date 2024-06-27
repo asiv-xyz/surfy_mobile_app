@@ -44,16 +44,12 @@ class _PosPageState extends State<PosPage> implements INavigationLifeCycle {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: SurfyColor.black,
-        iconTheme: const IconThemeData(color: SurfyColor.white),
-      ),
+      appBar: AppBar(),
       body: Obx(() {
         if (_isLoading.isTrue) {
           return Container(
             width: double.infinity,
             height: double.infinity,
-            color: SurfyColor.black,
             child: Center(
               child: CircularProgressIndicator(color: SurfyColor.blue)
             )
@@ -64,7 +60,6 @@ class _PosPageState extends State<PosPage> implements INavigationLifeCycle {
           return Container(
               width: double.infinity,
               height: double.infinity,
-              color: SurfyColor.black,
               child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -82,7 +77,6 @@ class _PosPageState extends State<PosPage> implements INavigationLifeCycle {
         return Container(
           width: double.infinity,
           height: double.infinity,
-          color: SurfyColor.black,
           child: KeyboardView(
             buttonText: 'Create QR code',
             inputAmount: _inputAmount,
@@ -100,9 +94,9 @@ class _PosPageState extends State<PosPage> implements INavigationLifeCycle {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hello ${_merchantData.value?.storeName}!', style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16),),
-                    const SizedBox(height: 10,),
-                    Text('Enter you want to receive', style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 12),),
+                    Text('Hello ${_merchantData.value?.storeName}!', style: Theme.of(context).textTheme.bodyLarge),
+                    const SizedBox(height: 5,),
+                    Text('Enter you want to receive', style: Theme.of(context).textTheme.bodySmall),
                     Obx(() => Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [

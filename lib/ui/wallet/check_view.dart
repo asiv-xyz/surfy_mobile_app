@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/ui/components/badge.dart';
+import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
@@ -27,6 +26,19 @@ class CheckViewProps {
   final double crypto;
   final double fiat;
   final String currency;
+
+  @override
+  String toString() {
+    return {
+      "token": token.name,
+      "blockchain": blockchain.name,
+      "transactionHash": transactionHash,
+      "receiver": receiver,
+      "crypto": crypto,
+      "fiat": fiat,
+      "currency": currency,
+    }.toString();
+  }
 }
 
 class CheckView extends StatefulWidget {
@@ -60,9 +72,12 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
   late Animation<int> alpha;
   late Animation<double> animation;
 
+  final WalletBalancesRepository _repository = Get.find();
+
   @override
   void initState() {
     super.initState();
+    _repository.needToUpdate = true;
     controller = AnimationController(duration: Duration(seconds: 1), vsync: this);
     alpha = IntTween(begin: 0, end: 255).animate(controller);
     animation = Tween<double>(begin: 0, end: 300).animate(controller)..addListener(() {
@@ -78,14 +93,11 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(0),
-        child: AppBar(
-          backgroundColor: Colors.black,
-        )
+        child: AppBar()
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: SurfyColor.black,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -100,7 +112,7 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                     children: [
                       Image.asset("assets/images/ic_blue_check.png", width: 40, height: 40),
                       const SizedBox(width: 10),
-                      Text('Check please!', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 28),)
+                      Text('Check please!', style: Theme.of(context).textTheme.headlineMedium)
                     ],
                   ),
                 ),
@@ -111,8 +123,8 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Tx Hash', style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16),),
-                            Text(shortAddress(widget.transactionHash), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 12)),
+                            Text('Tx Hash', style: Theme.of(context).textTheme.displaySmall),
+                            Text(shortAddress(widget.transactionHash), style: Theme.of(context).textTheme.bodyMedium),
                           ],
                         )
                     ),

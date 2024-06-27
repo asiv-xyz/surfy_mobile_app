@@ -6,7 +6,7 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 class TokenPriceRepository {
   TokenPriceRepository({required this.service});
 
-  static const updateThreshold = 60000; // 5 minutes
+  static const updateThreshold = 300000; // 5 minutes
   final TokenPriceService service;
   int _lastUpdated = 0;
   String _lastUpdatedCurrency = "usd";

@@ -63,6 +63,12 @@ dependencies:
       url: https://github.com/dola99/qr_code_scanner
       ref: update
   vibration: ^1.9.0
+  xrpl_dart: ^4.3.0
+  local_auth: ^2.2.0
+  tron: ^0.0.2
+  grpc: ^3.2.4
+  on_chain: ^3.4.0
+  blockchain_utils: ^3.1.0
 
 dev_dependencies:
   flutter_test:

@@ -9,10 +9,11 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class UserHeader extends StatelessWidget {
-  UserHeader({super.key, required this.profileImageUrl, required this.profileName});
+  UserHeader({super.key, required this.profileImageUrl, required this.profileName, required this.onRefresh});
 
   final String profileImageUrl;
   final String profileName;
+  final Function onRefresh;
   final KeyService keyService = Get.find();
 
   @override
@@ -21,58 +22,53 @@ class UserHeader extends StatelessWidget {
       return Container();
     }
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.network(profileImageUrl, width: 48, height: 48,)
-                  )
-                ),
-                SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Hello, ${profileName}', style: GoogleFonts.sora(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.white)),
-                    Text('Welcome to SURFY!', style: GoogleFonts.sora(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.white))
-                  ],
+          Row(
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: Image.network(profileImageUrl, width: 48, height: 48,)
                 )
-              ],
-            )
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Hello, $profileName', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Welcome to SURFY!', style: Theme.of(context).textTheme.titleLarge)
+                ],
+              )
+            ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Container(
+              SizedBox(
                 width: 24,
                 height: 24,
                 child: IconButton(
                     onPressed: () {
                       context.push('/settings');
                     },
-                    icon: Icon(Icons.settings_outlined, color: Colors.white, size: 24))
+                    icon: const Icon(Icons.settings_outlined, size: 24))
               ),
-              SizedBox(width: 20),
-              Container(
+              const SizedBox(width: 20),
+              SizedBox(
                 width: 24,
                 height: 24,
                 child: IconButton(
                     onPressed: () async {
-                      final GetWalletBalances getWalletBalancesUseCase = Get.find();
-                      final key = await keyService.getKey();
-                      getWalletBalancesUseCase.loadNewTokenDataList(
-                          Token.values, key.first, key.second);
+                      onRefresh.call();
                     },
-                    icon: Icon(Icons.refresh_outlined, color: Colors.white, size: 24)
+                    icon: const Icon(Icons.refresh_outlined, size: 24)
                 )
               )
             ],

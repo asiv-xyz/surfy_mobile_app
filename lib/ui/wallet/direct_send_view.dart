@@ -27,9 +27,7 @@ class _DirectSendPageState extends State<DirectSendPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-
-      ),
+      appBar: AppBar(),
       body: Container(
         width: double.infinity,
         height: double.infinity,

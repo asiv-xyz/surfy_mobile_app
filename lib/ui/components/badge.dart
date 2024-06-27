@@ -19,8 +19,9 @@ class TokenBadge extends StatelessWidget {
         child : Row(
           children: [
             Image.asset(tokens[token]?.iconAsset ?? "", width: 24, height: 24,),
-            const SizedBox(width: 5),
-            Text(tokens[token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16)),
+            const SizedBox(width: 10),
+            Text(tokens[token]?.name ?? "", style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(width: 1,)
           ],
         )
     );
@@ -35,15 +36,18 @@ class NetworkBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: BoxDecoration(
-            color: SurfyColor.greyBg,
-            borderRadius: BorderRadius.circular(15)
+            borderRadius: BorderRadius.circular(15),
+          color: SurfyColor.greyBg
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         child : Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(blockchains[blockchain]?.icon ?? "", width: 24, height: 24,),
-            const SizedBox(width: 5),
-            Text(blockchains[blockchain]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16)),
+            const SizedBox(width: 10),
+            Text(blockchains[blockchain]?.name ?? "", style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(width: 1,)
           ],
         )
     );

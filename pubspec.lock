@@ -89,6 +89,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  blockchain_utils:
+    dependency: "direct main"
+    description:
+      name: blockchain_utils
+      sha256: "3e0590f46485b209e88fea63a19425aad52c264d059c4e1379abdce80c448605"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -616,6 +624,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.2.1"
+  google_identity_services_web:
+    dependency: transitive
+    description:
+      name: google_identity_services_web
+      sha256: "9482364c9f8b7bd36902572ebc3a7c2b5c8ee57a9c93e6eb5099c1a9ec5265d8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1+1"
+  googleapis_auth:
+    dependency: transitive
+    description:
+      name: googleapis_auth
+      sha256: befd71383a955535060acde8792e7efc11d2fccd03dd1d3ec434e85b68775938
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.0"
   graphs:
     dependency: transitive
     description:
@@ -624,6 +648,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.1"
+  grpc:
+    dependency: "direct main"
+    description:
+      name: grpc
+      sha256: e93ee3bce45c134bf44e9728119102358c7cd69de7832d9a874e2e74eb8cab40
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.4"
   gtk:
     dependency: transitive
     description:
@@ -656,6 +688,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.1"
+  http2:
+    dependency: transitive
+    description:
+      name: http2
+      sha256: "9ced024a160b77aba8fb8674e38f70875e321d319e6f303ec18e87bd5a4b0c1d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   http_multi_server:
     dependency: transitive
     description:
@@ -752,6 +792,46 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  local_auth:
+    dependency: "direct main"
+    description:
+      name: local_auth
+      sha256: "280421b416b32de31405b0a25c3bd42dfcef2538dfbb20c03019e02a5ed55ed0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
+  local_auth_android:
+    dependency: transitive
+    description:
+      name: local_auth_android
+      sha256: b77dc490fef9214e785c326bf11fa733feaa47675d0433f05f48b5caa486c8f7
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.40"
+  local_auth_darwin:
+    dependency: transitive
+    description:
+      name: local_auth_darwin
+      sha256: e424ebf90d5233452be146d4a7da4bcd7a70278b67791592f3fde1bda8eef9e2
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.1"
+  local_auth_platform_interface:
+    dependency: transitive
+    description:
+      name: local_auth_platform_interface
+      sha256: "1b842ff177a7068442eae093b64abe3592f816afd2a533c0ebcdbe40f9d2075a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.10"
+  local_auth_windows:
+    dependency: transitive
+    description:
+      name: local_auth_windows
+      sha256: "505ba3367ca781efb1c50d3132e44a2446bccc4163427bc203b9b4d8994d97ea"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.10"
   logger:
     dependency: "direct main"
     description:
@@ -808,6 +888,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  on_chain:
+    dependency: "direct main"
+    description:
+      name: on_chain
+      sha256: be2ece636b074439da67380a6d9fb22fae6f30bcf74919ebaf9422bbc9748005
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.0"
   package_config:
     dependency: transitive
     description:
@@ -920,6 +1008,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.1"
+  protobuf:
+    dependency: transitive
+    description:
+      name: protobuf
+      sha256: "01dd9bd0fa02548bf2ceee13545d4a0ec6046459d847b6b061d8a27237108a08"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
+  protobuf_google:
+    dependency: transitive
+    description:
+      name: protobuf_google
+      sha256: "13d551f35f1ef70039937427ba131198e1e91dc2171d0f01aa0b01e18dddac6f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   pub_semver:
     dependency: transitive
     description:
@@ -1142,6 +1246,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  tron:
+    dependency: "direct main"
+    description:
+      name: tron
+      sha256: "7f7233193fd9108a6378d4bdc8fdfc0204c6a9747d762fd5c7834a4901575bf7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   turf:
     dependency: transitive
     description:
@@ -1382,6 +1494,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.0"
+  xrpl_dart:
+    dependency: "direct main"
+    description:
+      name: xrpl_dart
+      sha256: "94b619e44a4856870ea9261598038257ccddf95a443d91a358ec2a447c424ca1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.3.0"
   yaml:
     dependency: transitive
     description:

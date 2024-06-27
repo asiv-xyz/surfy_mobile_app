@@ -52,18 +52,11 @@ class _PosQrPageState extends State<PosQrPage> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Text('POS',
-            style: GoogleFonts.sora(
-                fontSize: 16,
-                color: SurfyColor.white,
-                fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: SurfyColor.white),
-        backgroundColor: SurfyColor.black,
+        title: const Text('POS'),
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: SurfyColor.black,
         child: Column(
           children: [
             Container(

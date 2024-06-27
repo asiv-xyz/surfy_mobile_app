@@ -14,6 +14,7 @@ class Merchant {
     required this.category,
     required this.nation,
     required this.sns,
+    required this.wallets,
   });
 
   final String id;
@@ -28,6 +29,7 @@ class Merchant {
   final String category;
   final String nation;
   final List<MerchantSns> sns;
+  final List<MerchantWallet>? wallets;
 
   @override
   String toString() {
@@ -43,7 +45,8 @@ class Merchant {
       "email": email,
       "category": category,
       "nation": nation,
-      "sns": sns
+      "sns": sns,
+      "wallets": wallets,
     }.toString();
   }
 
@@ -60,7 +63,8 @@ class Merchant {
       email: json['email'],
       category: json['category'],
       nation: json['nation'],
-      sns: json['sns']?.map((item) => MerchantSns.fromJson(item)).toList() ?? [],
+      sns: json['sns']?.map<MerchantSns>((item) => MerchantSns.fromJson(item)).toList() ?? [],
+      wallets: json['wallets']?.map<MerchantWallet>((item) => MerchantWallet.fromJson(item)).toList() ?? [],
     );
   }
 }
@@ -86,9 +90,10 @@ class MerchantWallet {
   }
 
   factory MerchantWallet.fromJson(Map<String, dynamic> json) {
+    print('MerchantWallet: $json');
     return MerchantWallet(
         walletAddress: json['walletAddress'],
-        walletCategory: json['walletCategory'],
+        walletCategory: json['walletCategory'] ?? "",
         blockchain: json['blockchain']
     );
   }

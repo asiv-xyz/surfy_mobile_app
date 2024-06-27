@@ -5,18 +5,29 @@ enum Token {
   SOLANA,
   USDC,
   USDT,
-  // DOGE,
+  DOGE,
   DEGEN,
   // TON,
+  BNB,
+  XRP,
+  TRON,
 }
 
 Token findTokenByName(String name) {
-  final list = Token.values.where((t) => t.name.toLowerCase() == name.toLowerCase());
+  final list = tokens.entries.where((tokenData) {
+    final item = tokenData.value;
+    if (name.toLowerCase() == item.name.toLowerCase()) {
+      return true;
+    }
+
+    return false;
+  }).toList();
+
   if (list.isEmpty) {
-    throw Exception('No token');
+    throw Exception('No token: $name');
   }
 
-  return list.first;
+  return list.first.key;
 }
 
 class TokenData {
@@ -55,7 +66,8 @@ const Map<Token, TokenData> tokens = {
       Blockchain.ETHEREUM_SEPOLIA,
       // Blockchain.OPTIMISM,
       // Blockchain.ARBITRUM,
-      Blockchain.BASE
+      Blockchain.BASE,
+      Blockchain.BASE_SEPOLIA,
     ],
     iconAsset: "assets/images/tokens/ic_ethereum.png",
     isToken: false,
@@ -93,10 +105,11 @@ const Map<Token, TokenData> tokens = {
   Token.USDT: TokenData(
     token: Token.USDT,
     name: "Tether",
-    symbol: "USDT",
+    symbol: "Tether",
     supportedBlockchain: [
       Blockchain.ETHEREUM,
-      // Blockchain.SOLANA
+      Blockchain.SOLANA,
+      Blockchain.TRON,
     ],
     iconAsset: "assets/images/tokens/ic_tether.png",
     isToken: true,
@@ -105,6 +118,7 @@ const Map<Token, TokenData> tokens = {
       // Blockchain.ETHEREUM_SEPOLIA: "",
       Blockchain.SOLANA: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
       // Blockchain.SOLANA_DEVNET: "",
+      Blockchain.TRON: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
     },
     decimal: 6,
     cgIdentifier: "tether",
@@ -140,20 +154,60 @@ const Map<Token, TokenData> tokens = {
     cgIdentifier: "degen-base",
     fixedDecimal: 2,
   ),
-  // Token.DOGE: TokenData(
-  //   token: Token.DOGE,
-  //   name: "Dogecoin",
-  //   symbol: "DOGE",
-  //   supportedBlockchain: [
-  //   //   Blockchain.BSC
-  //   ],
-  //   iconAsset: "assets/images/tokens/ic_dogecoin.png",
-  //   isToken: true,
-  //   tokenContractAddress: {
-  //     // Blockchain.BSC: "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
-  //   },
-  //   decimal: 8,
-  //   cgIdentifier: "dogecoin",
-  //   fixedDecimal: 2,
-  // ),
+  Token.DOGE: TokenData(
+    token: Token.DOGE,
+    name: "Dogecoin",
+    symbol: "DOGE",
+    supportedBlockchain: [
+      Blockchain.BSC
+    ],
+    iconAsset: "assets/images/tokens/ic_dogecoin.png",
+    isToken: true,
+    tokenContractAddress: {
+      Blockchain.BSC: "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+    },
+    decimal: 8,
+    cgIdentifier: "dogecoin",
+    fixedDecimal: 2,
+  ),
+  Token.XRP: TokenData(
+    token: Token.XRP,
+    name: "XRP",
+    symbol: "XRP",
+    supportedBlockchain: [Blockchain.XRPL],
+    iconAsset: "assets/images/tokens/ic_xrpl.png",
+    isToken: false,
+    tokenContractAddress: {},
+    decimal: 6,
+    cgIdentifier: "ripple",
+    fixedDecimal: 4,
+  ),
+
+  Token.BNB: TokenData(
+    token: Token.BNB,
+    name: "BNB",
+    symbol: "BNB",
+    supportedBlockchain: [Blockchain.BSC, Blockchain.OP_BNB],
+    iconAsset: "assets/images/tokens/ic_bnb.png",
+    isToken: false,
+    tokenContractAddress: {
+      Blockchain.OP_BNB: "0x4200000000000000000000000000000000000006",
+    },
+    decimal: 6,
+    cgIdentifier: "binancecoin",
+    fixedDecimal: 3
+  ),
+
+  Token.TRON: TokenData(
+    token: Token.TRON,
+    name: "Tron",
+    symbol: "Tron",
+    supportedBlockchain: [Blockchain.TRON],
+    iconAsset: "assets/images/tokens/ic_tron.png",
+    isToken: false,
+    tokenContractAddress: {},
+    decimal: 6,
+    cgIdentifier: "tron",
+    fixedDecimal: 4
+  )
 };

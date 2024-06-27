@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
@@ -10,7 +11,7 @@ class WalletBalancesRepository {
   final WalletService walletService;
 
   bool needToUpdate = true;
-  static const updateThreshold = 60000; // 5 minutes
+  static const updateThreshold = 300000; // 5 minutes
   int _lastUpdateTimestamp = 0;
   List<UserTokenData> data = [];
 
@@ -21,11 +22,15 @@ class WalletBalancesRepository {
 
   Future<UserTokenData> _getSingleWalletBalance(({Token token, Blockchain blockchain, String key}) arg) async {
     try {
+      var startTime = DateTime.now().millisecondsSinceEpoch;
+      print('_getSingleWalletBalance start: ${arg.token}, ${arg.blockchain}');
       final address = await walletService.getWalletAddress(arg.blockchain, arg.key);
       final balance = await walletService.getBalance(arg.token, arg.blockchain, address);
+      var duration = DateTime.now().millisecondsSinceEpoch - startTime;
+      print('_getSingleWalletBalance end: ${arg.token}, ${arg.blockchain}, $duration');
       return balance;
     } catch (e) {
-      logger.e('get wallet balance failed, token=${arg.token}, blockchain=${arg.blockchain}');
+      logger.e('get wallet balance failed, token=${arg.token}, blockchain=${arg.blockchain}, error=${e}');
       rethrow;
     }
   }
@@ -36,7 +41,7 @@ class WalletBalancesRepository {
       final supportedBlockchain = tokens[token]?.supportedBlockchain ?? [];
       return supportedBlockchain.map((blockchain) async {
         final blockchainData = blockchains[blockchain];
-        return await compute(_getSingleWalletBalance, (token: token, blockchain: blockchain, key: blockchainData?.curve == EllipticCurve.SECP256K1 ? secp256k1 : ed25519));
+        return await _getSingleWalletBalance((token: token, blockchain: blockchain, key: blockchainData?.curve == EllipticCurve.SECP256K1 ? secp256k1 : ed25519));
       }).toList();
     }).expand((element) => element).toList();
 

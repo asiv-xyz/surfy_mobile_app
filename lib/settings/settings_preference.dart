@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
@@ -49,6 +50,7 @@ int getFixedDigitBySymbol(CurrencyType currencyType) {
 
 class SettingsPreference {
   final userCurrencyType = CurrencyType.usd.obs;
+  final Rx<ThemeMode> themeObs = Rx(ThemeMode.system);
 
   SettingsPreference() {
     getCurrencyType().then((currencyType) {
@@ -75,5 +77,18 @@ class SettingsPreference {
     final result = CurrencyType.values.where((ct) => ct.name == value.toLowerCase()).first;
     logger.i('getCurrencyType: $result');
     return result;
+  }
+
+  Future<ThemeMode> getTheme() async {
+    final preference = await SharedPreferences.getInstance();
+    final value = preference.getString('theme');
+    final themeData = ThemeMode.values.where((t) => t.name.toLowerCase() == value);
+    return themeData.first;
+  }
+
+  Future<void> setTheme(ThemeMode theme) async {
+    final preference = await SharedPreferences.getInstance();
+    preference.setString('theme', theme.name.toLowerCase());
+    themeObs.value = theme;
   }
 }

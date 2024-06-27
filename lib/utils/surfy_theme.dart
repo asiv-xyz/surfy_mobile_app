@@ -8,4 +8,11 @@ class SurfyColor {
   static const white = Color(0xFFFFFFFF);
   static const black = Color(0xFF0A0A0A);
   static const deepRed = Color(0xFFEA3737);
+
+  static const lightThemeBackground = Color(0xFFF3F4F6);
+  static const darkThemeCardBackground = Color(0xFF141519);
+}
+
+class SurfyColorV2 {
+
 }

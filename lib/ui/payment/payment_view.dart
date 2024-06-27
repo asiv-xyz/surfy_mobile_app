@@ -110,16 +110,8 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     return Obx(() => Scaffold(
           appBar: AppBar(
-            backgroundColor: SurfyColor.black,
             titleSpacing: 0,
-            title: Text(
-              'Payment',
-              style: GoogleFonts.sora(
-                  color: SurfyColor.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16),
-            ),
-            iconTheme: const IconThemeData(color: SurfyColor.white),
+            title: const Text('Payment',),
           ),
           body: Container(
               height: MediaQuery.of(context).size.height,

@@ -93,6 +93,8 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
   _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
     _determinePosition().then((position) {
+      _userLatitude.value = position.latitude;
+      _userLongitude.value = position.longitude;
       mapboxMap.setCamera(mapbox.CameraOptions(
           center: Point(
               coordinates: Position(position.longitude, position.latitude)),
@@ -173,8 +175,8 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
         margin: const EdgeInsets.all(10),
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-            color: SurfyColor.black,
-            borderRadius: BorderRadius.circular(15)
+          borderRadius: BorderRadius.circular(15),
+          color: SurfyColor.black,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -218,10 +220,7 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            backgroundColor: SurfyColor.black,
-            title: Text('Find SURFY Store!',
-                style: GoogleFonts.sora(
-                    color: SurfyColor.white, fontWeight: FontWeight.bold))),
+            title: Text('Find SURFY Store!')),
         body: Stack(
           fit: StackFit.expand,
           children: [

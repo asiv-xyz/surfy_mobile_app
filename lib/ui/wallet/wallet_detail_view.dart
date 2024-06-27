@@ -14,6 +14,7 @@ import 'package:surfy_mobile_app/ui/components/balance_view.dart';
 import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
@@ -37,8 +38,8 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
   final Rx<TokenPrice?> _tokenPrice = Rx<TokenPrice?>(null);
   final Rx<bool> _isLoading = Rx<bool>(false);
   final Rx<bool> _onlyHeldShow = Rx<bool>(true);
-  final Rx<String> _totalCryptoBalance = Rx<String>("");
-  final Rx<String> _totalFiatBalance = Rx<String>("");
+  final Rx<double> _totalCryptoBalance = Rx<double>(0);
+  final Rx<double> _totalFiatBalance = Rx<double>(0);
 
   List<UserTokenData> _getDrawList() {
     if (_onlyHeldShow.isTrue) {
@@ -67,9 +68,10 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
     final jobList = Future.wait([loadBalanceAndSortJob, loadTokenPriceData]);
     await jobList;
 
-    final totalBalancePair = _getWalletBalancesUseCase.parseTotalTokenBalanceForUi(widget.token, _balanceList.value, _tokenPrice.value?.price ?? 0.0, _preference.userCurrencyType.value);
-    _totalCryptoBalance.value = totalBalancePair.first;
-    _totalFiatBalance.value = totalBalancePair.second;
+    // final totalBalancePair = _getWalletBalancesUseCase.parseTotalTokenBalanceForUi(widget.token, _balanceList.value, _tokenPrice.value?.price ?? 0.0, _preference.userCurrencyType.value);
+    final aggregatedTokenBalance = _getWalletBalancesUseCase.aggregateUserTokenAmount(widget.token, _getWalletBalancesUseCase.userDataObs.value);
+    _totalCryptoBalance.value = aggregatedTokenBalance;
+    _totalFiatBalance.value = aggregatedTokenBalance * (_tokenPrice.value?.price ?? 0);
   }
 
   @override
@@ -97,26 +99,22 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
           children: [
             Image.asset(tokenData.iconAsset, width: 40, height: 40),
             const SizedBox(width: 10),
-            Text(tokenData.name, style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 18, fontWeight: FontWeight.bold),)
+            Text(tokenData.name)
           ],
         ),
-        backgroundColor: SurfyColor.black,
-        iconTheme: const IconThemeData(color: SurfyColor.white),
       ),
-      backgroundColor: SurfyColor.black,
       body: Obx(() {
         if (_isLoading.isTrue) {
           return Container(
             width: double.infinity,
             height: double.infinity,
-            color: SurfyColor.black,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(color: SurfyColor.blue,),
-                const SizedBox(height: 10,),
-                Text('Session timeout, reload token data...', style: GoogleFonts.sora(color: SurfyColor.white),)
+                const SizedBox(height: 20,),
+                Text('Session timeout, reload token data...', style: Theme.of(context).textTheme.titleLarge)
               ],
             )
           );
@@ -128,8 +126,10 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
               children: [
                 Obx(() {
                   return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
                       child: BalanceView(
+                        token: widget.token,
+                        currencyType: _preference.userCurrencyType.value,
                         fiatBalance: _totalFiatBalance.value,
                         cryptoBalance: _totalCryptoBalance.value,
                       )
@@ -139,18 +139,13 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                     width: double.infinity,
                     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: CurrentPrice(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       tokenName: tokens[widget.token]?.name ?? "",
                       price: _tokenPrice.value?.price ?? 0.0,
                       currency: _preference.userCurrencyType.value,
                     )
                 )),
-                Container(
-                  width: double.infinity,
-                  height: 6,
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  color: SurfyColor.darkGrey,
-                ),
+                Divider(color: Theme.of(context).dividerColor),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -169,13 +164,14 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                         onTap: () {
                           _onlyHeldShow.value = !_onlyHeldShow.value;
                         },
-                        child: Text('Only coins held', style: GoogleFonts.sora(fontSize: 14, color: SurfyColor.white),)
+                        child: Text('View only the coins I own', style: Theme.of(context).textTheme.labelLarge)
                     )
                   ],
                 ),
                 Obx(() => Column(
                   children: _getDrawList().map((item) {
-                    final balanceItem = _getWalletBalancesUseCase.parseSingleTokenBalanceForUi(widget.token, item.blockchain, _balanceList.value, _tokenPrice.value?.price ?? 0, _preference.userCurrencyType.value);
+                    final balance = _getWalletBalancesUseCase.aggregateUserTokenAmountByBlockchain(widget.token, item.blockchain, _balanceList.value);
+                    final fiat = balance * (_tokenPrice.value?.price ?? 0);
                     return InkWell(
                         onTap: () {
                           context.push('/sendAndReceive', extra: Pair<Token, Blockchain>(item.token, item.blockchain));
@@ -198,11 +194,11 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
-                                            Text(tokens[item.token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),),
+                                            Text(tokens[item.token]?.name ?? "", style: Theme.of(context).textTheme.displaySmall),
                                           ],
                                         ),
                                         const SizedBox(height: 2),
-                                        Text("(${item.blockchain.name})", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 8)),
+                                        Text("(${item.blockchain.name})", style: Theme.of(context).textTheme.labelMedium),
                                         const SizedBox(height: 2),
                                         AddressBadge(address: item.address, mainAxisAlignment: MainAxisAlignment.start,)
                                       ],
@@ -212,8 +208,8 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(balanceItem.second, style: GoogleFonts.sora(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
-                                    Text(balanceItem.first, style: GoogleFonts.sora(color: const Color(0xFFBAC2C7), fontSize: 14, fontWeight: FontWeight.w500),)
+                                    Text(formatFiat(fiat, _preference.userCurrencyType.value), style: Theme.of(context).textTheme.displaySmall),
+                                    Text(formatCrypto(widget.token, balance), style: Theme.of(context).textTheme.labelMedium)
                                   ],
                                 )
                               ],

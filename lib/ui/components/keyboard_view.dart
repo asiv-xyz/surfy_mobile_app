@@ -72,7 +72,6 @@ class _KeyboardViewState extends State<KeyboardView> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: SurfyColor.black,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -80,103 +79,81 @@ class _KeyboardViewState extends State<KeyboardView> {
           Expanded(
               child: Container(
                   width: double.infinity,
-                  color: SurfyColor.greyBg,
                   child: Column(
                     children: [
                       Expanded(
                           child: Container(
                               width: double.infinity,
-                              color: SurfyColor.black,
                               child: Column(
                                 children: [
                                   Expanded(
                                       child: Row(
                                         children: [
                                           ...["1", "2", "3"].map((item) => Expanded(
-                                              child: Material(
-                                                color: SurfyColor.black,
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    _onClickKeyboard(item);
-                                                  },
-                                                  child: Container(
-                                                      child: Center(
-                                                          child: Text(item, style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 24,),)
-                                                      )
-                                                  ),
-                                                )
-                                              ))
-                                          ).toList(),
+                                            child: TextButton(
+                                              onPressed: () {
+                                                _onClickKeyboard(item);
+                                              },
+                                              child: Center(
+                                                child: Text(item, style: Theme.of(context).textTheme.displayMedium)
+                                              )
+                                            )
+                                          )).toList(),
                                         ],
                                       )
                                   ),
-                                  const Divider(color: SurfyColor.greyBg,),
+                                  Divider(color: Theme.of(context).dividerColor),
                                   Expanded(
                                       child: Row(
                                         children: [
                                           ...["4", "5", "6"].map((item) => Expanded(
-                                              child: Material(
-                                                color: SurfyColor.black,
-                                                child: InkWell(
-                                                  onTap: () {
+                                              child: TextButton(
+                                                  onPressed: () {
                                                     _onClickKeyboard(item);
                                                   },
-                                                  child: Container(
-                                                      child: Center(
-                                                          child: Text(item, style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 24,),)
-                                                      )
-                                                  ),
-                                                )
-                                              ))
-                                          ).toList(),
+                                                  child: Center(
+                                                      child: Text(item, style: Theme.of(context).textTheme.displayMedium)
+                                                  )
+                                              )
+                                          )).toList(),
                                         ],
                                       )
                                   ),
-                                  const Divider(color: SurfyColor.greyBg,),
+                                  Divider(color: Theme.of(context).dividerColor),
                                   Expanded(
                                       child: Row(
                                         children: [
                                           ...["7", "8", "9"].map((item) => Expanded(
-                                              child: Material(
-                                                color: SurfyColor.black,
-                                                child: InkWell(
-                                                  onTap: () {
+                                              child: TextButton(
+                                                  onPressed: () {
                                                     _onClickKeyboard(item);
                                                   },
-                                                  child: Container(
-                                                      child: Center(
-                                                          child: Text(item, style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 24,),)
-                                                      )
-                                                  ),
-                                                )
-                                              ))
-                                          ).toList(),
+                                                  child: Center(
+                                                      child: Text(item, style: Theme.of(context).textTheme.displayMedium)
+                                                  )
+                                              )
+                                          )).toList(),
                                         ],
                                       )
                                   ),
-                                  const Divider(color: SurfyColor.greyBg,),
+                                  Divider(color: Theme.of(context).dividerColor),
                                   Expanded(
                                       child: Row(
                                         children: [
                                           ...[".", "0", "<-"].map((item) => Expanded(
-                                              child: Material(
-                                                color: SurfyColor.black,
-                                                child: InkWell(
-                                                  onTap: () {
+                                              child: TextButton(
+                                                  onPressed: () {
                                                     _onClickKeyboard(item);
                                                   },
-                                                  child: Container(
-                                                      child: Center(
-                                                          child: Text(item, style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 24,),)
-                                                      )
-                                                  ),
-                                                )
-                                              ))
-                                          ).toList(),
+                                                  child: Center(
+                                                      child: Text(item, style: Theme.of(context).textTheme.displayMedium)
+                                                  )
+                                              )
+                                          )).toList(),
                                         ],
                                       )
                                   ),
-                                  const Divider(color: SurfyColor.greyBg,),
+                                  Divider(color: Theme.of(context).dividerColor),
                                 ],
                               )
                           )

@@ -17,9 +17,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings', style: GoogleFonts.sora(color: SurfyColor.white)),
-        iconTheme: const IconThemeData(color: SurfyColor.white),
-        backgroundColor: SurfyColor.black,
+        title: const Text('Settings'),
       ),
       body: Stack(
         children: [
@@ -51,6 +49,44 @@ class SettingsPage extends StatelessWidget {
                         )
                     ),
                     Container(
+                        child: PopupMenuButton<ThemeMode>(
+                            onSelected: (theme) async {
+                              await _preference.setTheme(theme);
+                            },
+                            itemBuilder: (context) => ThemeMode.values.map((themeType) => PopupMenuItem(
+                                value: themeType,
+                                child: Text(themeType.name))
+                            ).toList(),
+                            child: Obx(() => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                color: SurfyColor.black,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Theme: ${_preference.themeObs.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
+                                    Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                                  ],
+                                )
+                            ))
+                        )
+                    ),
+                    Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        color: SurfyColor.black,
+                        child: InkWell(
+                            onTap: () {
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Export private key', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                              ],
+                            )
+                        )
+                    ),
+                    Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         color: SurfyColor.black,
@@ -62,7 +98,7 @@ class SettingsPage extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('Logout', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
-                                Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                                const Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
                               ],
                             )
                         )

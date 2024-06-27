@@ -36,13 +36,7 @@ class _WalletSelectPageState extends State<WalletSelectPage> {
         Scaffold(
             appBar: AppBar(
               titleSpacing: 0,
-              title: Text('What coin will you pay with?',
-                  style: GoogleFonts.sora(
-                      fontSize: 16,
-                      color: SurfyColor.white,
-                      fontWeight: FontWeight.bold)),
-              iconTheme: const IconThemeData(color: SurfyColor.white),
-              backgroundColor: SurfyColor.black,
+              title: const Text('What coin will you pay with?'),
             ),
             body: Container(
                 width: double.infinity,

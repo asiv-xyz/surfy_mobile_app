@@ -19,6 +19,9 @@ class GetWalletBalances {
   final WalletBalancesRepository repository;
   final KeyService keySerivce;
   final isLoading = false.obs;
+  final Rx<List<UserTokenData>> userDataObs = Rx([]);
+
+  final RxBool needUpdate = false.obs;
 
   Future<List<UserTokenData>> getTokenDataList(Token token) async {
     final key = await keySerivce.getKey();
@@ -45,6 +48,7 @@ class GetWalletBalances {
     logger.d('loadNewTokenData');
     isLoading.value = true;
     final result = await repository.forceLoadAndGetUserWalletBalances(tokenList, secp256k1, ed25519);
+    userDataObs.value = result;
     isLoading.value = false;
     return result;
   }
@@ -56,6 +60,53 @@ class GetWalletBalances {
     final result = await repository.getUserWalletBalances(tokenList, key.first, key.second);
     isLoading.value = false;
     return result;
+  }
+
+  Pair<Token, double> aggregateTokenBalance(
+      Token token,
+      List<UserTokenData> useTokenDataList,
+      double tokenPrice,
+      CurrencyType currency) {
+    final aggregatedUserBalance = useTokenDataList.where((t) => t.token == token).reduce((prev, curr) {
+      return UserTokenData(
+        token: prev.token,
+        blockchain: prev.blockchain,
+        decimal: prev.decimal,
+        address: "",
+        amount: prev.amount + curr.amount,
+      );
+    });
+
+    final totalPrice = aggregatedUserBalance.toVisibleAmount() * tokenPrice;
+    return Pair(token, totalPrice);
+  }
+
+  double aggregateUserTokenAmount(Token token, List<UserTokenData> userTokenDataList) {
+    final aggregatedUserBalance = userTokenDataList.where((t) => t.token == token).reduce((prev, curr) {
+      return UserTokenData(
+        token: prev.token,
+        blockchain: prev.blockchain,
+        decimal: prev.decimal,
+        address: "",
+        amount: prev.amount + curr.amount,
+      );
+    });
+
+    return aggregatedUserBalance.toVisibleAmount();
+  }
+
+  double aggregateUserTokenAmountByBlockchain(Token token, Blockchain blockchain, List<UserTokenData> userTokenDataList) {
+    final aggregatedUserBalance = userTokenDataList.where((t) => t.token == token && t.blockchain == blockchain).reduce((prev, curr) {
+    return UserTokenData(
+      token: prev.token,
+      blockchain: prev.blockchain,
+        decimal: prev.decimal,
+        address: "",
+        amount: prev.amount + curr.amount,
+      );
+    });
+
+    return aggregatedUserBalance.toVisibleAmount();
   }
 
   Pair<String, String> parseTotalTokenBalanceForUi(

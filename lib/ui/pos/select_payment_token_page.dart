@@ -82,16 +82,8 @@ class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: SurfyColor.black,
         titleSpacing: 0,
-        title: Text(
-          'Select payment method',
-          style: GoogleFonts.sora(
-              color: SurfyColor.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16),
-        ),
-        iconTheme: const IconThemeData(color: SurfyColor.white),
+        title: const Text('Select payment method',),
       ),
       body: Obx(() {
         if (_isLoading.isTrue) {
@@ -105,53 +97,46 @@ class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> {
           return Container(
             width: double.infinity,
             height: double.infinity,
-            color: SurfyColor.black,
             child: SingleChildScrollView(
               child: Column(
                 children: _balanceData.value.map((balance) => Container(
                     width: double.infinity,
                     child: Column(
                       children: [
-                        Material(
-                          color: SurfyColor.black,
-                          child: InkWell(
-                            onTap: () {
-                              if (mounted) {
-                                widget.onSelect(balance.token, balance.blockchain);
-                                context.pop();
-                              }
-                            },
-                            child: Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.symmetric(horizontal: 20),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        TextButton(onPressed: () {
+                          if (mounted) {
+                            widget.onSelect(balance.token, balance.blockchain);
+                            context.pop();
+                          }
+                        }, child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
                                   children: [
-                                    Row(
-                                      children: [
-                                        TokenIconWithNetwork(
-                                            blockchain: balance.blockchain,
-                                            token: balance.token,
-                                            width: 40,
-                                            height: 40),
-                                        const SizedBox(width: 10,),
-                                        Text(tokens[balance.token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16, fontWeight: FontWeight.bold),)
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(formatFiat(_calculateFiat(balance.amount, balance.decimal, _tokenPriceData.value[balance.token]?.price ?? 0.0), widget.receiveCurrency), style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 14),),
-                                        Text(formatCrypto(balance.token, balance.toVisibleAmount()), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14),),
-                                      ],
-                                    )
+                                    TokenIconWithNetwork(
+                                        blockchain: balance.blockchain,
+                                        token: balance.token,
+                                        width: 40,
+                                        height: 40),
+                                    const SizedBox(width: 10,),
+                                    Text(tokens[balance.token]?.name ?? "", style: Theme.of(context).textTheme.titleLarge)
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(formatFiat(_calculateFiat(balance.amount, balance.decimal, _tokenPriceData.value[balance.token]?.price ?? 0.0), widget.receiveCurrency), style: Theme.of(context).textTheme.titleLarge),
+                                    Text(formatCrypto(balance.token, balance.toVisibleAmount()), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
                                   ],
                                 )
+                              ],
                             )
-                          )
-                        ),
-                        const Divider(color: SurfyColor.darkGrey),
+                        )),
+                        Divider(color: Theme.of(context).dividerColor),
                       ],
                     )
                 )).toList(),

@@ -37,7 +37,7 @@ class _ReceivePageState extends State<ReceivePage> {
     _selectedToken = Rx(widget.token);
     _selectedBlockchain = Rx(widget.blockchain);
     
-    _qrService.getQRcode("https://store.surfy.network/send/${_selectedBlockchain.value.name}/${_selectedToken.value.name}/${_userAddress.value}/${_amount.value}").then((r) {
+    _qrService.getQRcode("surfy://com.riverbank.surfy/send/${_selectedBlockchain.value.name}/${_selectedToken.value.name}/${_userAddress.value}/${_amount.value}").then((r) {
       _qrUrl.value = r;
     });
   }
@@ -46,10 +46,8 @@ class _ReceivePageState extends State<ReceivePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: SurfyColor.white),
         titleSpacing: 0,
-        title: Text('Receive', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
-        backgroundColor: SurfyColor.black,
+        title: Text('Receive'),
       ),
       body: Container(
         width: double.infinity,
@@ -69,6 +67,7 @@ class _ReceivePageState extends State<ReceivePage> {
               );
             } else {
               return Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Image.network(_qrUrl.value, loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
                     if (loadingProgress == null) {
@@ -87,19 +86,19 @@ class _ReceivePageState extends State<ReceivePage> {
                     cursorColor: SurfyColor.black,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      label: Text('Amount to receive', style: GoogleFonts.sora(color: SurfyColor.black)),
+                      label: Text('Amount to receive', style: GoogleFonts.sora(color: SurfyColor.black, fontSize: 12)),
                       focusColor: SurfyColor.blue,
                       hoverColor: SurfyColor.blue,
                       focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: SurfyColor.blue), borderRadius: BorderRadius.all(Radius.circular(10)))
                     ),
-                    style: GoogleFonts.sora(color: SurfyColor.black,),
+                    style: GoogleFonts.sora(color: SurfyColor.black, fontSize: 12),
                     controller: _textController
                   ),
                   const SizedBox(height: 10,),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Token", style: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.bold),),
+                      Text("Token", style: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.bold, fontSize: 14),),
                       TokenBadge(token: _selectedToken.value),
                     ],
                   ),
@@ -107,7 +106,7 @@ class _ReceivePageState extends State<ReceivePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Network", style: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.bold),),
+                      Text("Network", style: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.bold, fontSize: 14)),
                       NetworkBadge(blockchain: _selectedBlockchain.value)
                     ],
                   ),
@@ -126,7 +125,7 @@ class _ReceivePageState extends State<ReceivePage> {
                           });
                         },
                         child: Center(
-                          child: Text("Create QR code", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                          child: Text("Create QR code", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16)),
                         )
                       )
                     )

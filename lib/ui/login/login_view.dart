@@ -68,9 +68,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-        ),
+        appBar: AppBar(),
         body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -125,9 +123,60 @@ class _LoginPageState extends State<LoginPage> {
                                 final Web3AuthResponse response =
                                 await Web3AuthFlutter.login(
                                   LoginParams(
-                                      loginProvider: Provider.twitter,
-                                      curve: web3_auth_enum.Curve.ed25519),
+                                      loginProvider: Provider.google,
+                                  ),
                                 );
+                                if (response.error != null) {
+                                  logger.e('error! ${response.error}');
+                                } else {
+                                  _isLoading.value = true;
+                                  await initApp();
+                                  _isLoading.value = false;
+                                  if (mounted) {
+                                    context.go('/wallet');
+                                  }
+                                }
+                              },
+                              child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 15),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    color: Colors.white,
+                                  ),
+                                  child: Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Image(
+                                              image: AssetImage(
+                                                  'assets/images/ic_google.png'),
+                                              width: 20,
+                                              height: 20),
+                                          const SizedBox(width: 10),
+                                          Text('Sign In with Google',
+                                              style: GoogleFonts.sora(
+                                                  textStyle: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 20,
+                                                      fontWeight: FontWeight.bold)))
+                                        ],
+                                      )))),
+                          const SizedBox(height: 20,),
+                          MaterialButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () async {
+                                final Web3AuthResponse response =
+                                  await Web3AuthFlutter.login(
+                                    LoginParams(
+                                      loginProvider: Provider.twitter,
+                                      extraLoginOptions: ExtraLoginOptions(
+                                        domain: "https://dev-3jgomtflwyaph3kh.us.auth0.com",
+                                        client_id: "p54tgx0ZHSPGfDXnTwketw9rn8VqAI1G",
+                                        redirect_uri: "surfy://com.riverbank.surfy/auth"
+                                      )
+                                    ),
+                                  );
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {

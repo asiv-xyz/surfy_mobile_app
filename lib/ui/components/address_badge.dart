@@ -17,7 +17,7 @@ class AddressBadge extends StatelessWidget {
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(shortAddress(address), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
+        Text(shortAddress(address), style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(width: 4),
         Container(
             width: 14,
@@ -28,7 +28,7 @@ class AddressBadge extends StatelessWidget {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: address));
               },
-              icon: const Icon(Icons.copy_outlined, color: SurfyColor.lightGrey),
+              icon: const Icon(Icons.copy_outlined),
             )
         )
       ],

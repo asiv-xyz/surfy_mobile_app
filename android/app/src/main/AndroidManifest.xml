@@ -34,7 +34,7 @@
                 <data android:scheme="surfy" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="com.riverbank.surfy_mobile_app" />
+                <data android:host="com.riverbank.surfy" />
                 <data android:host="store.surfy.network" />
                 <data android:path="/auth" />
                 <data android:path="/qr" />
