@@ -1,3 +1,4 @@
+import 'package:dartx/dartx.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 
 enum Token {
@@ -211,3 +212,8 @@ const Map<Token, TokenData> tokens = {
     fixedDecimal: 4
   )
 };
+
+List<Pair<Token, Blockchain>> getSupportedTokenAndNetworkList() {
+  return Token.values.map((token) => (tokens[token]?.supportedBlockchain ?? []).map((blockchain) => Pair(token, blockchain)))
+      .expand((e) => e).toList();
+}

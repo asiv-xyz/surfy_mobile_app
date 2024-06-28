@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
+import 'package:surfy_mobile_app/settings/settings_preference.dart';
+import 'package:surfy_mobile_app/ui/wallet/viewmodel/check_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -23,9 +25,9 @@ class CheckViewProps {
   final Blockchain blockchain;
   final String transactionHash;
   final String receiver;
-  final double crypto;
+  final BigInt crypto;
   final double fiat;
-  final String currency;
+  final CurrencyType currency;
 
   @override
   String toString() {
@@ -56,9 +58,9 @@ class CheckView extends StatefulWidget {
   final Blockchain blockchain;
   final String transactionHash;
   final String receiver;
-  final double crypto;
+  final BigInt crypto;
   final double fiat;
-  final String currency;
+  final CurrencyType currency;
 
   @override
   State<StatefulWidget> createState() {
@@ -66,17 +68,28 @@ class CheckView extends StatefulWidget {
   }
 }
 
-class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMixin {
+abstract class CheckViewInterface {
+  void onCreate();
+}
+
+class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMixin implements CheckViewInterface {
   
   late AnimationController controller;
   late Animation<int> alpha;
   late Animation<double> animation;
 
+  final CheckViewModel _viewModel = CheckViewModel();
   final WalletBalancesRepository _repository = Get.find();
+
+  @override
+  void onCreate() {
+
+  }
 
   @override
   void initState() {
     super.initState();
+    _viewModel.setView(this);
     _repository.needToUpdate = true;
     controller = AnimationController(duration: Duration(seconds: 1), vsync: this);
     alpha = IntTween(begin: 0, end: 255).animate(controller);

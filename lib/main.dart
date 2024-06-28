@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:app_links/app_links.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/payment/select_token.dart';
 import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
@@ -33,6 +38,8 @@ import 'package:surfy_mobile_app/utils/dio_utils.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 Future<void> buildDependencies() async {
+  await Hive.initFlutter();
+
   logger.d('Build Dependency graph');
   TokenPriceService tokenPriceService = Get.put(TokenPriceService());
   TokenPriceRepository tokenPriceRepository =
@@ -47,11 +54,14 @@ Future<void> buildDependencies() async {
 
   WalletBalancesRepository walletBalancesRepository =
       Get.put(WalletBalancesRepository(walletService: walletService));
+
+  Get.put(Calculator(getTokenPrice: getTokenPrice));
   Get.put(GetWalletBalances(
     repository: Get.find(),
     getWalletAddressUseCase: Get.find(),
     getTokenPriceUseCase: Get.find(),
     keySerivce: Get.find(),
+    calculator: Get.find(),
   ));
 
   Get.put(await availableCameras());
@@ -73,12 +83,12 @@ Future<void> buildDependencies() async {
 }
 
 void main() async {
+  await dotenv.load(fileName: ".env");
   dioObject.transformer = BackgroundTransformer()
     ..jsonDecodeCallback = parseJson;
   await buildDependencies();
   WidgetsFlutterBinding.ensureInitialized();
-  MapboxOptions.setAccessToken(
-      "pk.eyJ1IjoiYm9vc2lrIiwiYSI6ImNsdm9xZmc4OTByOHoycm9jOWE5eHl6bnQifQ.Di5Upe8BfD8olr5r6wldNw");
+  MapboxOptions.setAccessToken(dotenv.env["MAPBOX_API_KEY"]);
 
   Get.put(NavigationController());
   final goRouter = await generateRouter(Get.find(), Get.find());

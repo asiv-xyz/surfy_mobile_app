@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
@@ -16,7 +17,8 @@ import 'package:surfy_mobile_app/service/transaction/exceptions/exceptions.dart'
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/send_confirm_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/sending_confirm_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/viewmodel/send_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -34,88 +36,43 @@ class SendPage extends StatefulWidget {
   }
 }
 
-class _SendPageState extends State<SendPage> {
-  final GetWalletAddress _getWalletAddressUseCase = Get.find();
-  final GetWalletBalances _getWalletBalancesUseCase = Get.find();
-  final GetTokenPrice _getTokenPriceUseCase = Get.find();
+abstract class SendPageInterface {
+  void onCreate();
+  void onLoading();
+  void offLoading();
+}
+
+class _SendPageState extends State<SendPage> implements SendPageInterface {
+
+  final SendViewModel _viewModel = SendViewModel();
+
   final SettingsPreference _preference = Get.find();
-  final SendP2pToken _sendP2pToken = Get.find();
+  final Calculator _calculator = Get.find();
 
-  final _inputAmount = "0".obs;
-  final _currency = "".obs;
   final _isLoading = false.obs;
-  final _tokenPrice = 0.0.obs;
-  final _gasTokenPrice = 0.0.obs;
-  final _receiverAddress = "".obs;
-  final _isFiatInputMode = true.obs;
-
-  final RxDouble _userTokenBalance = 0.0.obs;
-  final RxDouble _userFiatBalance = 0.0.obs;
-
   final _textController = TextEditingController();
 
-  int _sessionTime = 0;
+  @override
+  void onCreate() {
 
-  String _formattingFiatAmount(String fiat) {
-    final formatter = NumberFormat.decimalPattern('en_US');
-    if (fiat == "0") {
-      return "0";
-    }
-
-    if (fiat.endsWith(".")) {
-      final splited = fiat.split(".");
-      final doubled = splited[0].toDouble();
-      return "${formatter.format(doubled)}.";
-    }
-
-    return formatter.format(fiat.toDouble());
   }
 
-  String _formattingTokenAmount(double tokenAmount) {
-    final tokenData = tokens[widget.token];
-    return "${tokenAmount.toStringAsFixed(tokenData?.fixedDecimal ?? 2)} ${tokenData?.symbol}";
+  @override
+  void onLoading() {
+
   }
 
-  double _calculateTokenAmount(double fiat) {
-    final cryptoAmount = fiat / _tokenPrice.value;
-    if (cryptoAmount == 0.0) {
-      return 0.0;
-    }
+  @override
+  void offLoading() {
 
-    return cryptoAmount;
-  }
-
-  double _calculateFiatAmount(double crypto) {
-    if (crypto == 0.0) {
-      return 0.0;
-    }
-
-    final fiatAmount = _tokenPrice.value * crypto;
-    if (fiatAmount == 0.0) {
-      return 0.0;
-    }
-
-    return fiatAmount;
   }
 
   @override
   void initState() {
     super.initState();
-    _sessionTime = DateTime.now().millisecondsSinceEpoch;
-    _preference.getCurrencyType().then((currencyType) async {
-      _currency.value = currencyType.name.toUpperCase();
-      _isLoading.value = true;
-      final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(widget.token, currencyType);
-      _tokenPrice.value = tokenPrice?.price ?? 0.0;
-      final gasTokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(blockchains[widget.blockchain]?.feeCoin ??  widget.token, currencyType);
-      _gasTokenPrice.value = gasTokenPrice?.price ?? 0.0;
-
-      _userTokenBalance.value = _getWalletBalancesUseCase.aggregateUserTokenAmountByBlockchain(widget.token, widget.blockchain, _getWalletBalancesUseCase.userDataObs.value);
-      _userFiatBalance.value = _userTokenBalance.value * _tokenPrice.value;
-
-      _isLoading.value = false;
-    });
-    _textController.addListener(() => _receiverAddress.value = _textController.text);
+    _viewModel.setView(this);
+    _viewModel.init(widget.token, widget.blockchain, _preference.userCurrencyType.value);
+    _textController.addListener(() => _viewModel.observableReceiverAddress.value = _textController.text);
   }
 
   @override
@@ -130,76 +87,30 @@ class _SendPageState extends State<SendPage> {
         children: [
           KeyboardView(
             buttonText: 'Send',
-            isFiatInputMode: _isFiatInputMode.value,
+            isFiatInputMode: _viewModel.observableIsFiatInputMode.value,
             onClickSend: () async {
-              // await _sendP2pToken.send(widget.token, widget.blockchain, _receiverAddress.value, 0);
               if (mounted) {
-                try {
-                  _isLoading.value = true;
-                  final address = await _getWalletAddressUseCase.getAddress(widget.blockchain);
-                  if (_isFiatInputMode.isTrue) {
-                    final gas = await _sendP2pToken.estimateGas(widget.token,
-                        widget.blockchain,
-                        _receiverAddress.value,
-                        _calculateTokenAmount(_inputAmount.value.toDouble()));
-                    final gasTokenAmount = gas.toDouble()/ BigInt.from(pow(10, tokens[blockchains[widget.blockchain]?.feeCoin]?.decimal ?? 0)).toDouble();
-                    print('gasTokenAmount: $gasTokenAmount');
-                    final gasAsFiat = _gasTokenPrice.value * gasTokenAmount;
-                    context.push('/sendConfirm', extra: SendConfirmViewProps(
-                      token: widget.token,
-                      blockchain: widget.blockchain,
-                      sender: address,
-                      receiver: _receiverAddress.value,
-                      amount: _calculateTokenAmount(_inputAmount.value.toDouble()),
-                      fiat: _inputAmount.value.toDouble(),
-                      currency: _currency.value,
-                      sessionTime: _sessionTime,
-                      gas: gas.toDouble(),
-                      gasAsFiat: gasAsFiat,
-                    ));
-                  } else {
-                    final gas = await _sendP2pToken.estimateGas(widget.token,
-                        widget.blockchain,
-                        _receiverAddress.value,
-                        _calculateTokenAmount(_inputAmount.value.toDouble()));
-                    final gasTokenAmount = gas.toDouble()/ BigInt.from(pow(10, tokens[blockchains[widget.blockchain]?.feeCoin]?.decimal ?? 0)).toDouble();
-                    print('gasTokenAmount: $gasTokenAmount');
-                    final gasAsFiat = _gasTokenPrice.value * gasTokenAmount;
-                    context.push('/sendConfirm', extra: SendConfirmViewProps(
-                      token: widget.token,
-                      blockchain: widget.blockchain,
-                      sender: address,
-                      receiver: _receiverAddress.value,
-                      amount: _inputAmount.value.toDouble(),
-                      fiat: _calculateFiatAmount(_inputAmount.value.toDouble()),
-                      currency: _currency.value,
-                      sessionTime: _sessionTime,
-                      gas: gas.toDouble(),
-                      gasAsFiat: gasAsFiat,
-                    ));
-                  }
-                } catch (e) {
-                  logger.e(e);
-                  var errorMsg = "";
-                  if (e is NotActivatedAccountException) {
-                    errorMsg = e.toString();
-                  } else if (e.toString().contains("insufficient fund")) {
-                    errorMsg = "You don't have enough balance. Please check your balance.";
-                  } else {
-                    errorMsg = "Unknown error.";
-                  }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(errorMsg, style: Theme.of(context).textTheme.displayLarge),
-                      backgroundColor: Colors.black,
-                    ),
-                  );
-                } finally {
-                  _isLoading.value = false;
+                final address = _viewModel.observableReceiverAddress.value;
+                var amount = BigInt.zero;
+                var fiat = 0.0;
+                if (_viewModel.observableIsFiatInputMode.isTrue) {
+                  amount = _calculator.fiatToCryptoAmount(_viewModel.observableInputData.value.toDouble(), widget.token);
+                  fiat = _viewModel.observableInputData.value.toDouble();
+                } else {
+                  amount = _calculator.cryptoWithDecimal(widget.token, _viewModel.observableInputData.value.toDouble());
+                  fiat = _calculator.cryptoAmountToFiat(widget.token, _viewModel.observableInputData.value.toDouble(), _preference.userCurrencyType.value);
                 }
+                context.push('/sendConfirm', extra: SendingConfirmViewProps(
+                  token: widget.token,
+                  blockchain: widget.blockchain,
+                  sender: _viewModel.observableAddress.value,
+                  receiver: _viewModel.observableReceiverAddress.value,
+                  amount: amount,
+                  fiat: fiat,
+                ));
               }
             },
-            inputAmount: _inputAmount,
+            inputAmount: _viewModel.observableInputData,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -214,31 +125,30 @@ class _SendPageState extends State<SendPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Obx(() {
-                            if (_isFiatInputMode.value) {
+                            if (_viewModel.observableIsFiatInputMode.isTrue) {
                               return Row(
                                 children: [
-                                  Obx(() => Text(_inputAmount.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36, fontWeight: FontWeight.bold),)),
+                                  Obx(() => Text(_viewModel.observableInputData.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36, fontWeight: FontWeight.bold),)),
                                   const SizedBox(width: 10,),
-                                  Obx(() => Text(_currency.value, style: Theme.of(context).textTheme.headlineLarge)),
+                                  Obx(() => Text(_preference.userCurrencyType.value.name.toUpperCase(), style: Theme.of(context).textTheme.headlineLarge)),
                                 ],
                               );
                             } else {
                               return Row(
                                 children: [
-                                  // ${tokenData?.symbol}
-                                  Obx(() => Text(_inputAmount.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36, fontWeight: FontWeight.bold),)),
+                                  Obx(() => Text(_viewModel.observableInputData.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36, fontWeight: FontWeight.bold),)),
                                   const SizedBox(width: 10,),
-                                  Obx(() => Text(tokens[widget.token]?.symbol ?? "", style: Theme.of(context).textTheme.headlineLarge)),
+                                  Text(tokens[widget.token]?.symbol ?? "", style: Theme.of(context).textTheme.headlineLarge),
                                 ],
                               );
                             }
                           }),
                           const SizedBox(height: 10),
                           Obx(() {
-                            if (_isFiatInputMode.value) {
-                              return Text(_formattingTokenAmount(_calculateTokenAmount(_inputAmount.value.toDouble())), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                            if (_viewModel.observableIsFiatInputMode.isTrue) {
+                              return Text(formatCrypto(widget.token, _calculator.fiatToCrypto(_viewModel.observableInputData.value.toDouble(), widget.token)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                             } else {
-                              return Text("${_formattingFiatAmount(_calculateFiatAmount(_inputAmount.value.toDouble()).toString())} ${_currency.value}", style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                              return Text(formatFiat(_calculator.cryptoAmountToFiat(widget.token, _viewModel.observableInputData.value.toDouble(), _preference.userCurrencyType.value), _preference.userCurrencyType.value), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                             }
                           }),
                           Container(
@@ -247,8 +157,8 @@ class _SendPageState extends State<SendPage> {
                                 children: [
                                   Text('Balance', style: Theme.of(context).textTheme.labelSmall),
                                   const SizedBox(width: 5),
-                                  Obx(() => Text(formatFiat(_userFiatBalance.value, _preference.userCurrencyType.value), style: Theme.of(context).textTheme.labelSmall)),
-                                  Obx(() => Text("(${formatCrypto(widget.token, _userTokenBalance.value)})", style: Theme.of(context).textTheme.labelSmall)),
+                                  Obx(() => Text(formatFiat(_calculator.cryptoToFiat(widget.token, _viewModel.observableCryptoBalance.value, _preference.userCurrencyType.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.labelSmall)),
+                                  Obx(() => Text(formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, _viewModel.observableCryptoBalance.value)), style: Theme.of(context).textTheme.labelSmall))
                                 ],
                               )
                           ),
@@ -256,7 +166,7 @@ class _SendPageState extends State<SendPage> {
                       ),
                       IconButton(
                         onPressed: () {
-                          _isFiatInputMode.value = !_isFiatInputMode.value;
+                          _viewModel.observableIsFiatInputMode.value = !_viewModel.observableIsFiatInputMode.value;
                         },
                         icon: const Icon(Icons.swap_vert_outlined, size: 50,)
                       )

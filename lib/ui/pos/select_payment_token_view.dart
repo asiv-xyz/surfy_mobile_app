@@ -45,7 +45,12 @@ class SelectPaymentTokenPage extends StatefulWidget {
   }
 }
 
-class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> {
+abstract class SelectPaymentTokenView {
+  void onLoading();
+  void offLoading();
+}
+
+class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> implements SelectPaymentTokenView {
 
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
@@ -65,6 +70,16 @@ class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> {
     final tokenPriceData = await _getTokenPriceUseCase.getTokenPrice(Token.values, widget.receiveCurrency);
     _tokenPriceData.value = tokenPriceData;
     _balanceData.value = balanceData.where((b) => b.amount > BigInt.zero).toList();
+  }
+
+  @override
+  void onLoading() {
+    _isLoading.value = true;
+  }
+
+  @override
+  void offLoading() {
+    _isLoading.value = false;
   }
 
   @override

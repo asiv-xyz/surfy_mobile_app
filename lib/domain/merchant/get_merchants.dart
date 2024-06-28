@@ -1,4 +1,5 @@
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
+import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
 import 'package:surfy_mobile_app/service/merchant/merchant_service.dart';
 
 class GetMerchants {

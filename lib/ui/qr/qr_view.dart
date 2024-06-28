@@ -105,6 +105,7 @@ class _QRPageState extends State<QRPage> implements INavigationLifeCycle {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
             final RouterService routerService = Get.find();
             routerService.checkLoginAndGoByUrl(qrUrl);
+            _scannedUrl.value = "";
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

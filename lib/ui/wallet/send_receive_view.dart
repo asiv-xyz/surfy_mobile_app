@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
@@ -10,6 +11,7 @@ import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/balance_view.dart';
 import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
+import 'package:surfy_mobile_app/ui/wallet/viewmodel/send_receive_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
@@ -28,7 +30,18 @@ class SendReceivePage extends StatefulWidget {
   }
 }
 
-class _SendReceivePageState extends State<SendReceivePage> {
+abstract class SendReceivePageInterface {
+  void onCreate();
+  void onLoading();
+  void offLoading();
+}
+
+class _SendReceivePageState extends State<SendReceivePage> implements SendReceivePageInterface {
+
+  final SendReceiveViewModel _viewModel = SendReceiveViewModel();
+
+  final Calculator _calculator = Get.find();
+
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
   final GetWalletBalances _getWalletBalances = Get.find();
   final SettingsPreference _preference = Get.find();
@@ -40,19 +53,28 @@ class _SendReceivePageState extends State<SendReceivePage> {
   final Rx<double> _tokenPrice = Rx(0);
   final RxBool _isLoading = false.obs;
 
-  Future<void> _getMetadata() async {
-    final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(widget.token, _preference.userCurrencyType.value);
-    _tokenPrice.value = tokenPrice?.price ?? 0;
-    _address.value = await _getWalletAddressUseCase.getAddress(widget.blockchain);
-    _cryptoBalance.value = _getWalletBalances.aggregateUserTokenAmount(widget.token, _getWalletBalances.userDataObs.value);
-    _fiatBalance.value = _cryptoBalance.value * (tokenPrice?.price ?? 0);
+  @override
+  void onCreate() {
+
+  }
+
+  @override
+  void onLoading() {
+    _isLoading.value = true;
+  }
+
+  @override
+  void offLoading() {
+    _isLoading.value = false;
   }
 
   @override
   void initState() {
     super.initState();
-    _isLoading.value = true;
-    _getMetadata().then((_) => _isLoading.value = false);
+    _viewModel.setView(this);
+    _viewModel.init(widget.token, widget.blockchain, _preference.userCurrencyType.value);
+    // _isLoading.value = true;
+    // _getMetadata().then((_) => _isLoading.value = false);
   }
 
   @override
@@ -103,8 +125,8 @@ class _SendReceivePageState extends State<SendReceivePage> {
                             child: BalanceView(
                               token: widget.token,
                               currencyType: _preference.userCurrencyType.value,
-                              fiatBalance: _fiatBalance.value,
-                              cryptoBalance: _cryptoBalance.value,
+                              cryptoBalance: _calculator.cryptoToDouble(widget.token, _viewModel.observableCryptoBalance.value),
+                              fiatBalance: _calculator.cryptoToFiat(widget.token, _viewModel.observableCryptoBalance.value, _preference.userCurrencyType.value)
                             )
                         )),
                         SizedBox(
@@ -115,7 +137,7 @@ class _SendReceivePageState extends State<SendReceivePage> {
                                 Obx(() => CurrentPrice(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     tokenName: tokens[widget.token]?.name ?? "",
-                                    price: _tokenPrice.value,
+                                    price: _viewModel.observableTokenPrice.value,
                                     currency: _preference.userCurrencyType.value)
                                 )
                               ],
@@ -139,7 +161,7 @@ class _SendReceivePageState extends State<SendReceivePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Your ${tokens[widget.token]?.name} address', style: Theme.of(context).textTheme.labelMedium,),
-                            Obx(() => Text(shortAddress(_address.value), style: Theme.of(context).textTheme.labelSmall))
+                            Obx(() => Text(shortAddress(_viewModel.observableAddress.value), style: Theme.of(context).textTheme.labelSmall))
                           ],
                         ),
                         TextButton(
@@ -150,7 +172,7 @@ class _SendReceivePageState extends State<SendReceivePage> {
                                 ))
                             ),
                             onPressed: () {
-                              Clipboard.setData(ClipboardData(text: _address.value));
+                              Clipboard.setData(ClipboardData(text: _viewModel.observableAddress.value));
                             },
                             child: Center(
                                 child: Text('Copy', style: Theme.of(context).textTheme.labelMedium,)

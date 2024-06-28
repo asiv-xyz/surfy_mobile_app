@@ -8,6 +8,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
+import 'package:surfy_mobile_app/ui/map/viewmodel/map_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
@@ -45,7 +46,12 @@ class AnnotationClickListener extends OnPointAnnotationClickListener {
   }
 }
 
-class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
+abstract class MapView {
+  void onLoading();
+  void offLoading();
+}
+
+class _MapPageState extends State<MapPage> implements INavigationLifeCycle, MapView {
   // TODO : access token to env var
   static const String ACCESS_TOKEN =
       "pk.eyJ1IjoiYm9vc2lrIiwiYSI6ImNsdm9xZmc4OTByOHoycm9jOWE5eHl6bnQifQ.Di5Upe8BfD8olr5r6wldNw";
@@ -55,6 +61,27 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
 
   final _userLatitude = 0.0.obs;
   final _userLongitude = 0.0.obs;
+
+  final RxBool _isLoading = false.obs;
+
+  final MapViewModel _viewModel = MapViewModel();
+
+  @override
+  void onLoading() {
+    _isLoading.value = true;
+  }
+
+  @override
+  void offLoading() {
+    _isLoading.value = false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel.setView(this);
+    _viewModel.init();
+  }
 
   Future<geolocator.Position> _determinePosition() async {
     bool serviceEnabled;
@@ -107,8 +134,8 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
         showAccuracyRing: true,
     ));
     mapboxMap.annotations.createPointAnnotationManager().then((manager) async {
-      final placeList = await _placeRepository.getPlaceList();
-      for (final place in placeList) {
+      // final placeList = await _placeRepository.getPlaceList();
+      for (final place in _viewModel.observableMerchantList.value) {
         var image = "";
         switch (place.category.toLowerCase()) {
           case "cafe":
@@ -221,37 +248,50 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle {
     return Scaffold(
         appBar: AppBar(
             title: Text('Find SURFY Store!')),
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            mapbox.MapWidget(
-              onMapCreated: _onMapCreated,
-            ),
-            Obx(() {
-              return Align(
-                alignment: Alignment.bottomCenter,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      onPressed: () async {
-                        if (mapboxMap != null) {
-                          await _setCurrentUserPosition(mapboxMap!);
-                        }
-                      },
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(SurfyColor.black),
-                      ),
-                      icon: Icon(Icons.my_location_rounded, color: SurfyColor.blue,)),
-                    _clickPlaceUseCase.isClicked.isFalse ? SizedBox(height: 20,) : Container(),
-                    _clickPlaceUseCase.isClicked.isTrue ? _buildPlaceInfo() : Container()
-                  ],
-                )
-              );
-            }),
-          ],
-        ));
+        body: Obx(() {
+          if (_isLoading.isTrue) {
+            return const SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: Center(
+                child: CircularProgressIndicator(color: SurfyColor.blue)
+              )
+            );
+          }
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              mapbox.MapWidget(
+                onMapCreated: _onMapCreated,
+              ),
+              Obx(() {
+                return Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        IconButton(
+                            onPressed: () async {
+                              if (mapboxMap != null) {
+                                await _setCurrentUserPosition(mapboxMap!);
+                              }
+                            },
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStateProperty.all(SurfyColor.black),
+                            ),
+                            icon: Icon(Icons.my_location_rounded, color: SurfyColor.blue,)),
+                        _clickPlaceUseCase.isClicked.isFalse ? SizedBox(height: 20,) : Container(),
+                        _clickPlaceUseCase.isClicked.isTrue ? _buildPlaceInfo() : Container()
+                      ],
+                    )
+                );
+              }),
+            ],
+          );
+        })
+    );
   }
 
   Widget buildAccessTokenWarning() {

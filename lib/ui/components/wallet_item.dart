@@ -1,21 +1,28 @@
 import 'dart:math';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
-import 'package:surfy_mobile_app/entity/token/token_price.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class WalletItem extends StatefulWidget {
-  WalletItem({super.key, required this.token});
+  const WalletItem({
+    super.key,
+    required this.token,
+    required this.tokenAmount,
+    required this.tokenPrice,
+    required this.currencyType,
+  });
 
   final Token token;
+  final BigInt tokenAmount;
+  final double tokenPrice;
+  final CurrencyType currencyType;
 
   @override
   State<StatefulWidget> createState() {
@@ -24,11 +31,8 @@ class WalletItem extends StatefulWidget {
 }
 
 class _WalletItemState extends State<WalletItem> {
-  final GetWalletBalances getWalletBalances = Get.find();
-  final GetTokenPrice getTokenPrice = Get.find();
   final SettingsPreference preference = Get.find();
-  final Rx<List<UserTokenData>> _userTokenData = Rx<List<UserTokenData>>([]);
-  final Rx<TokenPrice?> _tokenPrice = Rx<TokenPrice?>(null);
+  final Calculator _calculator = Get.find();
 
   String visualizeAmount(Token token, BigInt amount) {
     final tokenData = tokens[token];
@@ -38,28 +42,13 @@ class _WalletItemState extends State<WalletItem> {
     return (amount / BigInt.from(pow(10, tokenData.decimal))).toStringAsFixed(2);
   }
 
-  Future<void> loadData() async {
-    final balances = await getWalletBalances.getTokenDataList(widget.token);
-    _userTokenData.value = balances;
-
-    final prices = await getTokenPrice.getSingleTokenPrice(widget.token, preference.userCurrencyType.value);
-    _tokenPrice.value = prices;
-    print('loadData: $balances, $prices');
-  }
-
   Future<Widget> _buildTotalBalanceTab() async {
-    final balance = getWalletBalances.aggregateUserTokenAmount(widget.token, getWalletBalances.userDataObs.value);
-    final fiat = balance * (_tokenPrice.value?.price ?? 0);
-    print('_buildTotalBalanceTab, token=${widget.token}, balance=$balance, fiat=$fiat');
+    final fiat = await _calculator.cryptoToFiat(widget.token, widget.tokenAmount, widget.currencyType);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Container(
-            child: Text(formatFiat(fiat, preference.userCurrencyType.value), style: Theme.of(context).textTheme.titleLarge)
-        ),
-        Container(
-            child: Text(formatCrypto(widget.token, balance), style: Theme.of(context).textTheme.labelLarge)
-        )
+        Text(formatFiat(fiat, preference.userCurrencyType.value), style: Theme.of(context).textTheme.titleLarge),
+        Text(formatCrypto(widget.token, visualizeAmount(widget.token, widget.tokenAmount).toDouble()), style: Theme.of(context).textTheme.labelLarge)
       ],
     );
   }
@@ -68,13 +57,11 @@ class _WalletItemState extends State<WalletItem> {
   @override
   void initState() {
     super.initState();
-    print('wallet_item initState()');
-    loadData();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => InkWell(
+    return InkWell(
         onTap: () {
           final token = tokens[widget.token];
           if (token != null) {
@@ -166,7 +153,7 @@ class _WalletItemState extends State<WalletItem> {
               ],
             )
         )
-    ));
+    );
   }
 
 }

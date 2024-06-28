@@ -1,5 +1,3 @@
-import 'package:surfy_mobile_app/settings/settings_preference.dart';
-
 class Merchant {
   const Merchant({
     required this.id,
@@ -52,17 +50,17 @@ class Merchant {
 
   factory Merchant.fromJson(Map<String, dynamic> json) {
     return Merchant(
-      id: json['id'],
-      storeName: json['storeName'],
-      owner: json['owner'],
-      latitude: json['latitude'],
-      longitude: json['longitude'],
-      thumbnail: json['thumbnail'],
-      address: json['address'],
-      phone: json['phone'],
-      email: json['email'],
-      category: json['category'],
-      nation: json['nation'],
+      id: json['id'] ?? "",
+      storeName: json['storeName'] ?? "",
+      owner: json['owner'] ?? "",
+      latitude: json['latitude'] ?? 0.0,
+      longitude: json['longitude'] ?? 0.0,
+      thumbnail: json['thumbnail'] ?? "",
+      address: json['address'] ?? "",
+      phone: json['phone'] ?? "",
+      email: json['email'] ?? "",
+      category: json['category'] ?? "",
+      nation: json['nation'] ?? "",
       sns: json['sns']?.map<MerchantSns>((item) => MerchantSns.fromJson(item)).toList() ?? [],
       wallets: json['wallets']?.map<MerchantWallet>((item) => MerchantWallet.fromJson(item)).toList() ?? [],
     );
@@ -90,7 +88,6 @@ class MerchantWallet {
   }
 
   factory MerchantWallet.fromJson(Map<String, dynamic> json) {
-    print('MerchantWallet: $json');
     return MerchantWallet(
         walletAddress: json['walletAddress'],
         walletCategory: json['walletCategory'] ?? "",

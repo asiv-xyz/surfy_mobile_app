@@ -11,18 +11,18 @@ import 'package:surfy_mobile_app/ui/map/map_view.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/ui/payment/payment_view.dart';
 import 'package:surfy_mobile_app/ui/payment/wallet_select_view.dart';
-import 'package:surfy_mobile_app/ui/pos/confirm_pay_view.dart';
+import 'package:surfy_mobile_app/ui/pos/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/pos/payment_complete_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pos_qr_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pos_view.dart';
-import 'package:surfy_mobile_app/ui/pos/select_payment_token_page.dart';
+import 'package:surfy_mobile_app/ui/pos/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/ui/qr/qr_view.dart';
 import 'package:surfy_mobile_app/ui/settings/settings_view.dart';
 import 'package:surfy_mobile_app/ui/splash/splash_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/direct_send_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/receive_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/send_confirm_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/sending_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/send_receive_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/send_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/wallet_detail_view.dart';
@@ -154,8 +154,8 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                   GoRoute(
                       path: 'payment',
                       builder: (context, state) {
-                        final extra = state.extra as ConfirmPayPageProps;
-                        return ConfirmPayPage(
+                        final extra = state.extra as PaymentConfirmPageProps;
+                        return PaymentConfirmPage(
                             storeId: extra.storeId,
                             receiveCurrency: extra.receiveCurrency,
                             wantToReceiveAmount: extra.wantToReceiveAmount);
@@ -261,18 +261,15 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                 GoRoute(
                     path: '/sendConfirm',
                     builder: (context, state) {
-                      final SendConfirmViewProps extra = state.extra as SendConfirmViewProps;
-                      return SendConfirmView(
+                      print('extra: ${state.extra}');
+                      final SendingConfirmViewProps extra = state.extra as SendingConfirmViewProps;
+                      return SendingConfirmPage(
                         token: extra.token,
                         blockchain: extra.blockchain,
                         sender: extra.sender,
                         receiver: extra.receiver,
                         amount: extra.amount,
                         fiat: extra.fiat,
-                        currency: extra.currency,
-                        sessionTime: extra.sessionTime,
-                        gas: extra.gas,
-                        gasAsFiat: extra.gasAsFiat,
                       );
                     }
                 ),

@@ -8,11 +8,11 @@ class SendP2pToken {
 
   final TransactionService transactionService;
 
-  Future<SendTokenResponse> send(Token token, Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Token token, Blockchain blockchain, String to, BigInt amount) async {
     return await transactionService.sendToken(token, blockchain, to, amount);
   }
 
-  Future<BigInt> estimateGas(Token token, Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateGas(Token token, Blockchain blockchain, String to, BigInt amount) async {
     return await transactionService.estimateGas(token, blockchain, to, amount);
   }
 }

@@ -26,7 +26,7 @@ class SendTokenResponse {
   });
   final Token token;
   final Blockchain blockchain;
-  final double sentAmount;
+  final BigInt sentAmount;
   final String transactionHash;
 
   @override
@@ -41,8 +41,8 @@ class SendTokenResponse {
 }
 
 abstract class SendTokenHandler {
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount);
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount);
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount);
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount);
 }
 
 class SendEthereumHandler implements SendTokenHandler {
@@ -51,18 +51,17 @@ class SendEthereumHandler implements SendTokenHandler {
   final KeyService keyService;
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     final client = Web3Client(blockchainData?.rpc ?? "", http.Client());
     final secp256K1 = (await keyService.getKey()).first;
     final credential = EthPrivateKey.fromHex(secp256K1);
-    final weiValue = amount * pow(10, tokens[Token.ETHEREUM]?.decimal ?? 0);
     final gasPrice = await client.getGasPrice();
 
     final tx = Transaction(
       from: credential.address,
       to: EthereumAddress.fromHex(to),
-      value: EtherAmount.fromBigInt(EtherUnit.wei, BigInt.from(weiValue)),
+      value: EtherAmount.fromBigInt(EtherUnit.wei, amount),
       gasPrice: gasPrice,
       maxGas: 200000,
     );
@@ -72,18 +71,16 @@ class SendEthereumHandler implements SendTokenHandler {
   }
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     final client = Web3Client(blockchainData?.rpc ?? "", http.Client());
     print('chainId: ${await client.getChainId()}');
     final secp256K1 = (await keyService.getKey()).first;
     final credential = EthPrivateKey.fromHex(secp256K1);
-    final gweiValue = amount * pow(10, tokens[Token.ETHEREUM]?.decimal ?? 0);
     final result = await client.estimateGas(
       sender: credential.address,
       to: EthereumAddress.fromHex(to),
-      // value: EtherAmount.fromBigInt(EtherUnit.wei, BigInt.from(gweiValue)),
-      value: EtherAmount.zero()
+      value: EtherAmount.fromBigInt(EtherUnit.wei, amount),
 
     );
     final gasPrice = await client.getGasPrice();
@@ -99,7 +96,7 @@ class SendUsdcHandler implements SendTokenHandler {
   final SendErc20Handler erc20Handler;
   final SendSplHandler splHandler;
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     switch (blockchain) {
       case Blockchain.SOLANA:
       case Blockchain.SOLANA_DEVNET:
@@ -119,7 +116,7 @@ class SendUsdcHandler implements SendTokenHandler {
   }
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     switch (blockchain) {
       case Blockchain.SOLANA:
       case Blockchain.SOLANA_DEVNET:
@@ -147,22 +144,19 @@ class SendErc20Handler implements SendTokenHandler {
   final KeyService keyService;
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     logger.i('Send $token, network=$blockchain, to=$to, amount=$amount');
     final tokenData = tokens[token];
     final blockchainData = blockchains[blockchain];
     final contractAddress = tokenData?.tokenContractAddress[blockchain];
-    print('contract: $contractAddress');
     final client = Web3Client(blockchainData?.rpc ?? "", http.Client());
     final erc20 = Erc20(address: EthereumAddress.fromHex(contractAddress ?? "0x0"), client: client, chainId: blockchainData?.chainId);
     final secp256K1 = (await keyService.getKey()).first;
     final credential = EthPrivateKey.fromHex(secp256K1);
-    final amountWithDecimal = amount * pow(10, tokenData?.decimal ?? 0);
-    print('amountWithDecimal: ${BigInt.from(amountWithDecimal)}');
 
     final gasPrice = await client.getGasPrice();
     final result = await erc20.transfer(
-      (to: EthereumAddress.fromHex(to), value: BigInt.from(amountWithDecimal)),
+      (to: EthereumAddress.fromHex(to), value: amount),
       credentials: credential,
       transaction: Transaction(
         gasPrice: gasPrice,
@@ -173,7 +167,7 @@ class SendErc20Handler implements SendTokenHandler {
   }
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final tokenData = tokens[token];
     final blockchainData = blockchains[blockchain];
     final contractAddress = tokenData?.tokenContractAddress[blockchain];
@@ -181,9 +175,8 @@ class SendErc20Handler implements SendTokenHandler {
     final erc20 = Erc20(address: EthereumAddress.fromHex(contractAddress ?? "0x0"), client: client);
     final secp256K1 = (await keyService.getKey()).first;
     final credential = EthPrivateKey.fromHex(secp256K1);
-    final amountWithDecimal = amount * pow(10, tokenData?.decimal ?? 0);
     final encodedData = erc20.self.function('transfer').encodeCall([
-      erc20.self.address, BigInt.from(amountWithDecimal)
+      erc20.self.address, amount
     ]);
     final result = await client.estimateGas(sender: credential.address, to: EthereumAddress.fromHex(to), data: encodedData);
     final gasPrice = await client.getGasPrice();
@@ -196,7 +189,7 @@ class SendSolanaHandler implements SendTokenHandler {
   final KeyService keyService;
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -210,10 +203,9 @@ class SendSolanaHandler implements SendTokenHandler {
     final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
     final key = await keyService.getKey();
     final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: key.second.codeUnits);
-    final lamports = amount * pow(10, tokenData.decimal ?? 0);
     final result = await client.transferLamports(source: userWallet,
       destination: Ed25519HDPublicKey.fromBase58(to),
-      lamports: lamports.toInt(),
+      lamports: amount.toInt(),
       commitment: Commitment.confirmed
     );
 
@@ -221,7 +213,7 @@ class SendSolanaHandler implements SendTokenHandler {
   }
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -245,7 +237,7 @@ class SendSplHandler implements SendTokenHandler {
   final KeyService keyService;
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async{
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async{
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -256,11 +248,11 @@ class SendSplHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
-    return SendTokenResponse(token: token, blockchain: blockchain, sentAmount: 0, transactionHash: "");
+    return SendTokenResponse(token: token, blockchain: blockchain, sentAmount: BigInt.zero, transactionHash: "");
   }
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     return BigInt.zero;
   }
 }
@@ -270,27 +262,24 @@ class SendXrpHandler implements SendTokenHandler {
   final KeyService keyService;
   
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final syncRpc = XRPLRpc(RPCHttpService(RPCConst.mainetUri, http.Client()));
     final fee = await syncRpc.request(RPCFee());
     return BigInt.from(fee.calculateFeeDynamically());
   }
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     final key = await keyService.getKey();
     var wallet = XRPPrivateKey.fromHex(key.first, algorithm: XRPKeyAlgorithm.secp256k1);
     final syncRpc = XRPLRpc(RPCHttpService(RPCConst.mainetUri, http.Client()));
     final fee = await syncRpc.request(RPCFee());
-    print('amount: $amount');
-    print('amount2: ${XRPHelper.xrpDecimalToDrop(amount.toString())}');
     final payment = Payment(
-      amount: CurrencyAmount.xrp(XRPHelper.xrpDecimalToDrop(amount.toString())),
+      amount: CurrencyAmount.xrp(amount),
       destination: to,
       account: wallet.getPublic().toAddress().address,
       fee: BigInt.from(fee.calculateFeeDynamically()),
       signer: XRPLSignature.signer(wallet.getPublic().toHex()),
-      sequence: 0
     );
     await XRPHelper.autoFill(syncRpc, payment);
     final sig = wallet.sign(payment.toBlob());
@@ -317,7 +306,7 @@ class SendTronHandler implements SendTokenHandler {
   final KeyService keyService;
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final key = await keyService.getKey();
 
     final blockchainData = blockchains[blockchain];
@@ -331,7 +320,7 @@ class SendTronHandler implements SendTokenHandler {
 
     final userAccountResource = await rpc.request(tron.TronRequestGetAccountResource(address: pk.publicKey().toAddress()));
     final transferContract = tron.TransferContract(
-      amount: tron.TronHelper.toSun(amount.toString()),
+      amount: amount,
       ownerAddress: pk.publicKey().toAddress(),
       toAddress: tron.TronAddress(to),
     );
@@ -355,7 +344,7 @@ class SendTronHandler implements SendTokenHandler {
   }
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     final key = await keyService.getKey();
 
     final blockchainData = blockchains[blockchain];
@@ -365,7 +354,7 @@ class SendTronHandler implements SendTokenHandler {
     final pk = tron.TronPrivateKey.fromBytes(bip44.privateKey.raw);
 
     final transferContract = tron.TransferContract(
-      amount: tron.TronHelper.toSun(amount.toString()),
+      amount: amount,
       ownerAddress: pk.publicKey().toAddress(),
       toAddress: tron.TronAddress(to),
     );
@@ -406,7 +395,7 @@ class SendTrcHandler implements SendTokenHandler {
   }
 
   @override
-  Future<BigInt> estimateFee(Blockchain blockchain, String to, double amount) async {
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -427,7 +416,7 @@ class SendTrcHandler implements SendTokenHandler {
     final contract = tron.ContractABI.fromJson(erc20Abi, isTron: true);
     final function = contract.functionFromName("transfer");
 
-    final transferParams = [tron.TronAddress(to), BigInt.from(amount)];
+    final transferParams = [tron.TronAddress(to), amount];
     int bandWidthNeed = 0;
     int energyNeed = 0;
 
@@ -482,7 +471,7 @@ class SendTrcHandler implements SendTokenHandler {
   }
 
   @override
-  Future<SendTokenResponse> send(Blockchain blockchain, String to, double amount) async {
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -503,7 +492,7 @@ class SendTrcHandler implements SendTokenHandler {
     final contract = tron.ContractABI.fromJson(erc20Abi, isTron: true);
     final function = contract.functionFromName("transfer");
 
-    final transferParams = [tron.TronAddress(to), BigInt.from(amount)];
+    final transferParams = [tron.TronAddress(to), amount];
     final request = await rpc.request(
       tron.TronRequestTriggerConstantContract(
         ownerAddress: privateKey.publicKey().toAddress(),

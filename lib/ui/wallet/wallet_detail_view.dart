@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
+import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -13,6 +15,7 @@ import 'package:surfy_mobile_app/ui/components/address_badge.dart';
 import 'package:surfy_mobile_app/ui/components/balance_view.dart';
 import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
+import 'package:surfy_mobile_app/ui/wallet/viewmodel/wallet_detail_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -29,56 +32,26 @@ class WalletDetailPage extends StatefulWidget {
   }
 }
 
-class _WalletDetailPageState extends State<WalletDetailPage> {
-  final GetTokenPrice _getTokenPriceUseCase = Get.find();
-  final GetWalletBalances _getWalletBalancesUseCase = Get.find();
-  final SettingsPreference _preference = Get.find();
+abstract class WalletDetailPageInterface {
+  void onCreate();
+  void onLoading();
+  void offLoading();
+}
 
-  final Rx<List<UserTokenData>> _balanceList = Rx<List<UserTokenData>>([]);
-  final Rx<TokenPrice?> _tokenPrice = Rx<TokenPrice?>(null);
+class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDetailPageInterface {
+
+  final WalletDetailViewModel _viewModel = WalletDetailViewModel();
+  final SettingsPreference _preference = Get.find();
+  final Calculator _calculator = Get.find();
+
   final Rx<bool> _isLoading = Rx<bool>(false);
   final Rx<bool> _onlyHeldShow = Rx<bool>(true);
-  final Rx<double> _totalCryptoBalance = Rx<double>(0);
-  final Rx<double> _totalFiatBalance = Rx<double>(0);
-
-  List<UserTokenData> _getDrawList() {
-    if (_onlyHeldShow.isTrue) {
-      return _balanceList.value.where((item) => item.amount > BigInt.zero).toList();
-    }
-
-    return _balanceList.value;
-  }
-
-  Future<void> _loadData() async {
-    final loadBalanceAndSortJob = _getWalletBalancesUseCase.getTokenDataList(widget.token).then((result) {
-      result.sort((a, b) {
-        if (a.amount < b.amount) {
-          return 1;
-        } else if (a.amount == b.amount) {
-          return 0;
-        } else {
-          return -1;
-        }
-      });
-      _balanceList.value = result;
-    });
-    final loadTokenPriceData = _getTokenPriceUseCase.getSingleTokenPrice(widget.token, _preference.userCurrencyType.value).then((result) {
-      _tokenPrice.value = result;
-    });
-    final jobList = Future.wait([loadBalanceAndSortJob, loadTokenPriceData]);
-    await jobList;
-
-    // final totalBalancePair = _getWalletBalancesUseCase.parseTotalTokenBalanceForUi(widget.token, _balanceList.value, _tokenPrice.value?.price ?? 0.0, _preference.userCurrencyType.value);
-    final aggregatedTokenBalance = _getWalletBalancesUseCase.aggregateUserTokenAmount(widget.token, _getWalletBalancesUseCase.userDataObs.value);
-    _totalCryptoBalance.value = aggregatedTokenBalance;
-    _totalFiatBalance.value = aggregatedTokenBalance * (_tokenPrice.value?.price ?? 0);
-  }
 
   @override
   void initState() {
     super.initState();
-    _isLoading.value = true;
-    _loadData().then((_) => _isLoading.value = false);
+    _viewModel.setView(this);
+    _viewModel.init(widget.token, _preference.userCurrencyType.value);
   }
 
   @override
@@ -105,7 +78,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
       ),
       body: Obx(() {
         if (_isLoading.isTrue) {
-          return Container(
+          return SizedBox(
             width: double.infinity,
             height: double.infinity,
             child: Column(
@@ -113,8 +86,6 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(color: SurfyColor.blue,),
-                const SizedBox(height: 20,),
-                Text('Session timeout, reload token data...', style: Theme.of(context).textTheme.titleLarge)
               ],
             )
           );
@@ -130,8 +101,8 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                       child: BalanceView(
                         token: widget.token,
                         currencyType: _preference.userCurrencyType.value,
-                        fiatBalance: _totalFiatBalance.value,
-                        cryptoBalance: _totalCryptoBalance.value,
+                        fiatBalance: _calculator.cryptoToFiat(widget.token, _viewModel.aggregateBalance(), _preference.userCurrencyType.value),
+                        cryptoBalance: _calculator.cryptoToDouble(widget.token, _viewModel.aggregateBalance()),
                       )
                   );
                 }),
@@ -141,7 +112,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                     child: CurrentPrice(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       tokenName: tokens[widget.token]?.name ?? "",
-                      price: _tokenPrice.value?.price ?? 0.0,
+                      price: _viewModel.tokenPrice.value,
                       currency: _preference.userCurrencyType.value,
                     )
                 )),
@@ -169,9 +140,8 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                   ],
                 ),
                 Obx(() => Column(
-                  children: _getDrawList().map((item) {
-                    final balance = _getWalletBalancesUseCase.aggregateUserTokenAmountByBlockchain(widget.token, item.blockchain, _balanceList.value);
-                    final fiat = balance * (_tokenPrice.value?.price ?? 0);
+                  children: _viewModel.sortByDesc(_onlyHeldShow.value).map((item) {
+                    final address = _viewModel.addresses.value[item.blockchain] ?? "";
                     return InkWell(
                         onTap: () {
                           context.push('/sendAndReceive', extra: Pair<Token, Blockchain>(item.token, item.blockchain));
@@ -200,7 +170,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                                         const SizedBox(height: 2),
                                         Text("(${item.blockchain.name})", style: Theme.of(context).textTheme.labelMedium),
                                         const SizedBox(height: 2),
-                                        AddressBadge(address: item.address, mainAxisAlignment: MainAxisAlignment.start,)
+                                        AddressBadge(address: address, mainAxisAlignment: MainAxisAlignment.start,)
                                       ],
                                     )
                                   ],
@@ -208,8 +178,9 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(formatFiat(fiat, _preference.userCurrencyType.value), style: Theme.of(context).textTheme.displaySmall),
-                                    Text(formatCrypto(widget.token, balance), style: Theme.of(context).textTheme.labelMedium)
+                                    Text(formatFiat(_calculator.cryptoToFiat(widget.token, item.balance, _preference.userCurrencyType.value),
+                                        _preference.userCurrencyType.value), style: Theme.of(context).textTheme.displaySmall),
+                                    Text(formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, item.balance)), style: Theme.of(context).textTheme.labelMedium)
                                   ],
                                 )
                               ],
@@ -223,5 +194,19 @@ class _WalletDetailPageState extends State<WalletDetailPage> {
         );
       }),
     );
+  }
+
+  @override
+  void onCreate() {
+  }
+
+  @override
+  void offLoading() {
+    _isLoading.value = false;
+  }
+
+  @override
+  void onLoading() {
+    _isLoading.value = true;
   }
 }

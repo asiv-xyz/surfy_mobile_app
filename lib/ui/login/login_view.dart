@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
@@ -171,8 +172,8 @@ class _LoginPageState extends State<LoginPage> {
                                     LoginParams(
                                       loginProvider: Provider.twitter,
                                       extraLoginOptions: ExtraLoginOptions(
-                                        domain: "https://dev-3jgomtflwyaph3kh.us.auth0.com",
-                                        client_id: "p54tgx0ZHSPGfDXnTwketw9rn8VqAI1G",
+                                        domain: dotenv.env["AUTH0_DOMAIN"],
+                                        client_id: dotenv.env["AUTH0_CLIENT_ID"],
                                         redirect_uri: "surfy://com.riverbank.surfy/auth"
                                       )
                                     ),

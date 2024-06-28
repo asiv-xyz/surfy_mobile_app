@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/ui/pos/confirm_pay_view.dart';
+import 'package:surfy_mobile_app/ui/pos/payment_confirm_view.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class RouterService {
@@ -53,7 +53,7 @@ class RouterService {
           final storeId = pathParameters[2];
           final wantToReceiveAmount = pathParameters[3].toDouble();
           final receiveCurrency = findCurrencyTypeByName(pathParameters[4]);
-          router.push("/pos/payment", extra: ConfirmPayPageProps(storeId: storeId, receiveCurrency: receiveCurrency, wantToReceiveAmount: wantToReceiveAmount));
+          router.push("/pos/payment", extra: PaymentConfirmPageProps(storeId: storeId, receiveCurrency: receiveCurrency, wantToReceiveAmount: wantToReceiveAmount));
           break;
         default:
           router.push("/$path");

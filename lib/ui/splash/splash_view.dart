@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
@@ -36,7 +37,7 @@ class _SplashPageState extends State<SplashPage> {
       redirectUrl = Uri.parse('com.example.surfyMobileApp://auth');
     }
     await Web3AuthFlutter.init(Web3AuthOptions(
-      clientId: "BPcfE0gT3pagAlb0yWekXmsxCXxcYQ3jrdKodfDJgM8G3rV5kQ71kZW1kqWlKVzQyj0sIiCSM816kYpU4i1t7ww",
+      clientId: dotenv.env["WEB3AUTH_CLIENT_ID"] ?? "",
       network: Network.sapphire_devnet,
       redirectUrl: redirectUrl,
     ));
@@ -51,7 +52,7 @@ class _SplashPageState extends State<SplashPage> {
 
     final List<Future> jobList = [
       getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType),
-      loadData(),
+      // loadData(),
       // loadPlace()
     ];
     await Future.wait(jobList);

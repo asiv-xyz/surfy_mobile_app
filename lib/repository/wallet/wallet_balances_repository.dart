@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dartx/dartx.dart';
+import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
@@ -9,6 +11,8 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 class WalletBalancesRepository {
   WalletBalancesRepository({required this.walletService});
   final WalletService walletService;
+
+  final WalletCache walletCache = WalletCache();
 
   bool needToUpdate = true;
   static const updateThreshold = 300000; // 5 minutes
@@ -71,5 +75,27 @@ class WalletBalancesRepository {
     }
 
     return data.where((d) => d.token == token).toList();
+  }
+
+
+
+  // refactoring
+  Future<BigInt> getBalance(Token token, Blockchain blockchain, String address, { fromRemote }) async {
+    if (fromRemote == true) {
+      print('get from remote, token=$token, blockchain=$blockchain, address=$address');
+      final result = await walletService.getBalance(token, blockchain, address);
+      await walletCache.saveBalance(token, blockchain, address, result.amount);
+      return result.amount;
+    }
+
+    if (!await walletCache.needToUpdate(token, blockchain, address)) {
+      print('get from cache, token=$token, blockchain=$blockchain, address=$address');
+      return await walletCache.getBalance(token, blockchain, address);
+    }
+
+    print('get from remote, token=$token, blockchain=$blockchain, address=$address');
+    final result = await walletService.getBalance(token, blockchain, address);
+    await walletCache.saveBalance(token, blockchain, address, result.amount);
+    return result.amount;
   }
 }

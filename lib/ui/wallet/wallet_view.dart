@@ -1,13 +1,19 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
+import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/user_header.dart';
 import 'package:surfy_mobile_app/ui/components/wallet_item.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
+import 'package:surfy_mobile_app/ui/type/balance.dart';
+import 'package:surfy_mobile_app/ui/wallet/viewmodel/wallet_viewmodel.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
+import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
@@ -20,20 +26,47 @@ class WalletPage extends StatefulWidget {
   }
 }
 
-class _WalletPageState extends State<WalletPage> implements INavigationLifeCycle {
+abstract class WalletPageInterface {
+  void onRefresh();
+  void onLoading();
+  void offLoading();
+}
+
+class _WalletPageState extends State<WalletPage> implements WalletPageInterface {
   final Rx<String> _profileImageUrl = "".obs;
   final Rx<String> _profileName = "".obs;
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
-  final GetTokenPrice _getTokenPrice = Get.find();
   final SettingsPreference _preference = Get.find();
-  final Rx<List<Token>> _tokenList = Rx([]);
+  final Calculator _calculator = Get.find();
+
+  final WalletViewModel _viewModel = WalletViewModel();
+
+  final RxBool _isLoading = false.obs;
 
   @override
   void initState() {
     super.initState();
-    final NavigationController controller = Get.find();
-    controller.addListener(0, this);
     loadWallet();
+
+    _viewModel.setListener(this);
+    _viewModel.onCreate();
+  }
+
+  @override
+  void onRefresh() {
+    logger.i('onRefresh()');
+  }
+
+  @override
+  void onLoading() {
+    logger.i('onLoading()');
+    _isLoading.value = true;
+  }
+
+  @override
+  void offLoading() {
+    logger.i('offLoading()');
+    _isLoading.value = false;
   }
 
   Future<void> loadWallet() async {
@@ -41,21 +74,35 @@ class _WalletPageState extends State<WalletPage> implements INavigationLifeCycle
       setState(() {
         _profileName.value = user.name ?? "";
         _profileImageUrl.value = user.profileImage ?? "";
-        final list = Token.values.map((token) => _getWalletBalancesUseCase.aggregateTokenBalance(token, _getWalletBalancesUseCase.userDataObs.value, _getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0, _preference.userCurrencyType.value))
-            .toList();
-        list.sort((a, b) {
-          if (a.second < b.second) {
-            return 1;
-          } else if (a.second == b.second) {
-            return 0;
-          } else {
-            return -1;
-          }
-        });
-        _tokenList.value = list.map((pair) => pair.first).toList();
-        print('tokenList: ${_tokenList.value}');
       });
     });
+  }
+
+  List<Pair<Token, BigInt>> _balanceListByDesc(List<Token> tokens, List<Balance> balanceList) {
+    final list = tokens.map((token) {
+      return _viewModel.balances.value.where((t) => t.token == token).reduce((prev, curr) {
+        return Balance(
+            token: token,
+            blockchain: prev.blockchain,
+            balance: prev.balance + curr.balance
+        );
+      });
+    }).map((balance) => Pair(balance.token, balance.balance)).toList();
+
+    list.sort((a, b) {
+      final fiatA = _calculator.cryptoToFiat(a.first, a.second, _preference.userCurrencyType.value);
+      final fiatB = _calculator.cryptoToFiat(b.first, b.second, _preference.userCurrencyType.value);
+
+      if (fiatA < fiatB) {
+        return 1;
+      } else if (fiatA == fiatB) {
+        return 0;
+      } else {
+        return -1;
+      }
+    });
+
+    return list;
   }
 
   @override
@@ -65,90 +112,78 @@ class _WalletPageState extends State<WalletPage> implements INavigationLifeCycle
           preferredSize: const Size.fromHeight(0),
           child: AppBar()
         ),
-        body: Container(
-            width: double.infinity,
-            height: double.infinity,
-            child: Stack(
-              children: [
-                Positioned(
-                    width: MediaQuery.of(context).size.width,
-                    bottom: 0,
-                    child: const Image(
-                        image: AssetImage('assets/images/wallet_bg.png'),
-                        width: double.infinity)),
-                SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: Column(
-                      children: [
-                        Obx(() => UserHeader(
-                            profileImageUrl: _profileImageUrl.value,
-                            profileName: _profileName.value,
-                            onRefresh: () async {
-                              print('onRefresh!');
-                              final GetWalletBalances getWalletBalancesUseCase = Get.find();
-                              final KeyService keyService = Get.find();
-                              final key = await keyService.getKey();
-                              getWalletBalancesUseCase.loadNewTokenDataList(Token.values, key.first, key.second);
-
-                              final list = Token.values.map((token) => _getWalletBalancesUseCase.aggregateTokenBalance(token, _getWalletBalancesUseCase.userDataObs.value, _getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0, _preference.userCurrencyType.value))
-                                  .toList();
-                              list.sort((a, b) {
-                                if (a.second < b.second) {
-                                  return 1;
-                                } else if (a.second == b.second) {
-                                  return 0;
-                                } else {
-                                  return -1;
-                                }
-                              });
-                              _tokenList.value = list.map((pair) => pair.first).toList();
-
-                              print('tokenList: ${_tokenList.value}');
-                            }
-                        )),
-                        const SizedBox(height: 8),
-                        Obx(() => Column(
-                          children: _tokenList.value.map((token) {
-                            print('token: $token');
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: WalletItem(token: token),
-                            );
-                          }).toList(),
-                        ))
-                      ],
-                    )
-                  ),
-                ),
-                Obx(() {
-                  if (_getWalletBalancesUseCase.isLoading.value == true) {
-                    return Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
+        body: Obx(() {
+          if (_isLoading.isTrue) {
+            return const SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: Center(
+                child: CircularProgressIndicator(color: SurfyColor.blue)
+              )
+            );
+          } else {
+            return SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: Stack(
+                  children: [
+                    Positioned(
+                        width: MediaQuery.of(context).size.width,
+                        bottom: 0,
+                        child: const Image(
+                            image: AssetImage('assets/images/wallet_bg.png'),
+                            width: double.infinity)),
+                    SingleChildScrollView(
+                      child: Container(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: Column(
+                            children: [
+                              Obx(() => UserHeader(
+                                  profileImageUrl: _profileImageUrl.value,
+                                  profileName: _profileName.value,
+                                  onRefresh: () async {
+                                    _viewModel.refresh();
+                                  }
+                              )),
+                              const SizedBox(height: 8),
+                              Column(
+                                  children: _balanceListByDesc(Token.values, _viewModel.balances.value).map((item) {
+                                    final balance = item.second;
+                                    return Container(
+                                        margin: const EdgeInsets.symmetric(vertical: 8),
+                                        child: Obx(() => WalletItem(
+                                          token: item.first,
+                                          tokenAmount: balance,
+                                          tokenPrice: _viewModel.prices.value[item.first]?.price ?? 0,
+                                          currencyType: _preference.userCurrencyType.value,
+                                        ))
+                                    );
+                                  }).toList()
+                              )
+                            ],
+                          )
                       ),
-                      child: const Center(
-                        child: CircularProgressIndicator(color: Color(0xFF3B85F3)),
-                      ),
-                    );
-                  }
+                    ),
+                    Obx(() {
+                      if (_getWalletBalancesUseCase.isLoading.value == true) {
+                        return Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Colors.black,
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(color: Color(0xFF3B85F3)),
+                          ),
+                        );
+                      }
 
-                  return Container();
-                })
-              ],
-            ))
+                      return Container();
+                    })
+                  ],
+                ));
+          }
+        })
         );
-  }
-
-  @override
-  void onPageEnd() {
-    print('onPageEnd');
-  }
-
-  @override
-  void onPageStart() {
-    print('onPageStart');
   }
 }

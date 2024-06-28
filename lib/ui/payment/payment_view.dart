@@ -34,66 +34,6 @@ class _PaymentPageState extends State<PaymentPage> {
   final _isLoading = false.obs;
   final _tokenPrice = 0.0.obs;
 
-  String _formattingFiatAmount(String fiat) {
-    final formatter = NumberFormat.decimalPattern('en_US');
-    if (fiat == "0") {
-      return "0";
-    }
-
-    if (fiat.endsWith(".")) {
-      final splited = fiat.split(".");
-      final doubled = splited[0].toDouble();
-      return "${formatter.format(doubled)}.";
-    }
-
-    return formatter.format(fiat.toDouble());
-  }
-
-  String _calculateTokenAmount(double fiat) {
-    final cryptoAmount = fiat / _tokenPrice.value;
-    final tokenData = tokens[_selectTokenUseCase.selectedToken.value];
-    if (cryptoAmount == 0.0) {
-      return "0 ${tokenData?.symbol}";
-    }
-    return "${cryptoAmount.toStringAsFixed(tokenData?.fixedDecimal ?? 2)} ${tokenData?.symbol}";
-  }
-
-  void clickNumberButton(String n) {
-    switch (n) {
-      case "<-":
-        if (_enteredAmount.value.length > 1) {
-          _enteredAmount.value = _enteredAmount.value
-              .substring(0, _enteredAmount.value.length - 1);
-        } else {
-          _enteredAmount.value = "0";
-        }
-        break;
-      case "1":
-      case "2":
-      case "3":
-      case "4":
-      case "5":
-      case "6":
-      case "7":
-      case "8":
-      case "9":
-        if (_enteredAmount.value == "0") {
-          _enteredAmount.value = n;
-        } else {
-          _enteredAmount.value += n;
-        }
-        break;
-      case "0":
-        if (_enteredAmount.value != "0") {
-          _enteredAmount.value += "0";
-        }
-        break;
-      case ".":
-        _enteredAmount.value += ".";
-        break;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
