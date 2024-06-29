@@ -54,24 +54,6 @@ class GetWalletBalances {
     }
   }
 
-  Future<List<UserTokenData>> loadNewTokenDataList(List<Token> tokenList, String secp256k1, String ed25519) async {
-    logger.d('loadNewTokenData');
-    isLoading.value = true;
-    final result = await repository.forceLoadAndGetUserWalletBalances(tokenList, secp256k1, ed25519);
-    userDataObs.value = result;
-    isLoading.value = false;
-    return result;
-  }
-
-  Future<List<UserTokenData>> getMultipleTokenDataList(List<Token> tokenList) async {
-    logger.d('getMultipleTokenDataList');
-    isLoading.value = true;
-    final key = await keySerivce.getKey();
-    final result = await repository.getUserWalletBalances(tokenList, key.first, key.second);
-    isLoading.value = false;
-    return result;
-  }
-
   Future<Pair<String, String>> getUiTokenBalance(Token token, CurrencyType currency) async {
     logger.d('getUiTokenBalance, token=$token, currencyType=$currency');
     final tokenPriceData = await getTokenPriceUseCase.getSingleTokenPrice(token, currency);

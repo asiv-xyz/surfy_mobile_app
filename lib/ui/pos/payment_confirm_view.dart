@@ -392,6 +392,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                             borderRadius: BorderRadius.circular(0),
                             activeTrackColor: SurfyColor.white,
                             activeThumbColor: SurfyColor.blue,
+                            inactiveTrackColor: SurfyColor.lightGrey,
                             child: Text('Swipe to confirm', style: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.bold, fontSize: 16),)
                         );
                       } else {

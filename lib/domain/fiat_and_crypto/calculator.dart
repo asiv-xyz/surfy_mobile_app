@@ -20,8 +20,22 @@ class Calculator {
     return visibleTokenAmount * (tokenPrice?.price ?? 0.0);
   }
 
+  double cryptoToFiatV2(Token token, BigInt amount, double tokenPrice) {
+    final tokenData = tokens[token];
+    if (tokenData == null) {
+      return 0.0;
+    }
+
+    final visibleTokenAmount = amount / BigInt.from(pow(10, tokenData.decimal));
+    return visibleTokenAmount / tokenPrice;
+  }
+
   double cryptoAmountToFiat(Token token, double cryptoAmount, CurrencyType target) {
     final tokenPrice = getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0;
+    return cryptoAmount * tokenPrice;
+  }
+
+  double cryptoAmountToFiatV2(double cryptoAmount, double tokenPrice) {
     return cryptoAmount * tokenPrice;
   }
 
@@ -41,6 +55,11 @@ class Calculator {
     }
 
     final tokenPrice = getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0;
+    return fiat / tokenPrice;
+  }
+
+
+  double fiatToCryptoV2(double fiat, double tokenPrice) {
     return fiat / tokenPrice;
   }
 

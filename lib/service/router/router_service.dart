@@ -43,7 +43,7 @@ class RouterService {
       await Web3AuthFlutter.getUserInfo();
       switch (path) {
         case "payment":
-          router.push("/payment/${pathParameters[0]}");
+          router.push("/payment/${pathParameters[1]}");
           break;
         case "send":
           router.push("/send/${pathParameters[1]}/${pathParameters[2]}/${pathParameters[3]}/${pathParameters[4]}");

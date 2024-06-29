@@ -30,42 +30,6 @@ class _LoginPageState extends State<LoginPage> {
   final _isLoading = false.obs;
   final KeyService _keyService = Get.find();
 
-  Future<bool> loadMerchant() async {
-    logger.i('loadMerchat: is this user merchant?');
-    IsMerchant isMerchant = Get.find();
-    final isMerchantFlag = await isMerchant.isMerchant();
-    if (isMerchantFlag == true) {
-      logger.i('This user is merchant!');
-      isMerchant.userMerchantInfo.value = await isMerchant.getMyMerchantData();
-      return true;
-    } else {
-      logger.i('This user is not merchant.');
-      return false;
-    }
-  }
-
-  Future<void> loadData(String secp256k1, String ed25519) async {
-    GetWalletBalances getWalletBalances = Get.find();
-    await getWalletBalances.loadNewTokenDataList(Token.values, secp256k1, ed25519);
-  }
-
-  Future<void> initApp() async {
-    final GetTokenPrice getTokenPrice = Get.find();
-    logger.i('Initialize token price data');
-    await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), CurrencyType.usd);
-    logger.i('Price data loading completed');
-
-    final SettingsPreference preference = Get.find();
-    await preference.changeCurrencyType(CurrencyType.usd);
-
-    logger.i('Initialize wallet balance');
-    final key = await _keyService.getKey();
-    await loadData(key.first, key.second);
-    logger.i('Wallet balance loading completed');
-
-    logger.i('loadMerchant');
-    await loadMerchant();
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,9 +94,6 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
-                                  _isLoading.value = true;
-                                  await initApp();
-                                  _isLoading.value = false;
                                   if (mounted) {
                                     context.go('/wallet');
                                   }
@@ -181,9 +142,6 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
-                                  _isLoading.value = true;
-                                  await initApp();
-                                  _isLoading.value = false;
                                   if (mounted) {
                                     context.go('/wallet');
                                   }
@@ -224,9 +182,6 @@ class _LoginPageState extends State<LoginPage> {
                                 if (response.error != null) {
                                   logger.e('error! ${response.error}');
                                 } else {
-                                  _isLoading.value = true;
-                                  await initApp();
-                                  _isLoading.value = false;
                                   if (mounted) {
                                     context.go('/wallet');
                                   }

@@ -12,7 +12,6 @@ class SelectPaymentTokenViewModel {
   late SelectPaymentTokenView view;
 
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
-  final GetWalletAddress _getWalletAddressUseCase = Get.find();
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
 
   final Rx<List<FiatBalance>> observableBalanceList = Rx([]);
@@ -23,6 +22,7 @@ class SelectPaymentTokenViewModel {
   }
 
   Future<void> init(CurrencyType currency) async {
+    view.onLoading();
     List<Token> tokenList = Token.values;
     final tokenPriceList = await _getTokenPriceUseCase.getTokenPrice(tokenList, currency);
     observableTokenPrices.value = tokenPriceList;
@@ -30,6 +30,6 @@ class SelectPaymentTokenViewModel {
     final supportedResources = getSupportedTokenAndNetworkList();
     final balances = await _getWalletBalancesUseCase.getBalancesByDesc(supportedResources, currency);
     observableBalanceList.value = balances;
-
+    view.offLoading();
   }
 }

@@ -10,6 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:surfy_mobile_app/cache/token/token_price_cache.dart';
+import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/payment/select_token.dart';
@@ -20,6 +22,7 @@ import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
+import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/navigation_bar.dart';
 import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
@@ -36,14 +39,19 @@ import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/dio_utils.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
+import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 Future<void> buildDependencies() async {
   await Hive.initFlutter();
 
   logger.d('Build Dependency graph');
   TokenPriceService tokenPriceService = Get.put(TokenPriceService());
+  TokenPriceCache tokenPriceCache = Get.put(TokenPriceCache());
   TokenPriceRepository tokenPriceRepository =
-      Get.put(TokenPriceRepository(service: tokenPriceService));
+      Get.put(TokenPriceRepository(service: tokenPriceService, tokenPriceCache: tokenPriceCache));
   GetTokenPrice getTokenPrice =
       Get.put(GetTokenPrice(repository: tokenPriceRepository));
 
@@ -52,8 +60,9 @@ Future<void> buildDependencies() async {
   WalletService walletService = Get.put(WalletService());
   Get.put(GetWalletAddress(service: Get.find(), keyService: Get.find()));
 
+  WalletCache walletCache = Get.put(WalletCache());
   WalletBalancesRepository walletBalancesRepository =
-      Get.put(WalletBalancesRepository(walletService: walletService));
+      Get.put(WalletBalancesRepository(walletService: walletService, walletCache: walletCache));
 
   Get.put(Calculator(getTokenPrice: getTokenPrice));
   Get.put(GetWalletBalances(
@@ -82,16 +91,63 @@ Future<void> buildDependencies() async {
   Get.put(IsMerchant(service: Get.find()));
 }
 
+Future<void> web3AuthInit() async {
+  late final Uri redirectUrl;
+  if (Platform.isAndroid) {
+    redirectUrl = Uri.parse('surfy://com.riverbank.surfy/auth');
+  } else {
+    redirectUrl = Uri.parse('com.example.surfyMobileApp://auth');
+  }
+  await Web3AuthFlutter.init(Web3AuthOptions(
+    clientId: dotenv.env["WEB3AUTH_CLIENT_ID"] ?? "",
+    network: Network.sapphire_devnet,
+    redirectUrl: redirectUrl,
+  ));
+  await Web3AuthFlutter.initialize();
+}
+
+Future<void> loadTokenPrice() async {
+  final GetTokenPrice getTokenPrice = Get.find();
+  final SettingsPreference preference = Get.find();
+  final currencyType = await preference.getCurrencyType();
+  await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType);
+}
+
+
+Future<void> loadDefaultData() async {
+  final List<Future> jobList = [
+    web3AuthInit(),
+    loadTokenPrice(),
+  ];
+
+  await Future.wait(jobList);
+}
+
+void setEventBus() {
+  final EventBus bus = Get.put(EventBus());
+  final WalletBalancesRepository walletBalancesRepository = Get.find();
+  bus.addEventListener(walletBalancesRepository);
+}
+
 void main() async {
   await dotenv.load(fileName: ".env");
   dioObject.transformer = BackgroundTransformer()
     ..jsonDecodeCallback = parseJson;
   await buildDependencies();
+  setEventBus();
   WidgetsFlutterBinding.ensureInitialized();
   MapboxOptions.setAccessToken(dotenv.env["MAPBOX_API_KEY"] ?? "");
 
   Get.put(NavigationController());
-  final goRouter = await generateRouter(Get.find(), Get.find());
+  await loadDefaultData();
+  String initialLocation = "";
+  try {
+    await Web3AuthFlutter.getUserInfo();
+    initialLocation = "/wallet";
+  } catch (e) {
+    initialLocation = "/login";
+  }
+  final goRouter = await generateRouter(Get.find(), Get.find(), initialLocation);
   runApp(GetMaterialApp(home: SurfyApp(goRouter: goRouter)));
 }
 

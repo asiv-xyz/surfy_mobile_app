@@ -2,6 +2,7 @@ import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/merchant/merchant_service.dart';
 
+// TODO : need to apply cache, but improve backend also.
 class MerchantRepository {
   MerchantRepository({required this.service});
 

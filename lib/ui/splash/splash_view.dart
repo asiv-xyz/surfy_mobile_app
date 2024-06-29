@@ -27,9 +27,7 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-  Future<void> initApp() async {
-    var startTime = DateTime.now().millisecondsSinceEpoch;
-    logger.i('initApp start');
+  Future<void> web3AuthInit() async {
     late final Uri redirectUrl;
     if (Platform.isAndroid) {
       redirectUrl = Uri.parse('surfy://com.riverbank.surfy/auth');
@@ -43,62 +41,31 @@ class _SplashPageState extends State<SplashPage> {
     ));
     await Web3AuthFlutter.initialize();
     await Web3AuthFlutter.getUserInfo();
+  }
 
+  Future<void> loadTokenPrice() async {
     final GetTokenPrice getTokenPrice = Get.find();
-    logger.i('Initialize token price data');
-
     final SettingsPreference preference = Get.find();
     final currencyType = await preference.getCurrencyType();
+    await getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType);
+  }
 
+  Future<void> initApp() async {
     final List<Future> jobList = [
-      getTokenPrice.getTokenPrice(tokens.values.map((token) => token.token).toList(), currencyType),
-      // loadData(),
-      // loadPlace()
+      web3AuthInit(),
+      loadTokenPrice(),
     ];
+
     await Future.wait(jobList);
-    logger.i('initApp end, duration=${DateTime.now().millisecondsSinceEpoch - startTime}');
   }
 
-  Future<void> loadData() async {
-    var startTime = DateTime.now().millisecondsSinceEpoch;
-    logger.i('loadData');
-    GetWalletBalances getWalletBalances = Get.find();
-    KeyService keyService = Get.find();
-    final key = await keyService.getKey();
-    await getWalletBalances.loadNewTokenDataList(Token.values, key.first, key.second);
-    logger.i('loadData end, duration: ${DateTime.now().millisecondsSinceEpoch - startTime}');
-  }
-
-  Future<bool> loadPlace() async {
-    logger.i('loadPlace');
-    MerchantRepository repository = Get.find();
-    await repository.getPlaceList();
-    logger.i('loadPlace end');
-    return true;
-  }
-
-  Future<bool> loadMerchant() async {
-    logger.i('loadMerchat: is this user merchant?');
-    IsMerchant isMerchant = Get.find();
-    final isMerchantFlag = await isMerchant.isMerchant();
-    if (isMerchantFlag == true) {
-      logger.i('This user is merchant!');
-      isMerchant.userMerchantInfo.value = await isMerchant.getMyMerchantData();
-      return true;
-    } else {
-      logger.i('This user is not merchant.');
-      return false;
-    }
-  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       initApp().then((_) {
-        loadMerchant().then((_) {
-          context.go('/wallet');
-        });
+        context.go('/wallet');
       }).catchError((e) {
         if (e.toString().contains('No user found')) {
           logger.i('Not logged in, go to login page');
