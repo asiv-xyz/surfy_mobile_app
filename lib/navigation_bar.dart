@@ -30,11 +30,10 @@ import 'package:surfy_mobile_app/ui/wallet/wallet_view.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
-Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationController controller) async {
+Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationController controller, String initialLocation) async {
   final GoRouter goRouter =
-  GoRouter(initialLocation: '/splash',
+  GoRouter(initialLocation: initialLocation,
       routes: <RouteBase>[
-    GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     StatefulShellRoute.indexedStack(
         builder: (BuildContext context, GoRouterState state,

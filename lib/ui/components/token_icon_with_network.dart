@@ -13,8 +13,8 @@ class TokenIconWithNetwork extends StatelessWidget {
 
   final double width;
   final double height;
-  final Blockchain blockchain;
-  final Token token;
+  final Blockchain? blockchain;
+  final Token? token;
 
   @override
   Widget build(BuildContext context) {

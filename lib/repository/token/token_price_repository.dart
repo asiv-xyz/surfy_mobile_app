@@ -1,41 +1,37 @@
+import 'package:get/get.dart';
+import 'package:surfy_mobile_app/cache/token/token_price_cache.dart';
 import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/token/token_price_service.dart';
+import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class TokenPriceRepository {
-  TokenPriceRepository({required this.service});
+  TokenPriceRepository({required this.service, required this.tokenPriceCache});
 
-  static const updateThreshold = 300000; // 5 minutes
+  final TokenPriceCache tokenPriceCache;
   final TokenPriceService service;
-  int _lastUpdated = 0;
-  String _lastUpdatedCurrency = "usd";
-  Map<Token, TokenPrice> _data = {};
 
-  Future<void> forceUpdateAndGetTokenPrice(List<Token> tokenList, String currency) async {
-    final cgIdentifiers = tokenList
-        .map((token) => tokens[token]?.cgIdentifier ?? "").toList();
-    final newBalances = await service.getTokenBalance(cgIdentifiers, currency);
-    _data = newBalances;
-    _lastUpdated = DateTime.now().millisecondsSinceEpoch;
-    _lastUpdatedCurrency = currency;
+  Future<Map<Token, TokenPrice>> getTokenPriceList(List<Token> tokenList, CurrencyType currencyType) async {
+    final cgIdentifiers = tokenList.map((token) => tokens[token]?.cgIdentifier ?? "").toList();
+    final balances = await service.getTokenBalance(cgIdentifiers, currencyType);
+
+    final job = balances.entries.map((item) async {
+      await tokenPriceCache.saveTokenPrice(item.key, item.value.price, currencyType);
+    }).toList();
+    await Future.wait(job);
+
+    return balances;
   }
 
-  Future<Map<Token, TokenPrice>> getTokenPrice(List<Token> tokenList, String currency) async {
-    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
-    if (_lastUpdated == 0 || currentTimestamp - _lastUpdated > updateThreshold || _lastUpdatedCurrency != currency) {
-      logger.d('Cache expired. Update token price');
-      await forceUpdateAndGetTokenPrice(tokenList, currency);
-    } else {
-      logger.d('Cache not expired!');
+  Future<TokenPrice?> getSingleTokenPrice(Token token, CurrencyType currencyType) async {
+    final needToUpdate = await tokenPriceCache.needToUpdate(token, currencyType);
+    if (needToUpdate) {
+      final price = await getTokenPriceList([token], currencyType);
+      return TokenPrice(token: token, price: price[token]?.price ?? 0.0, currency: currencyType.name.toLowerCase());
     }
 
-    return _data;
-  }
-
-  Future<TokenPrice?> getSingleTokenPrice(Token token, String currency) async {
-    logger.d('getSingleTokenPrice');
-    final data = await getTokenPrice(Token.values, currency);
-    return data[token];
+    final item = await tokenPriceCache.getTokenPrice(token, currencyType);
+    return TokenPrice(token: token, price: item, currency: currencyType.name.toLowerCase());
   }
 }

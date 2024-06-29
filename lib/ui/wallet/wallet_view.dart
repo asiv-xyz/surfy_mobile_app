@@ -49,7 +49,7 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
     loadWallet();
 
     _viewModel.setListener(this);
-    _viewModel.onCreate();
+    _viewModel.init();
   }
 
   @override

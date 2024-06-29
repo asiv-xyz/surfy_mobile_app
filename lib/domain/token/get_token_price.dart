@@ -14,13 +14,13 @@ class GetTokenPrice {
 
   Future<Map<Token, TokenPrice>> getTokenPrice(List<Token> tokenList, CurrencyType currency) async {
     logger.i('getTokenPrice: token=$tokenList, currency=$currency');
-    final result = await repository.getTokenPrice(tokenList, currency.name);
+    final result = await repository.getTokenPriceList(tokenList, currency);
     tokenPriceObs.value = result;
     return result;
   }
 
   Future<TokenPrice?> getSingleTokenPrice(Token token, CurrencyType currency) async {
     logger.i('getSingleTokenPrice: token=$token, currency=$currency');
-    return await repository.getSingleTokenPrice(token, currency.name);
+    return await repository.getSingleTokenPrice(token, currency);
   }
 }

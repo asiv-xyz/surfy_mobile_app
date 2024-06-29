@@ -4,11 +4,17 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/payment/select_token.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
+import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
+import 'package:surfy_mobile_app/ui/payment/viewmodel/payment_viewmodel.dart';
+import 'package:surfy_mobile_app/ui/pos/select_payment_token_view.dart';
+import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
@@ -23,183 +29,218 @@ class PaymentPage extends StatefulWidget {
   }
 }
 
-class _PaymentPageState extends State<PaymentPage> {
-  final GetWalletBalances _getWalletBalancesUseCase = Get.find();
-  final GetTokenPrice _getTokenPriceUseCase = Get.find();
-  final SettingsPreference _preference = Get.find();
-  final SelectToken _selectTokenUseCase = Get.find();
+abstract class PaymentView {
+  void onLoading();
+  void offLoading();
 
-  final _enteredAmount = "0".obs;
-  final _currency = "".obs;
+}
+
+class _PaymentPageState extends State<PaymentPage> implements PaymentView {
+  final PaymentViewModel _viewModel = PaymentViewModel();
+
+  final SettingsPreference _preference = Get.find();
+
+  final Calculator _calculator = Get.find();
   final _isLoading = false.obs;
-  final _tokenPrice = 0.0.obs;
+
+  @override
+  void onLoading() {
+    _isLoading.value = true;
+  }
+
+  @override
+  void offLoading() {
+    _isLoading.value = false;
+  }
 
   @override
   void initState() {
     super.initState();
-    _preference.getCurrencyType().then((currencyType) async {
-      _currency.value = currencyType.name.toUpperCase();
-      _isLoading.value = true;
-      final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(_selectTokenUseCase.selectedToken.value, currencyType);
-      _tokenPrice.value = tokenPrice?.price ?? 0.0;
-      _isLoading.value = false;
-    });
+    _viewModel.setView(this);
+    _viewModel.init(widget.storeId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Scaffold(
-          appBar: AppBar(
-            titleSpacing: 0,
-            title: const Text('Payment',),
-          ),
-          body: Container(
-              height: MediaQuery.of(context).size.height,
-              color: SurfyColor.black,
-              child: Stack(
-                children: [
-                  KeyboardView(
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: const Text('Payment',),
+      ),
+      body: Container(
+          height: MediaQuery.of(context).size.height,
+          color: SurfyColor.black,
+          child: Stack(
+            children: [
+              Obx(() {
+                if (_isLoading.value == true) {
+                  return Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                          color: SurfyColor.black.withOpacity(0.8)),
+                      child: const Center(
+                          child: CircularProgressIndicator(
+                              color: SurfyColor.blue)));
+                } else {
+                  return KeyboardView(
                     buttonText: 'Send',
-                    isFiatInputMode: false,
+                    isFiatInputMode: _viewModel.observableIsFiatInputMode.value,
                     onClickSend: () {},
-                    inputAmount: _enteredAmount,
+                    inputAmount: _viewModel.observableInputAmount,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('To ${widget.storeId}',
-                            style: GoogleFonts.sora(
-                                color: SurfyColor.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20)),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        Text('${_enteredAmount.value} USD',
-                            style: GoogleFonts.sora(
-                                color: SurfyColor.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 40)),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        Text('0.005 BTC',
-                            style: GoogleFonts.sora(
-                                color: SurfyColor.lightGrey, fontSize: 16)),
-                        const SizedBox(height: 20),
-                        FutureBuilder<Pair<String, String>>(
-                            future: _getWalletBalancesUseCase.getUiTokenBalance(
-                                _selectTokenUseCase.selectedToken.value,
-                                _preference.userCurrencyType.value),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                final crypto = snapshot.data?.first ?? "0.0";
-                                final fiat = snapshot.data?.second ?? "0.0";
-                                return InkWell(
-                                    onTap: () {
-                                      context.push('/select');
-                                    },
-                                    child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(15),
-                                          color: SurfyColor.white,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                        Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('To ${_viewModel.observableMerchant.value?.storeName}',
+                                        style: GoogleFonts.sora(
+                                            color: SurfyColor.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20)),
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    Obx(() {
+                                      if (_viewModel.observableIsFiatInputMode.isTrue) {
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
+                                            Text('${_viewModel.observableInputAmount.value} ${_viewModel.observableMerchant.value?.currency}',
+                                                style: GoogleFonts.sora(
+                                                    color: SurfyColor.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 40)),
+                                            const SizedBox(
+                                              height: 5,
+                                            ),
+                                            Text(formatCrypto(_viewModel.observableSelectedToken.value!, _calculator.fiatToCryptoV2(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0)),
+                                                style: GoogleFonts.sora(
+                                                    color: SurfyColor.lightGrey, fontSize: 16)),
+                                          ],
+                                        );
+                                      } else {
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('${_viewModel.observableInputAmount.value} ${tokens[_viewModel.observableSelectedToken.value]?.symbol}',
+                                                style: GoogleFonts.sora(
+                                                    color: SurfyColor.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 40)),
+                                            const SizedBox(
+                                              height: 5,
+                                            ),
+                                            Text(formatFiat(_calculator.cryptoAmountToFiatV2(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0), findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? "")),
+                                                style: GoogleFonts.sora(
+                                                    color: SurfyColor.lightGrey, fontSize: 16)),
+                                          ],
+                                        );
+                                      }
+                                    }),
+                                  ],
+                                ),
+                                IconButton(
+                                    onPressed: () {
+                                      _viewModel.observableIsFiatInputMode.value = !_viewModel.observableIsFiatInputMode.value;
+                                    },
+                                    icon: const Icon(Icons.swap_vert_outlined, size: 50,)
+                                )
+                              ],
+                            )
+                        ),
+                        const SizedBox(height: 20),
+                        Obx(() => Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              color: SurfyColor.greyBg,
+                            ),
+                            child: MaterialButton(
+                                onPressed: () {
+                                  if (mounted) {
+                                    final props = SelectPaymentTokenPageProps(
+                                        onSelect: (Token token, Blockchain blockchain) async {
+                                          await _viewModel.changePaymentMethod(
+                                              token,
+                                              blockchain,
+                                          );
+                                        },
+                                        receiveCurrency: findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? ""),
+                                        wantToReceiveAmount: _viewModel.getMayPaidAmount(),
+                                    );
+                                    context.push("/pos/select", extra: props);
+                                  }
+                                },
+                                child: Container(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            TokenIconWithNetwork(blockchain: _viewModel.observableSelectedBlockchain.value, token: _viewModel.observableSelectedToken.value, width: 40, height: 40),
+                                            const SizedBox(width: 10),
+                                            Text(tokens[_viewModel.observableSelectedToken.value]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 18),)
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Column(
                                               children: [
-                                                Image.asset(
-                                                  tokens[_selectTokenUseCase
-                                                              .selectedToken
-                                                              .value]
-                                                          ?.iconAsset ??
-                                                      "",
-                                                  width: 40,
-                                                  height: 40,
-                                                ),
-                                                const SizedBox(width: 10),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      tokens[_selectTokenUseCase
-                                                                  .selectedToken
-                                                                  .value]
-                                                              ?.name ??
-                                                          "",
-                                                      style: GoogleFonts.sora(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16),
-                                                    ),
-                                                    Text(
-                                                      crypto,
-                                                      style: GoogleFonts.sora(
-                                                          fontSize: 14),
-                                                    ),
-                                                    Text(
-                                                      "$fiat",
-                                                      style: GoogleFonts.sora(
-                                                          fontSize: 14),
-                                                    ),
-                                                  ],
-                                                )
+                                                Obx(() {
+                                                  if (_isLoading.isTrue) {
+                                                    return Container(
+                                                      width: 50,
+                                                      height: 14,
+                                                      decoration: BoxDecoration(
+                                                          color: SurfyColor.black,
+                                                          borderRadius: BorderRadius.circular(8)
+                                                      ),
+                                                      margin: const EdgeInsets.only(bottom: 2),
+                                                    );
+                                                  }
+
+                                                  return Text(formatFiat(_viewModel.getSelectedTokenBalance().balance, _preference.userCurrencyType.value), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14));
+                                                }),
+                                                Obx(() {
+                                                  if (_isLoading.isTrue) {
+                                                    return Container(
+                                                      width: 50,
+                                                      height: 14,
+                                                      decoration: BoxDecoration(
+                                                          color: SurfyColor.black,
+                                                          borderRadius: BorderRadius.circular(8)
+                                                      ),
+                                                      margin: const EdgeInsets.only(top: 2),
+                                                    );
+                                                  }
+
+                                                  return Text(formatCrypto(_viewModel.observableSelectedToken.value, _calculator.cryptoToDouble(_viewModel.observableSelectedToken.value!, _viewModel.getSelectedTokenBalance().cryptoBalance)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                                                })
                                               ],
                                             ),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  color: SurfyColor.lightGrey),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 15,
-                                                      vertical: 8),
-                                              child: Center(
-                                                  child: Text(
-                                                'Change',
-                                                style: GoogleFonts.sora(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: SurfyColor.white),
-                                              )),
-                                            )
+                                            const SizedBox(width: 10,),
+                                            const Icon(Icons.navigate_next, color: SurfyColor.white,)
                                           ],
-                                        )));
-                              }
-
-                              return const Center(
-                                child: CircularProgressIndicator(
-                                    color: SurfyColor.blue),
-                              );
-                            })
+                                        )
+                                      ],
+                                    )
+                                )
+                            )
+                        ))
                       ],
                     ),
-                  ),
-                  Obx(() {
-                    if (_getWalletBalancesUseCase.isLoading.value == true) {
-                      return Container(
-                          width: double.infinity,
-                          height: double.infinity,
-                          decoration: BoxDecoration(
-                              color: SurfyColor.black.withOpacity(0.8)),
-                          child: const Center(
-                              child: CircularProgressIndicator(
-                                  color: SurfyColor.blue)));
-                    }
-
-                    return Container();
-                  }),
-                ],
-              )),
-        ));
+                  );
+                }
+              }),
+            ],
+          )),
+    );
   }
 }

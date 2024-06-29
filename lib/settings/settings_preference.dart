@@ -59,11 +59,8 @@ class SettingsPreference {
   }
 
   Future<void> changeCurrencyType(CurrencyType currencyType) async {
-    logger.i('changeCurrencyType: $currencyType');
     final preference = await SharedPreferences.getInstance();
-    preference.setString('currency_type', currencyType.name);
     userCurrencyType.value = currencyType;
-    EventBus.notifyChangeCurrencyType(currencyType);
   }
 
   Future<CurrencyType> getCurrencyType() async {
@@ -73,9 +70,7 @@ class SettingsPreference {
       logger.i('Not set currency type, USD will be returned.');
       return CurrencyType.usd;
     }
-    logger.i('value: $value');
     final result = CurrencyType.values.where((ct) => ct.name == value.toLowerCase()).first;
-    logger.i('getCurrencyType: $result');
     return result;
   }
 
@@ -88,7 +83,6 @@ class SettingsPreference {
 
   Future<void> setTheme(ThemeMode theme) async {
     final preference = await SharedPreferences.getInstance();
-    preference.setString('theme', theme.name.toLowerCase());
     themeObs.value = theme;
   }
 }

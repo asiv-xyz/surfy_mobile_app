@@ -1,18 +1,18 @@
 import 'dart:async';
 
-import 'package:dartx/dartx.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
+import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
-class WalletBalancesRepository {
-  WalletBalancesRepository({required this.walletService});
-  final WalletService walletService;
+class WalletBalancesRepository implements EventListener {
+  WalletBalancesRepository({required this.walletService, required this.walletCache});
 
-  final WalletCache walletCache = WalletCache();
+  final WalletService walletService;
+  final WalletCache walletCache;
 
   bool needToUpdate = true;
   static const updateThreshold = 300000; // 5 minutes
@@ -26,12 +26,8 @@ class WalletBalancesRepository {
 
   Future<UserTokenData> _getSingleWalletBalance(({Token token, Blockchain blockchain, String key}) arg) async {
     try {
-      var startTime = DateTime.now().millisecondsSinceEpoch;
-      print('_getSingleWalletBalance start: ${arg.token}, ${arg.blockchain}');
       final address = await walletService.getWalletAddress(arg.blockchain, arg.key);
       final balance = await walletService.getBalance(arg.token, arg.blockchain, address);
-      var duration = DateTime.now().millisecondsSinceEpoch - startTime;
-      print('_getSingleWalletBalance end: ${arg.token}, ${arg.blockchain}, $duration');
       return balance;
     } catch (e) {
       logger.e('get wallet balance failed, token=${arg.token}, blockchain=${arg.blockchain}, error=${e}');
@@ -82,7 +78,6 @@ class WalletBalancesRepository {
   // refactoring
   Future<BigInt> getBalance(Token token, Blockchain blockchain, String address, { fromRemote }) async {
     if (fromRemote == true) {
-      print('get from remote, token=$token, blockchain=$blockchain, address=$address');
       final result = await walletService.getBalance(token, blockchain, address);
       await walletCache.saveBalance(token, blockchain, address, result.amount);
       return result.amount;
@@ -93,9 +88,16 @@ class WalletBalancesRepository {
       return await walletCache.getBalance(token, blockchain, address);
     }
 
-    print('get from remote, token=$token, blockchain=$blockchain, address=$address');
     final result = await walletService.getBalance(token, blockchain, address);
     await walletCache.saveBalance(token, blockchain, address, result.amount);
     return result.amount;
+  }
+
+  @override
+  void onEventReceived(GlobalEvent event) {
+    if (event is ForceUpdateTokenBalanceEvent) {
+      logger.i("Force update user balance, token=${event.token}, blockchain=${event.blockchain}, address=${event.address}");
+      getBalance(event.token, event.blockchain, event.address, fromRemote: true);
+    }
   }
 }

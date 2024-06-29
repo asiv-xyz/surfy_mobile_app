@@ -10,6 +10,7 @@ class Merchant {
     required this.phone,
     required this.email,
     required this.category,
+    required this.currency,
     required this.nation,
     required this.sns,
     required this.wallets,
@@ -22,6 +23,7 @@ class Merchant {
   final double longitude;
   final String thumbnail;
   final String address;
+  final String currency;
   final String phone;
   final String email;
   final String category;
@@ -42,6 +44,7 @@ class Merchant {
       "phone": phone,
       "email": email,
       "category": category,
+      "currency": currency,
       "nation": nation,
       "sns": sns,
       "wallets": wallets,
@@ -60,6 +63,7 @@ class Merchant {
       phone: json['phone'] ?? "",
       email: json['email'] ?? "",
       category: json['category'] ?? "",
+      currency: json['currency'] ?? "",
       nation: json['nation'] ?? "",
       sns: json['sns']?.map<MerchantSns>((item) => MerchantSns.fromJson(item)).toList() ?? [],
       wallets: json['wallets']?.map<MerchantWallet>((item) => MerchantWallet.fromJson(item)).toList() ?? [],
@@ -74,9 +78,9 @@ class MerchantWallet {
     required this.blockchain,
   });
 
-  final String walletAddress;
-  final String walletCategory;
-  final String blockchain;
+  final String? walletAddress;
+  final String? walletCategory;
+  final String? blockchain;
 
   @override
   String toString() {

@@ -25,7 +25,7 @@ class WalletViewModel {
     listener = item;
   }
 
-  Future<void> onCreate() async {
+  Future<void> init() async {
     await refresh();
   }
 
@@ -51,7 +51,6 @@ class WalletViewModel {
     final balanceList = (await Future.wait(getBalanceJobList)).expand((e) => e);
     balances.value = [];
     for (var balance in balanceList) {
-      print('add: $balance');
       balances.value.add(balance);
     }
 
@@ -59,6 +58,5 @@ class WalletViewModel {
     prices.value = tokenPrices;
 
     listener.offLoading();
-    print('time: ${DateTime.now().millisecondsSinceEpoch - startTime}');
   }
 }
