@@ -1,16 +1,12 @@
-# surfy_mobile_app
+# SURFY
 
-A new Flutter project.
+SURFY is multi-chain crypto payment application.
 
-## Getting Started
+## Features
+* Multichain wallet including EVM, Solana, XRPL, Tron, Cosmos(TBD), etc
+* Payment with QR code, NFC(TBD)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Website
+* https://www.surfy.network
+* https://x.com/surfyxyz
+* https://warpcast.com/~/channel/surfy
