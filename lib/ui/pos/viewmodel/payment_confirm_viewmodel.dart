@@ -31,6 +31,8 @@ class PaymentConfirmViewModel {
   final Rx<BigInt> observableUserBalance = BigInt.zero.obs;
   final RxDouble observableTokenPrice = 0.0.obs;
   final Rx<Merchant?> observableMerchant = Rx(null);
+
+  final RxString observableSenderWallet = "".obs;
   final RxString observableReceiverWallet = "".obs;
   final RxString observableTransactionHash = "".obs;
 
@@ -60,9 +62,12 @@ class PaymentConfirmViewModel {
 
     observableSelectedToken.value = token;
     observableSelectedBlockchain.value = blockchain;
+
     final address = await _getWalletAddressUseCase.getAddress(blockchain);
     final balance = await _getWalletBalancesUseCase.getBalance(token, blockchain, address);
     final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, _settingsPreference.userCurrencyType.value);
+
+    observableSenderWallet.value = address;
     observableTokenPrice.value = tokenPrice?.price ?? 0;
     observableUserBalance.value = balance;
     observablePayCrypto.value = BigInt.from(pow(10, tokenData.decimal) * fiatAmount / (tokenPrice?.price ?? 1.0));
@@ -76,11 +81,11 @@ class PaymentConfirmViewModel {
     view.offChangePaymentMethod();
   }
 
-  Future<void> processPayment(Token token, Blockchain blockchain, String receiver, BigInt cryptoAmount) async {
+  Future<void> processPayment(Token token, Blockchain blockchain, String sender, String receiver, BigInt cryptoAmount) async {
     try {
       Vibration.vibrate(duration: 100);
       view.onStartPayment();
-      final response = await _sendP2pTokenUseCase.send(token, blockchain, receiver, cryptoAmount);
+      final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, cryptoAmount);
       observableTransactionHash.value = response.transactionHash;
     } catch (e) {
       view.onError("$e");

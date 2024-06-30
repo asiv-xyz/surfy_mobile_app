@@ -28,16 +28,15 @@ class SendingConfirmViewModel {
       }
       observableGasToken.value = feeCoin;
     } catch (e) {
-      print("error during gas: $e");
       observableGas.value = BigInt.zero;
     }
     view.offLoading();
   }
 
-  Future<String> processTransfer(Token token, Blockchain blockchain, String receiver, BigInt amount) async {
+  Future<String> processTransfer(Token token, Blockchain blockchain, String sender, String receiver, BigInt amount) async {
     view.onSending();
     Vibration.vibrate(duration: 100);
-    final response = await _sendP2pTokenUseCase.send(token, blockchain, receiver, amount);
+    final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, amount);
     view.offSending();
     return response.transactionHash;
   }

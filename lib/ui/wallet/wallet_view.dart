@@ -2,17 +2,13 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/user_header.dart';
 import 'package:surfy_mobile_app/ui/components/wallet_item.dart';
-import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/ui/wallet/viewmodel/wallet_viewmodel.dart';
-import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -33,20 +29,15 @@ abstract class WalletPageInterface {
 }
 
 class _WalletPageState extends State<WalletPage> implements WalletPageInterface {
-  final Rx<String> _profileImageUrl = "".obs;
-  final Rx<String> _profileName = "".obs;
-  final GetWalletBalances _getWalletBalancesUseCase = Get.find();
-  final SettingsPreference _preference = Get.find();
-  final Calculator _calculator = Get.find();
-
   final WalletViewModel _viewModel = WalletViewModel();
 
+  final SettingsPreference _preference = Get.find();
+  final Calculator _calculator = Get.find();
   final RxBool _isLoading = false.obs;
 
   @override
   void initState() {
     super.initState();
-    loadWallet();
 
     _viewModel.setListener(this);
     _viewModel.init();
@@ -67,15 +58,6 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
   void offLoading() {
     logger.i('offLoading()');
     _isLoading.value = false;
-  }
-
-  Future<void> loadWallet() async {
-    Web3AuthFlutter.getUserInfo().then((user) {
-      setState(() {
-        _profileName.value = user.name ?? "";
-        _profileImageUrl.value = user.profileImage ?? "";
-      });
-    });
   }
 
   List<Pair<Token, BigInt>> _balanceListByDesc(List<Token> tokens, List<Balance> balanceList) {
@@ -139,10 +121,10 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
                           child: Column(
                             children: [
                               Obx(() => UserHeader(
-                                  profileImageUrl: _profileImageUrl.value,
-                                  profileName: _profileName.value,
+                                  profileImageUrl: _viewModel.observableUser.value?.profileImage ?? "",
+                                  profileName: _viewModel.observableUser.value?.name ?? "",
                                   onRefresh: () async {
-                                    _viewModel.refresh();
+                                    _viewModel.refresh(true);
                                   }
                               )),
                               const SizedBox(height: 8),
@@ -165,7 +147,7 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
                       ),
                     ),
                     Obx(() {
-                      if (_getWalletBalancesUseCase.isLoading.value == true) {
+                      if (_isLoading.value == true) {
                         return Container(
                           width: double.infinity,
                           height: double.infinity,

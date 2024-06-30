@@ -90,7 +90,6 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
     _viewModel.setView(this);
-    _repository.needToUpdate = true;
     controller = AnimationController(duration: Duration(seconds: 1), vsync: this);
     alpha = IntTween(begin: 0, end: 255).animate(controller);
     animation = Tween<double>(begin: 0, end: 300).animate(controller)..addListener(() {

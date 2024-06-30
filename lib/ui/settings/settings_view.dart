@@ -22,31 +22,29 @@ class SettingsPage extends StatelessWidget {
       body: Stack(
         children: [
           SingleChildScrollView(
-            child: Container(
+            child: SizedBox(
                 width: double.infinity,
                 child: Column(
                   children: [
-                    Container(
-                        child: PopupMenuButton<CurrencyType>(
-                            onSelected: (currencyType) async {
-                              await _preference.changeCurrencyType(currencyType);
-                            },
-                            itemBuilder: (context) => CurrencyType.values.map((currencyType) => PopupMenuItem(
-                                value: currencyType,
-                                child: Text(currencyType.name))
-                            ).toList(),
-                            child: Obx(() => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              color: SurfyColor.black,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Change currency type: ${_preference.userCurrencyType.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
-                                  Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
-                                ],
-                              )
-                            ))
-                        )
+                    PopupMenuButton<CurrencyType>(
+                        onSelected: (currencyType) async {
+                          await _preference.changeCurrencyType(currencyType);
+                        },
+                        itemBuilder: (context) => CurrencyType.values.map((currencyType) => PopupMenuItem(
+                            value: currencyType,
+                            child: Text(currencyType.name))
+                        ).toList(),
+                        child: Obx(() => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          color: SurfyColor.black,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Change currency type: ${_preference.userCurrencyType.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
+                              Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                            ],
+                          )
+                        ))
                     ),
                     Container(
                         child: PopupMenuButton<ThemeMode>(
@@ -68,6 +66,27 @@ class SettingsPage extends StatelessWidget {
                                   ],
                                 )
                             ))
+                        )
+                    ),
+                    Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        color: SurfyColor.black,
+                        child: InkWell(
+                            onTap: () {
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Show testnet', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                Obx(() => Checkbox(
+                                    value: _preference.isShowTestnet.value,
+                                    onChanged: (value) async {
+                                      await _preference.setIsShowTestnet(value ?? false);
+                                    }
+                                ))
+                              ],
+                            )
                         )
                     ),
                     Container(
@@ -122,7 +141,7 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Do you want to logout?', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold),),
+                      Text('Do you want to logout?', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: SurfyColor.black),),
                       SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,

@@ -11,6 +11,16 @@ class WalletCache {
     return "${token.name}-${blockchain.name}-$address";
   }
 
+  Future<void> saveBalanceOnly(Token token, Blockchain blockchain, String address, BigInt amount) async {
+    if (!Hive.isBoxOpen(walletBoxName)) {
+      await Hive.openBox(walletBoxName);
+    }
+
+    final box = Hive.box(walletBoxName);
+    final key = _generateKey(token, blockchain, address);
+    box.put(key, amount);
+  }
+
   Future<void> saveBalance(Token token, Blockchain blockchain, String address, BigInt amount) async {
     if (!Hive.isBoxOpen(walletBoxName)) {
       await Hive.openBox(walletBoxName);

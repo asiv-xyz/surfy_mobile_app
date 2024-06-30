@@ -376,6 +376,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                               _viewModel.processPayment(
                                   _viewModel.observableSelectedToken.value,
                                   _viewModel.observableSelectedBlockchain.value,
+                                  _viewModel.observableSenderWallet.value,
                                   _viewModel.observableReceiverWallet.value,
                                   _viewModel.observablePayCrypto.value
                               ).then((_) {
