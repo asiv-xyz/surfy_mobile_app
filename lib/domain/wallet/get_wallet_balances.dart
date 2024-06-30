@@ -1,10 +1,12 @@
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
+import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
@@ -21,59 +23,19 @@ class GetWalletBalances {
     required this.getTokenPriceUseCase,
     required this.keySerivce,
     required this.calculator,
+    required this.settingsPreference
   });
   final GetWalletAddress getWalletAddressUseCase;
   final GetTokenPrice getTokenPriceUseCase;
+  final SettingsPreference settingsPreference;
   final Calculator calculator;
 
   final WalletBalancesRepository repository;
   final KeyService keySerivce;
   final isLoading = false.obs;
-  final Rx<List<UserTokenData>> userDataObs = Rx([]);
 
   final RxBool needUpdate = false.obs;
 
-  Future<List<UserTokenData>> getTokenDataList(Token token) async {
-    final key = await keySerivce.getKey();
-    try {
-      logger.d('getAggregatedTokenData');
-      isLoading.value = true;
-      final result = repository.getSingleTokenBalance(token, key.first, key.second);
-      isLoading.value = false;
-      return result;
-    } catch (e) {
-      if (e.toString().contains('Need to update!')) {
-        isLoading.value = true;
-        await repository.forceLoadAndGetUserWalletBalances(Token.values, key.first, key.second);
-        final result = repository.getSingleTokenBalance(token, key.first, key.second);
-        isLoading.value = false;
-        return result;
-      }
-
-      rethrow;
-    }
-  }
-
-  Future<Pair<String, String>> getUiTokenBalance(Token token, CurrencyType currency) async {
-    logger.d('getUiTokenBalance, token=$token, currencyType=$currency');
-    final tokenPriceData = await getTokenPriceUseCase.getSingleTokenPrice(token, currency);
-    final userBalanceData = await getTokenDataList(token);
-    final aggregatedUserBalance = userBalanceData.reduce((prev, curr) {
-      return UserTokenData(
-        token: prev.token,
-        blockchain: prev.blockchain,
-        decimal: prev.decimal,
-        address: "",
-        amount: prev.amount + curr.amount,
-      );
-    });
-    final formatter = NumberFormat.decimalPattern('en_US');
-    final fiat = aggregatedUserBalance.toVisibleAmount() * (tokenPriceData?.price ?? 0);
-    final formattedFiat = formatter.format(fiat.toStringAsFixed(getFixedDigitBySymbol(currency)).toDouble());
-    return Pair("${aggregatedUserBalance.toVisibleAmount().toStringAsFixed(tokens[token]?.fixedDecimal ?? 2)} ${tokens[token]?.symbol}", "${getCurrencySymbol(currency)} $formattedFiat");
-  }
-
-  // refactoring
   Future<BigInt> getBalance(Token token, Blockchain blockchain, String address) async {
     return await repository.getBalance(token,
         blockchain,

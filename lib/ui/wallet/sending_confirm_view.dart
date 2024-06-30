@@ -1,13 +1,11 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
+import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/wallet/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/viewmodel/sending_confirm_viewmodel.dart';
@@ -16,7 +14,6 @@ import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
-import 'package:vibration/vibration.dart';
 
 class SendingConfirmViewProps {
   SendingConfirmViewProps({
@@ -86,9 +83,10 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
   final SendingConfirmViewModel _viewModel = SendingConfirmViewModel();
 
   final Calculator _calculator = Get.find();
-  final SendP2pToken _sendP2pToken = Get.find();
+
   final RxBool _isLoading = false.obs;
   final RxBool _isSending = false.obs;
+  final EventBus eventBus = Get.find();
   final SettingsPreference _preference = Get.find();
 
   @override
@@ -272,7 +270,12 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             return;
                           } else {
                             try {
-                              final response = await _viewModel.processTransfer(widget.token, widget.blockchain, widget.receiver, widget.amount);
+                              final response = await _viewModel.processTransfer(
+                                  widget.token,
+                                  widget.blockchain,
+                                  widget.sender,
+                                  widget.receiver,
+                                  widget.amount);
                               if (!mounted) {
                                 return;
                               }

@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:get/get.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
-import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
@@ -14,68 +14,6 @@ class WalletBalancesRepository implements EventListener {
   final WalletService walletService;
   final WalletCache walletCache;
 
-  bool needToUpdate = true;
-  static const updateThreshold = 300000; // 5 minutes
-  int _lastUpdateTimestamp = 0;
-  List<UserTokenData> data = [];
-
-  bool _needToUpdate() {
-    int now = DateTime.now().millisecondsSinceEpoch;
-    return needToUpdate || (now - _lastUpdateTimestamp > updateThreshold) || data.isEmpty;
-  }
-
-  Future<UserTokenData> _getSingleWalletBalance(({Token token, Blockchain blockchain, String key}) arg) async {
-    try {
-      final address = await walletService.getWalletAddress(arg.blockchain, arg.key);
-      final balance = await walletService.getBalance(arg.token, arg.blockchain, address);
-      return balance;
-    } catch (e) {
-      logger.e('get wallet balance failed, token=${arg.token}, blockchain=${arg.blockchain}, error=${e}');
-      rethrow;
-    }
-  }
-
-  Future<List<UserTokenData>> _loadNewData(List<Token> tokenList, String secp256k1, String ed25519) async {
-    _lastUpdateTimestamp = DateTime.now().millisecondsSinceEpoch;
-    final jobList = tokenList.map((token) {
-      final supportedBlockchain = tokens[token]?.supportedBlockchain ?? [];
-      return supportedBlockchain.map((blockchain) async {
-        final blockchainData = blockchains[blockchain];
-        return await _getSingleWalletBalance((token: token, blockchain: blockchain, key: blockchainData?.curve == EllipticCurve.SECP256K1 ? secp256k1 : ed25519));
-      }).toList();
-    }).expand((element) => element).toList();
-
-    return (await Future.wait(jobList)).toList();
-  }
-
-  Future<List<UserTokenData>> getUserWalletBalances(List<Token> tokenList, String secp256k1, String ed25519) async {
-    if (_needToUpdate()) {
-      logger.i('load new wallet balances: $tokenList');
-      needToUpdate = false;
-      data = await _loadNewData(tokenList, secp256k1, ed25519);
-    }
-
-    return data;
-  }
-
-  Future<List<UserTokenData>> forceLoadAndGetUserWalletBalances(List<Token> tokenList, String secp256k1, String ed25519) async {
-    logger.i('force loading user wallet balances!!');
-    needToUpdate = true;
-    return await getUserWalletBalances(tokenList, secp256k1, ed25519);
-  }
-
-  List<UserTokenData> getSingleTokenBalance(Token token, String secp256k1, String ed25519) {
-    if (_needToUpdate()) {
-      logger.e('Need to update!');
-      throw Exception('Need to update!');
-    }
-
-    return data.where((d) => d.token == token).toList();
-  }
-
-
-
-  // refactoring
   Future<BigInt> getBalance(Token token, Blockchain blockchain, String address, { fromRemote }) async {
     if (fromRemote == true) {
       final result = await walletService.getBalance(token, blockchain, address);
@@ -84,7 +22,7 @@ class WalletBalancesRepository implements EventListener {
     }
 
     if (!await walletCache.needToUpdate(token, blockchain, address)) {
-      print('get from cache, token=$token, blockchain=$blockchain, address=$address');
+      print('balance from cache!');
       return await walletCache.getBalance(token, blockchain, address);
     }
 
@@ -94,10 +32,18 @@ class WalletBalancesRepository implements EventListener {
   }
 
   @override
-  void onEventReceived(GlobalEvent event) {
+  Future<void> onEventReceived(GlobalEvent event) async {
     if (event is ForceUpdateTokenBalanceEvent) {
-      logger.i("Force update user balance, token=${event.token}, blockchain=${event.blockchain}, address=${event.address}");
-      getBalance(event.token, event.blockchain, event.address, fromRemote: true);
+      if (!await walletCache.needToUpdate(event.token, event.blockchain, event.address)) {
+        print('Event: Update cache!');
+        final existedItem = await walletCache.getBalance(event.token, event.blockchain, event.address);
+        await walletCache.saveBalanceOnly(event.token, event.blockchain, event.address, existedItem - event.amount);
+      }
+      final EventBus bus = Get.find();
+      bus.emit(UpdateTokenBalanceCompleteEvent());
+      // TODO : How about need to cache update?
+      // logger.i("Force update user balance, token=${event.token}, blockchain=${event.blockchain}, address=${event.address}");
+      // getBalance(event.token, event.blockchain, event.address, fromRemote: true);
     }
   }
 }

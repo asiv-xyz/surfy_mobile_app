@@ -48,6 +48,8 @@ Future<void> buildDependencies() async {
   await Hive.initFlutter();
 
   logger.d('Build Dependency graph');
+  Get.put(EventBus());
+
   TokenPriceService tokenPriceService = Get.put(TokenPriceService());
   TokenPriceCache tokenPriceCache = Get.put(TokenPriceCache());
   TokenPriceRepository tokenPriceRepository =
@@ -63,20 +65,22 @@ Future<void> buildDependencies() async {
   WalletCache walletCache = Get.put(WalletCache());
   WalletBalancesRepository walletBalancesRepository =
       Get.put(WalletBalancesRepository(walletService: walletService, walletCache: walletCache));
+  EventBus bus = Get.find();
+  bus.addEventListener(walletBalancesRepository);
 
   Get.put(Calculator(getTokenPrice: getTokenPrice));
+  Get.put(SettingsPreference());
   Get.put(GetWalletBalances(
     repository: Get.find(),
     getWalletAddressUseCase: Get.find(),
     getTokenPriceUseCase: Get.find(),
     keySerivce: Get.find(),
     calculator: Get.find(),
+    settingsPreference: Get.find(),
   ));
 
   Get.put(await availableCameras());
   Get.put(SelectToken());
-
-  Get.put(SettingsPreference());
   Get.put(MerchantService());
   Get.put(MerchantRepository(service: Get.find()));
 
@@ -123,18 +127,12 @@ Future<void> loadDefaultData() async {
   await Future.wait(jobList);
 }
 
-void setEventBus() {
-  final EventBus bus = Get.put(EventBus());
-  final WalletBalancesRepository walletBalancesRepository = Get.find();
-  bus.addEventListener(walletBalancesRepository);
-}
-
 void main() async {
   await dotenv.load(fileName: ".env");
   dioObject.transformer = BackgroundTransformer()
     ..jsonDecodeCallback = parseJson;
   await buildDependencies();
-  setEventBus();
+  // setEventBus();
   WidgetsFlutterBinding.ensureInitialized();
   MapboxOptions.setAccessToken(dotenv.env["MAPBOX_API_KEY"] ?? "");
 
@@ -191,6 +189,9 @@ class _SurfyAppState extends State<SurfyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      onNavigationNotification: (value) {
+        return true;
+      },
       darkTheme: ThemeData(
           appBarTheme: AppBarTheme(
               iconTheme: const IconThemeData(color: SurfyColor.white),

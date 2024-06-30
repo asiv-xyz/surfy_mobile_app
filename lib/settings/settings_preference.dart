@@ -50,11 +50,15 @@ int getFixedDigitBySymbol(CurrencyType currencyType) {
 
 class SettingsPreference {
   final userCurrencyType = CurrencyType.usd.obs;
+  final RxBool isShowTestnet = false.obs;
   final Rx<ThemeMode> themeObs = Rx(ThemeMode.system);
 
   SettingsPreference() {
     getCurrencyType().then((currencyType) {
       userCurrencyType.value = currencyType;
+    });
+    getIsShowTestnet().then((value) {
+      isShowTestnet.value = value;
     });
   }
 
@@ -72,6 +76,18 @@ class SettingsPreference {
     }
     final result = CurrencyType.values.where((ct) => ct.name == value.toLowerCase()).first;
     return result;
+  }
+
+  Future<bool> getIsShowTestnet() async {
+    final preference = await SharedPreferences.getInstance();
+    final value = preference.getBool('show_testnet');
+    return value ?? false;
+  }
+
+  Future<void> setIsShowTestnet(bool value) async {
+    final preference = await SharedPreferences.getInstance();
+    isShowTestnet.value = value;
+    preference.setBool('show_testnet', value);
   }
 
   Future<ThemeMode> getTheme() async {

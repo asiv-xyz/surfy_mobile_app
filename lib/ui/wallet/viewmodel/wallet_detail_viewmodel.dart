@@ -20,6 +20,7 @@ class WalletDetailViewModel {
   final GetWalletBalances _getWalletBalances = Get.find();
   final GetWalletAddress _getWalletAddress = Get.find();
   final GetTokenPrice _getTokenPrice = Get.find();
+  final SettingsPreference _preference = Get.find();
 
   void setView(WalletDetailPageInterface view) {
     this.view = view;
@@ -28,12 +29,20 @@ class WalletDetailViewModel {
   Future<void> init(Token token, CurrencyType currency) async {
     view.onLoading();
     final networks = tokens[token]?.supportedBlockchain ?? [];
-    final job = networks.map((network) async {
-      final address = await _getWalletAddress.getAddress(network);
-      addresses.value[network] = address;
-      final result = await _getWalletBalances.getBalance(token, network, address);
-      return Balance(token: token, blockchain: network, balance: result);
-    }).toList();
+    final job = networks
+        .where((network) {
+          if (_preference.isShowTestnet.value == false && (blockchains[network]?.isTestnet ?? false)) {
+            return false;
+          }
+          return true;
+        })
+        .map((network) async {
+          final address = await _getWalletAddress.getAddress(network);
+          addresses.value[network] = address;
+          final result = await _getWalletBalances.getBalance(token, network, address);
+          return Balance(token: token, blockchain: network, balance: result);
+        }
+    ).toList();
     final result = await Future.wait(job);
     balances.value = result;
 

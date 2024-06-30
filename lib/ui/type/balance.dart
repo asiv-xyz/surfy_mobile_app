@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
@@ -20,6 +22,11 @@ class Balance {
       "blockchain": blockchain.name,
       "balance": balance,
     }.toString();
+  }
+
+  double toFiat(double tokenPrice) {
+    final cryptoAmount = balance / BigInt.from(pow(10, tokens[token]?.decimal ?? 0));
+    return cryptoAmount * tokenPrice;
   }
 }
 
