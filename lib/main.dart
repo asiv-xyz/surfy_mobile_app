@@ -74,7 +74,7 @@ Future<void> buildDependencies() async {
     repository: Get.find(),
     getWalletAddressUseCase: Get.find(),
     getTokenPriceUseCase: Get.find(),
-    keySerivce: Get.find(),
+    keyService: Get.find(),
     calculator: Get.find(),
     settingsPreference: Get.find(),
   ));
@@ -140,7 +140,8 @@ void main() async {
   await loadDefaultData();
   String initialLocation = "";
   try {
-    await Web3AuthFlutter.getUserInfo();
+    final userInfo = await Web3AuthFlutter.getUserInfo();
+    print('userInfo: ${userInfo}');
     initialLocation = "/wallet";
   } catch (e) {
     initialLocation = "/login";

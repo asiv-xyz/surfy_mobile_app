@@ -1,16 +1,30 @@
-import 'package:get/get.dart';
-import 'package:surfy_mobile_app/repository/token/token_price_repository.dart';
-import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 enum GlobalEventType {
   forceUpdateTokenBalance,
   updateTokenBalanceComplete,
+  reloadWalletEvent,
+  changeCurrencyTypeEvent,
 }
 
 abstract class GlobalEvent {
   GlobalEventType getType();
+}
+
+class ReloadWalletEvent extends GlobalEvent {
+  @override
+  GlobalEventType getType() {
+    return GlobalEventType.reloadWalletEvent;
+  }
+}
+
+class ChangeCurrecnyTypeEvent extends GlobalEvent {
+  @override
+  GlobalEventType getType() {
+    return GlobalEventType.changeCurrencyTypeEvent;
+  }
+
 }
 
 class UpdateTokenBalanceCompleteEvent extends GlobalEvent {
@@ -50,7 +64,7 @@ class ForceUpdateTokenBalanceEvent extends GlobalEvent {
 }
 
 abstract class EventListener {
-  void onEventReceived(GlobalEvent event);
+  Future<void> onEventReceived(GlobalEvent event);
 }
 
 class EventBus {
@@ -60,11 +74,9 @@ class EventBus {
     _eventListeners.add(listener);
   }
 
-  void emit(GlobalEvent event) {
-    print('Event emit!: $event');
-    for (var listener in _eventListeners) {
-      print('listener: $listener');
-      listener.onEventReceived(event);
-    }
+  Future<void> emit(GlobalEvent event) async {
+    print('Event Emit: $event');
+    final job = _eventListeners.map((listener) async => await listener.onEventReceived(event));
+    await Future.wait(job);
   }
 }

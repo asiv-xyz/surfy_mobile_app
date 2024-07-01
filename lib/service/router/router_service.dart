@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/ui/pos/payment_confirm_view.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class RouterService {

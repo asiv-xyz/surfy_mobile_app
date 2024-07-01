@@ -21,7 +21,7 @@ class GetWalletBalances {
     required this.repository,
     required this.getWalletAddressUseCase,
     required this.getTokenPriceUseCase,
-    required this.keySerivce,
+    required this.keyService,
     required this.calculator,
     required this.settingsPreference
   });
@@ -31,7 +31,7 @@ class GetWalletBalances {
   final Calculator calculator;
 
   final WalletBalancesRepository repository;
-  final KeyService keySerivce;
+  final KeyService keyService;
   final isLoading = false.obs;
 
   final RxBool needUpdate = false.obs;

@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/error_codes.dart' as auth_error;
+
 
 class SettingsPage extends StatelessWidget {
   SettingsPage({super.key});
 
   final SettingsPreference _preference = Get.find();
+  final EventBus _bus = Get.find();
+  final LocalAuthentication auth = LocalAuthentication();
   final _processLogout = false.obs;
 
   @override
@@ -29,6 +36,7 @@ class SettingsPage extends StatelessWidget {
                     PopupMenuButton<CurrencyType>(
                         onSelected: (currencyType) async {
                           await _preference.changeCurrencyType(currencyType);
+                          await _bus.emit(ChangeCurrecnyTypeEvent());
                         },
                         itemBuilder: (context) => CurrencyType.values.map((currencyType) => PopupMenuItem(
                             value: currencyType,
@@ -94,7 +102,38 @@ class SettingsPage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         color: SurfyColor.black,
                         child: InkWell(
-                            onTap: () {
+                            onTap: () async {
+                              print('export key');
+                              final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
+                              print('canAuthenticateWithBiometrics: $canAuthenticateWithBiometrics');
+                              final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+                              print('canAuthenticate: $canAuthenticate');
+                              if (canAuthenticate) {
+                                final List<BiometricType> availableBiometrics = await auth.getAvailableBiometrics();
+                                print('availableBiometrics: $availableBiometrics');
+                                if (availableBiometrics.contains(BiometricType.strong)) {
+                                  try {
+                                    final bool didAuthenticate = await auth.authenticate(
+                                        localizedReason: 'Please authenticate to show account balance',
+                                        options: const AuthenticationOptions(useErrorDialogs: false));
+                                    print('didAuthenticate: $didAuthenticate');
+                                    if (didAuthenticate) {
+                                      // show key
+                                    }
+
+                                  } on PlatformException catch (e) {
+                                    print('e: $e');
+                                    if (e.code == auth_error.notAvailable) {
+                                      // Add handling of no hardware here.
+                                    } else if (e.code == auth_error.notEnrolled) {
+                                      // ...
+                                    } else {
+                                      // ...
+                                    }
+                                  }
+                                }
+                              }
+
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -10,21 +10,21 @@ import 'package:surfy_mobile_app/ui/login/login_view.dart';
 import 'package:surfy_mobile_app/ui/map/map_view.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/ui/payment/payment_view.dart';
-import 'package:surfy_mobile_app/ui/pos/payment_confirm_view.dart';
-import 'package:surfy_mobile_app/ui/pos/payment_complete_view.dart';
-import 'package:surfy_mobile_app/ui/pos/pos_qr_view.dart';
-import 'package:surfy_mobile_app/ui/pos/pos_view.dart';
-import 'package:surfy_mobile_app/ui/pos/select_payment_token_view.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/check/payment_complete_view.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/pos/pos_view.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/qr/pos_qr_view.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/ui/qr/qr_view.dart';
 import 'package:surfy_mobile_app/ui/settings/settings_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/check_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/direct_send_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/receive_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/sending_confirm_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/send_receive_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/send_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/wallet_detail_view.dart';
-import 'package:surfy_mobile_app/ui/wallet/wallet_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/receive/receive_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/confirm/sending_confirm_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/detail/wallet_detail_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/send/send_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/single_balance/send_receive_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/wallet/wallet_view.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
@@ -206,12 +206,12 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
           StatefulShellBranch(
               routes: <RouteBase>[
                 GoRoute(
-                    path: '/sendAndReceive',
+                    path: '/single-balance',
                     builder: (context, state) {
                       final Pair<Token, Blockchain> extra = state.extra as Pair<Token, Blockchain>;
                       final token = extra.first;
                       final blockchain = extra.second;
-                      return SendReceivePage(
+                      return SingleBalancePage(
                           token: token,
                           blockchain: blockchain
                       );

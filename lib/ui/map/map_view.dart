@@ -8,6 +8,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
+import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/map/viewmodel/map_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -246,13 +247,7 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle, MapV
             title: Text('Find SURFY Store!')),
         body: Obx(() {
           if (_isLoading.isTrue) {
-            return const SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: Center(
-                child: CircularProgressIndicator(color: SurfyColor.blue)
-              )
-            );
+            return const LoadingWidget(opacity: 0.4);
           }
 
           return Stack(
