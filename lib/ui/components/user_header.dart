@@ -51,25 +51,18 @@ class UserHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                    onPressed: () {
-                      context.push('/settings');
-                    },
-                    icon: const Icon(Icons.settings_outlined, size: 24))
+              IconButton(
+                  onPressed: () {
+                    context.push('/settings');
+                  },
+                  icon: const Icon(Icons.settings_outlined, size: 25)
               ),
-              const SizedBox(width: 20),
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                    onPressed: () async {
-                      onRefresh.call();
-                    },
-                    icon: const Icon(Icons.refresh_outlined, size: 24)
-                )
+              // const SizedBox(width: 20),
+              IconButton(
+                  onPressed: () async {
+                    onRefresh.call();
+                  },
+                  icon: const Icon(Icons.refresh_outlined, size: 25)
               )
             ],
           )

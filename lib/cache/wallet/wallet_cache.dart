@@ -1,4 +1,5 @@
 import 'package:hive_flutter/adapters.dart';
+import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
@@ -70,5 +71,23 @@ class WalletCache {
 
     final now = DateTime.now().millisecondsSinceEpoch;
     return now - lastUpdatedTime > updateThreshold;
+  }
+
+  Future<void> clearCache() async {
+    logger.i('clearCache()');
+    if (!Hive.isBoxOpen(walletBoxName)) {
+      await Hive.openBox(walletBoxName);
+    }
+
+    var box = Hive.box(walletBoxName);
+    await box.clear();
+
+    if (!Hive.isBoxOpen(walletUpdatedTimeBoxName)) {
+      await Hive.openBox(walletUpdatedTimeBoxName);
+    }
+
+    box = Hive.box(walletUpdatedTimeBoxName);
+    await box.clear();
+    logger.i('finish clearCache()');
   }
 }

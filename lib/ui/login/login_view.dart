@@ -2,19 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/service/key/key_service.dart';
-import 'package:surfy_mobile_app/settings/settings_preference.dart';
+import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
+import 'package:surfy_mobile_app/ui/login/viewmodel/login_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
-import 'package:web3auth_flutter/enums.dart' as web3_auth_enum;
 import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
@@ -26,9 +21,41 @@ class LoginPage extends StatefulWidget {
   }
 }
 
-class _LoginPageState extends State<LoginPage> {
+abstract class LoginView {
+  void startLoading();
+  void finishLoading();
+  void onError(String error);
+}
+
+class _LoginPageState extends State<LoginPage> implements LoginView {
+  final LoginViewModel _viewModel = LoginViewModel();
   final _isLoading = false.obs;
-  final KeyService _keyService = Get.find();
+
+  @override
+  void startLoading() {
+    _isLoading.value = true;
+  }
+
+  @override
+  void finishLoading() {
+    _isLoading.value = false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel.setView(this);
+  }
+
+  @override
+  void onError(String error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+        backgroundColor: Colors.black,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,19 +112,13 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialButton(
                               padding: EdgeInsets.zero,
                               onPressed: () async {
-                                final Web3AuthResponse response =
-                                await Web3AuthFlutter.login(
-                                  LoginParams(
-                                      loginProvider: Provider.google,
-                                  ),
-                                );
-                                if (response.error != null) {
-                                  logger.e('error! ${response.error}');
-                                } else {
+                                _viewModel.processLogin(LoginParams(
+                                  loginProvider: Provider.google,
+                                ), () {
                                   if (mounted) {
                                     context.go('/wallet');
                                   }
-                                }
+                                });
                               },
                               child: Container(
                                   width: double.infinity,
@@ -128,24 +149,16 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialButton(
                               padding: EdgeInsets.zero,
                               onPressed: () async {
-                                final Web3AuthResponse response =
-                                  await Web3AuthFlutter.login(
-                                    LoginParams(
-                                      loginProvider: Provider.twitter,
-                                      extraLoginOptions: ExtraLoginOptions(
+                                await _viewModel.processLogin(LoginParams(loginProvider: Provider.twitter,
+                                    extraLoginOptions: ExtraLoginOptions(
                                         domain: dotenv.env["AUTH0_DOMAIN"],
                                         client_id: dotenv.env["AUTH0_CLIENT_ID"],
                                         redirect_uri: "surfy://com.riverbank.surfy/auth"
-                                      )
-                                    ),
-                                  );
-                                if (response.error != null) {
-                                  logger.e('error! ${response.error}');
-                                } else {
+                                    )), () {
                                   if (mounted) {
                                     context.go('/wallet');
                                   }
-                                }
+                                });
                               },
                               child: Container(
                                   width: double.infinity,
@@ -176,16 +189,13 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialButton(
                               padding: EdgeInsets.zero,
                               onPressed: () async {
-                                final Web3AuthResponse response = await Web3AuthFlutter.login(LoginParams(
+                                _viewModel.processLogin(LoginParams(
                                     loginProvider: Provider.farcaster
-                                ));
-                                if (response.error != null) {
-                                  logger.e('error! ${response.error}');
-                                } else {
+                                ), () {
                                   if (mounted) {
                                     context.go('/wallet');
                                   }
-                                }
+                                });
                               },
                               child: Container(
                                   width: double.infinity,
@@ -218,14 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                     )),
                 Obx(() {
                   if (_isLoading.isTrue) {
-                    return Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: SurfyColor.black.withOpacity(0.5),
-                      child: Center(
-                        child: CircularProgressIndicator(color: SurfyColor.blue,)
-                      ),
-                    );
+                    return const LoadingWidget(opacity: 0.4);
                   } else {
                     return Container();
                   }
