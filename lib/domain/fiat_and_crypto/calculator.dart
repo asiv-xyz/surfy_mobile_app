@@ -9,17 +9,6 @@ class Calculator {
 
   final GetTokenPrice getTokenPrice;
 
-  double cryptoToFiat(Token token, BigInt amount, CurrencyType target) {
-    final tokenData = tokens[token];
-    if (tokenData == null) {
-      return 0.0;
-    }
-
-    final tokenPrice = getTokenPrice.tokenPriceObs.value[token];
-    final visibleTokenAmount = amount / BigInt.from(pow(10, tokenData.decimal));
-    return visibleTokenAmount * (tokenPrice?.price ?? 0.0);
-  }
-
   double cryptoToFiatV2(Token token, BigInt amount, double tokenPrice) {
     final tokenData = tokens[token];
     if (tokenData == null) {
@@ -27,12 +16,9 @@ class Calculator {
     }
 
     final visibleTokenAmount = amount / BigInt.from(pow(10, tokenData.decimal));
-    return visibleTokenAmount / tokenPrice;
-  }
-
-  double cryptoAmountToFiat(Token token, double cryptoAmount, CurrencyType target) {
-    final tokenPrice = getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0;
-    return cryptoAmount * tokenPrice;
+    final result = visibleTokenAmount * tokenPrice;
+    print('cryptoToFiatV2: token=$token, amount=$visibleTokenAmount, tokenprice=$tokenPrice, fiat=$result');
+    return result;
   }
 
   double cryptoAmountToFiatV2(double cryptoAmount, double tokenPrice) {
@@ -48,30 +34,18 @@ class Calculator {
     return amount / BigInt.from(pow(10, tokenData.decimal));
   }
 
-  double fiatToCrypto(double fiat, Token token) {
-    final tokenData = tokens[token];
-    if (tokenData == null) {
-      return 0;
-    }
-
-    final tokenPrice = getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0;
-    return fiat / tokenPrice;
-  }
-
-
   double fiatToCryptoV2(double fiat, double tokenPrice) {
     return fiat / tokenPrice;
   }
 
-  BigInt fiatToCryptoAmount(double fiat, Token token) {
+  BigInt fiatToCryptoAmountV2(double fiat, Token token, double tokenPrice) {
     final tokenData = tokens[token];
     if (tokenData == null) {
       return BigInt.zero;
     }
 
-    final tokenPrice = getTokenPrice.tokenPriceObs.value[token]?.price ?? 0.0;
     final visibleAmount = fiat / tokenPrice;
-    return BigInt.from(visibleAmount) * BigInt.from(pow(10, tokenData.decimal));
+    return BigInt.from(visibleAmount * pow(10, tokenData.decimal));
   }
 
   BigInt cryptoWithDecimal(Token token, double visibleCrypto) {

@@ -27,8 +27,8 @@ class WalletViewModel implements EventListener {
   final SettingsPreference _preference = Get.find();
   final EventBus _bus = Get.find();
 
-  Rx<List<Balance>> balances = Rx([]);
-  Rx<Map<Token, TokenPrice>> prices = Rx({});
+  Rx<List<Balance>> observableBalances = Rx([]);
+  Rx<Map<Token, Map<CurrencyType, TokenPrice>>> observablePrices = Rx({});
   RxString observableProfileImageUrl = "".obs;
   RxString observableProfileName = "".obs;
   Rx<TorusUserInfo?> observableUser = Rx(null);
@@ -39,6 +39,7 @@ class WalletViewModel implements EventListener {
 
   Future<void> init() async {
     observableUser.value = await Web3AuthFlutter.getUserInfo();
+
     await refresh(true);
   }
 
@@ -67,13 +68,14 @@ class WalletViewModel implements EventListener {
     }).toList();
 
     final balanceList = (await Future.wait(getBalanceJobList)).expand((e) => e);
-    balances.value = [];
+    observableBalances.value = [];
     for (var balance in balanceList) {
-      balances.value.add(balance);
+      observableBalances.value.add(balance);
     }
 
     final tokenPrices = await _getTokenPrice.getTokenPrice(Token.values, _preference.userCurrencyType.value);
-    prices.value = tokenPrices;
+    print('tokenPrices: $tokenPrices');
+    observablePrices.value = tokenPrices;
 
     listener.offLoading();
   }

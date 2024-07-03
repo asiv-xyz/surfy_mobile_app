@@ -5,7 +5,7 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 class TokenPriceCache {
   static const tokenPriceBoxName = 'token-price';
   static const tokenPriceUpdatedTimeBoxName = 'token-price-updated-time';
-  static const updateThreshold = 60000;
+  static const updateThreshold = 300000;
 
   String _generateKey(Token token, CurrencyType currencyType) {
     return "${token.name}-${currencyType.name}";

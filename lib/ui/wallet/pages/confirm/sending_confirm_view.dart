@@ -24,6 +24,7 @@ class SendingConfirmViewProps {
     required this.receiver,
     required this.amount,
     required this.fiat,
+    required this.currencyType,
   });
 
   final Token token;
@@ -32,6 +33,7 @@ class SendingConfirmViewProps {
   final String receiver;
   final BigInt amount;
   final double fiat;
+  final CurrencyType currencyType;
 
   @override
   String toString() {
@@ -41,16 +43,17 @@ class SendingConfirmViewProps {
       "sender": sender,
       "receiver": receiver,
       "amount": amount.toString(),
-      "fiat": fiat
+      "fiat": fiat,
+      "currencyType": currencyType,
     }.toString();
   }
 }
 
-abstract class SendingConfirmPageInterface {
-  void onLoading();
-  void offLoading();
+abstract class SendingConfirmView {
+  void startLoading();
+  void finishLoading();
   void onSending();
-  void offSending();
+  void finishSending();
   void onError(String error);
 }
 
@@ -63,6 +66,7 @@ class SendingConfirmPage extends StatefulWidget {
     required this.receiver,
     required this.amount,
     required this.fiat,
+    required this.currencyType,
   });
 
   final Token token;
@@ -71,6 +75,7 @@ class SendingConfirmPage extends StatefulWidget {
   final String receiver;
   final BigInt amount;
   final double fiat;
+  final CurrencyType currencyType;
 
   @override
   State<StatefulWidget> createState() {
@@ -78,7 +83,7 @@ class SendingConfirmPage extends StatefulWidget {
   }
 }
 
-class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingConfirmPageInterface {
+class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingConfirmView {
   static const updateThreshold = 300000;
 
   final SendingConfirmViewModel _viewModel = SendingConfirmViewModel();
@@ -91,12 +96,12 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
   final SettingsPreference _preference = Get.find();
 
   @override
-  void onLoading() {
+  void startLoading() {
     _isLoading.value = true;
   }
 
   @override
-  void offLoading() {
+  void finishLoading() {
     _isLoading.value = false;
   }
 
@@ -106,7 +111,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
   }
 
   @override
-  void offSending() {
+  void finishSending() {
     _isSending.value = false;
   }
 
@@ -124,7 +129,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
   void initState() {
     super.initState();
     _viewModel.setView(this);
-    _viewModel.init(widget.token, widget.blockchain, widget.receiver, widget.amount);
+    _viewModel.init(widget.token, widget.blockchain, widget.receiver, widget.amount, widget.currencyType);
   }
 
   @override
@@ -243,7 +248,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(formatFiat(_calculator.cryptoToFiat(widget.token, widget.amount, _preference.userCurrencyType.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall),
+                                Text(formatFiat(_calculator.cryptoToFiatV2(widget.token, widget.amount, _viewModel.observableTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall),
                                 const SizedBox(height: 2),
                                 Text(formatCrypto(_viewModel.observableGasToken.value, _calculator.cryptoToDouble(widget.token, _viewModel.observableGas.value)), style: Theme.of(context).textTheme.labelSmall)
                               ],

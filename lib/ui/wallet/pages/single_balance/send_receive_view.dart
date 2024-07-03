@@ -121,7 +121,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                               token: widget.token,
                               currencyType: _preference.userCurrencyType.value,
                               cryptoBalance: _calculator.cryptoToDouble(widget.token, _viewModel.observableCryptoBalance.value),
-                              fiatBalance: _calculator.cryptoToFiat(widget.token, _viewModel.observableCryptoBalance.value, _preference.userCurrencyType.value)
+                              fiatBalance: _calculator.cryptoToFiatV2(widget.token, _viewModel.observableCryptoBalance.value, _viewModel.observableTokenPrice.value)
                             )
                         )),
                         SizedBox(

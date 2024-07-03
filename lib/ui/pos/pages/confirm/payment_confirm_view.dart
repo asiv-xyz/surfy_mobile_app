@@ -54,6 +54,7 @@ abstract class PaymentConfirmView {
 
 class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements PaymentConfirmView{
   final PaymentConfirmViewModel _viewModel = PaymentConfirmViewModel();
+  final SettingsPreference _preference = Get.find();
 
   final Calculator _calculator = Get.find();
 
@@ -113,15 +114,6 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
     _viewModel.init(widget.storeId, widget.wantToReceiveAmount, widget.receiveCurrency);
   }
 
-  bool _canPay() {
-    if (_isChangePaymentMethodLoading.isTrue) {
-      return true;
-    }
-    
-    return widget.wantToReceiveAmount < _calculator.cryptoToFiat(_viewModel.observableSelectedToken.value,
-        _viewModel.observableUserBalance.value, widget.receiveCurrency);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,7 +164,8 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                           final props = SelectPaymentTokenPageProps(
                                               onSelect: (Token token, Blockchain blockchain) async {
                                                 await _viewModel.changePaymentMethod(token, blockchain, widget.wantToReceiveAmount, widget.receiveCurrency);
-                                              }, receiveCurrency: widget.receiveCurrency,
+                                              },
+                                              receiveCurrency: _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd,
                                               wantToReceiveAmount: widget.wantToReceiveAmount);
                                           context.push("/pos/select", extra: props);
                                         }
@@ -207,7 +200,12 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                                       borderRadius: BorderRadius.circular(10)
                                                                   ),
                                                                 ),
-                                                                child: Text(formatFiat(_calculator.cryptoToFiat(_viewModel.observableSelectedToken.value, _viewModel.observableUserBalance.value, widget.receiveCurrency), widget.receiveCurrency), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14)
+                                                                child: Text(
+                                                                    formatFiat(
+                                                                        _calculator.cryptoToFiatV2(
+                                                                            _viewModel.observableSelectedToken.value,
+                                                                            _viewModel.observableUserBalance.value,
+                                                                            _viewModel.observableTokenPrice.value[_preference.userCurrencyType.value] ?? 0.0), _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14)
                                                             )
                                                         ));
                                                       }),
@@ -249,7 +247,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                   amount: _viewModel.observableGas.value,
                                   decimal: tokens[blockchains[_viewModel.observableSelectedBlockchain.value]?.feeCoin]?.decimal ?? 1,
                                   address: "");
-                              final gasFiat = gasData.toVisibleAmount() * (_viewModel.observableTokenPrice.value);
+                              final gasFiat = gasData.toVisibleAmount() * (_viewModel.observableTokenPrice.value[_preference.userCurrencyType.value] ?? 0.0);
                               print('gas: $gasData');
                               print('gasFiat: $gasFiat');
                               return Container(
@@ -359,7 +357,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                               );
                             }),
                             Obx(() {
-                              if (!_canPay()) {
+                              if (_viewModel.observableCanPay.isFalse) {
                                 return Container(
                                     child: Text('Insufficient balance, check your wallet!', style: GoogleFonts.sora(color: SurfyColor.deepRed, fontSize: 14),)
                                 );
@@ -385,6 +383,9 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                 height: 60,
                                 onSwipe: () {
                                   _viewModel.processPayment(
+                                      widget.storeId,
+                                      widget.wantToReceiveAmount,
+                                      widget.receiveCurrency,
                                       _viewModel.observableSelectedToken.value,
                                       _viewModel.observableSelectedBlockchain.value,
                                       _viewModel.observableSenderWallet.value,
@@ -398,9 +399,11 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                         blockchain: _viewModel.observableSelectedBlockchain.value,
                                         txHash: _viewModel.observableTransactionHash.value
                                     ));
+                                  }).catchError((e) {
+                                    onError("$e");
                                   });
                                 },
-                                enabled: _canPay(),
+                                enabled: _viewModel.observableCanPay.value,
                                 borderRadius: BorderRadius.circular(0),
                                 activeTrackColor: SurfyColor.white,
                                 activeThumbColor: SurfyColor.blue,

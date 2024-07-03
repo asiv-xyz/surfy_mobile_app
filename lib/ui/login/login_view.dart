@@ -49,6 +49,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
 
   @override
   void onError(String error) {
+    print('onError: $error');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),

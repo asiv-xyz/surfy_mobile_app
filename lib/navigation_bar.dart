@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
+import 'package:surfy_mobile_app/ui/common/error/error_page.dart';
 import 'package:surfy_mobile_app/ui/history/history_view.dart';
 import 'package:surfy_mobile_app/ui/login/login_view.dart';
 import 'package:surfy_mobile_app/ui/map/map_view.dart';
@@ -266,6 +267,7 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                         receiver: extra.receiver,
                         amount: extra.amount,
                         fiat: extra.fiat,
+                        currencyType: extra.currencyType,
                       );
                     }
                 ),
@@ -284,6 +286,12 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                           currency: extra.currency
                       );
                     }
+                ),
+                GoRoute(
+                  path: '/error',
+                  builder: (context, state) {
+                    return ErrorPage();
+                  }
                 )
               ]),
         ])

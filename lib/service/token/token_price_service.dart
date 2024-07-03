@@ -8,7 +8,7 @@ import 'package:surfy_mobile_app/utils/tokens.dart';
 class TokenPriceService {
   Future<Map<Token, TokenPrice>> getTokenBalance(List<String> cgIdentifierList, CurrencyType currencyType) async {
     final result = await dioObject.get(
-      'https://slq250cw87.execute-api.ap-northeast-2.amazonaws.com/Prod/price?ids=${cgIdentifierList.join(',')}&vs_currency=${currencyType.name.toLowerCase()}',
+      'https://wgs0z4xv93.execute-api.ap-northeast-2.amazonaws.com/Prod/price?ids=${cgIdentifierList.join(',')}&vs_currency=${currencyType.name.toLowerCase()}',
       options: Options(responseType: ResponseType.json),
     );
 

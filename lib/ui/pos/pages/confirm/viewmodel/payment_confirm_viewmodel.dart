@@ -3,13 +3,17 @@ import 'dart:math';
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
+import 'package:surfy_mobile_app/domain/transaction/save_transaction.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
+import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
+import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:vibration/vibration.dart';
 
@@ -22,18 +26,26 @@ class PaymentConfirmViewModel {
   final GetWalletAddress _getWalletAddressUseCase = Get.find();
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final SettingsPreference _settingsPreference = Get.find();
+  final SaveTransaction _saveTransactionUseCase = Get.find();
+  final KeyService _keyService = Get.find();
 
   final Rx<Token> observableSelectedToken = Rx(Token.ETHEREUM);
   final Rx<Blockchain> observableSelectedBlockchain = Rx(Blockchain.ETHEREUM);
+
   final Rx<BigInt> observableGas = BigInt.zero.obs;
   final Rx<BigInt> observablePayCrypto = BigInt.zero.obs;
   final Rx<BigInt> observableUserBalance = BigInt.zero.obs;
-  final RxDouble observableTokenPrice = 0.0.obs;
+
+  final Rx<Map<CurrencyType, double>> observableTokenPrice = Rx({});
+
   final Rx<Merchant?> observableMerchant = Rx(null);
+  final Rx<CurrencyType?> observableUserCurrencyType = Rx(null);
 
   final RxString observableSenderWallet = "".obs;
   final RxString observableReceiverWallet = "".obs;
   final RxString observableTransactionHash = "".obs;
+
+  final RxBool observableCanPay = false.obs;
 
   void setView(PaymentConfirmView view) {
     this.view = view;
@@ -42,6 +54,8 @@ class PaymentConfirmViewModel {
   Future<void> init(String storeId, double fiatAmount, CurrencyType currencyType) async {
     try {
       view.onLoading();
+
+      observableUserCurrencyType.value = _settingsPreference.userCurrencyType.value;
 
       final merchant = await _getMerchantsUseCase.getSingle(storeId);
       observableMerchant.value = merchant;
@@ -69,18 +83,25 @@ class PaymentConfirmViewModel {
 
       final address = await _getWalletAddressUseCase.getAddress(blockchain);
       final balance = await _getWalletBalancesUseCase.getBalance(token, blockchain, address);
-      final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, _settingsPreference.userCurrencyType.value);
+
+      var tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, currencyType);
+      observableTokenPrice.value[currencyType] = tokenPrice?.price ?? 0;
+      observablePayCrypto.value = BigInt.from(pow(10, tokenData.decimal) * fiatAmount / (tokenPrice?.price ?? 1.0));
+      if (currencyType != _settingsPreference.userCurrencyType.value) {
+        tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, _settingsPreference.userCurrencyType.value);
+        observableTokenPrice.value[_settingsPreference.userCurrencyType.value] = tokenPrice?.price ?? 0;
+      }
 
       observableSenderWallet.value = address;
-      observableTokenPrice.value = tokenPrice?.price ?? 0;
       observableUserBalance.value = balance;
-      observablePayCrypto.value = BigInt.from(pow(10, tokenData.decimal) * fiatAmount / (tokenPrice?.price ?? 1.0));
 
       final networkCategory = blockchains[blockchain]?.category;
       final receivedWallet = observableMerchant.value?.wallets?.where((wallet) => wallet.walletCategory == networkCategory).first;
       final estimatedGas = await _sendP2pTokenUseCase.estimateGas(token, blockchain, receivedWallet?.walletAddress ?? "", observablePayCrypto.value);
       observableGas.value = estimatedGas;
       observableReceiverWallet.value = receivedWallet?.walletAddress ?? "";
+
+      await canPay(fiatAmount, currencyType);
     } catch (e) {
       view.onError("$e");
     } finally {
@@ -88,14 +109,47 @@ class PaymentConfirmViewModel {
     }
   }
 
-  Future<void> processPayment(Token token, Blockchain blockchain, String sender, String receiver, BigInt cryptoAmount) async {
+  Future<void> canPay(double targetFiat, CurrencyType merchantCurrencyType) async {
+    final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(observableSelectedToken.value, merchantCurrencyType);
+    final userBalance = await _getWalletBalancesUseCase.getBalance(observableSelectedToken.value, observableSelectedBlockchain.value, observableSenderWallet.value);
+    final fiat = cryptoToFiat(observableSelectedToken.value,
+        userBalance, tokenPrice?.price ?? 0, merchantCurrencyType);
+    print('targetFiat: $targetFiat, userBalance: $fiat');
+    observableCanPay.value = fiat > targetFiat;
+  }
+
+  Future<void> processPayment(
+      String storeId,
+      double fiat,
+      CurrencyType paymentCurrencyType,
+      Token token,
+      Blockchain blockchain,
+      String sender,
+      String receiver,
+      BigInt cryptoAmount) async {
     try {
+      print('processPayment: token=$token, blockchain=$blockchain, sender=$sender, receiver=$receiver, cryptoAmount=$cryptoAmount');
       Vibration.vibrate(duration: 100);
       view.onStartPayment();
       final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, cryptoAmount);
+      await _saveTransactionUseCase.run(
+          type: TransactionType.payment,
+          transactionHash: response.transactionHash,
+          senderUserId: await _keyService.getKeyHash(),
+          senderAddress: sender,
+          receiverAddress: receiver,
+          amount: cryptoAmount,
+          token: token,
+          blockchain: blockchain,
+          storeId: storeId,
+          fiat: fiat,
+          currencyType: paymentCurrencyType,
+      );
+      print('processPayment: $response');
       observableTransactionHash.value = response.transactionHash;
     } catch (e) {
-      view.onError("$e");
+      print('processPayment error: $e');
+      rethrow;
     } finally {
       view.onFinishPayment();
     }

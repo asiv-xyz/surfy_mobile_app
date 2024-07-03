@@ -92,7 +92,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                       child: BalanceView(
                         token: widget.token,
                         currencyType: _preference.userCurrencyType.value,
-                        fiatBalance: _calculator.cryptoToFiat(widget.token, _viewModel.aggregateBalance(), _preference.userCurrencyType.value),
+                        fiatBalance: _calculator.cryptoToFiatV2(widget.token, _viewModel.aggregateBalance(), _viewModel.tokenPrice.value),
                         cryptoBalance: _calculator.cryptoToDouble(widget.token, _viewModel.aggregateBalance()),
                       )
                   );
@@ -169,7 +169,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(formatFiat(_calculator.cryptoToFiat(widget.token, item.balance, _preference.userCurrencyType.value),
+                                    Text(formatFiat(_calculator.cryptoToFiatV2(widget.token, item.balance, _viewModel.tokenPrice.value),
                                         _preference.userCurrencyType.value), style: Theme.of(context).textTheme.displaySmall),
                                     Text(formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, item.balance)), style: Theme.of(context).textTheme.labelMedium)
                                   ],

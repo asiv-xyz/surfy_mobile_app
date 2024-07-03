@@ -7,7 +7,7 @@ import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/user_header.dart';
-import 'package:surfy_mobile_app/ui/components/wallet_item.dart';
+import 'package:surfy_mobile_app/ui/wallet/components/wallet_item/wallet_item.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/wallet/viewmodel/wallet_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
@@ -64,7 +64,7 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
 
   List<Pair<Token, BigInt>> _balanceListByDesc(List<Token> tokens, List<Balance> balanceList) {
     final list = tokens.map((token) {
-      return _viewModel.balances.value
+      return _viewModel.observableBalances.value
           .where((t) => t.token == token)
           .where((t) {
             if (!_preference.isShowTestnet.value && (blockchains[t.blockchain]?.isTestnet ?? true)) {
@@ -82,8 +82,8 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
     }).map((balance) => Pair(balance.token, balance.balance)).toList();
 
     list.sort((a, b) {
-      final fiatA = _calculator.cryptoToFiat(a.first, a.second, _preference.userCurrencyType.value);
-      final fiatB = _calculator.cryptoToFiat(b.first, b.second, _preference.userCurrencyType.value);
+      final fiatA = _calculator.cryptoToFiatV2(a.first, a.second, _viewModel.observablePrices.value[a.first]?[_preference.userCurrencyType.value]?.price ?? 0.0);
+      final fiatB = _calculator.cryptoToFiatV2(b.first, b.second, _viewModel.observablePrices.value[b.first]?[_preference.userCurrencyType.value]?.price ?? 0.0);
 
       if (fiatA < fiatB) {
         return 1;
@@ -133,14 +133,14 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
                               )),
                               const SizedBox(height: 8),
                               Column(
-                                  children: _balanceListByDesc(Token.values, _viewModel.balances.value).map((item) {
+                                  children: _balanceListByDesc(Token.values, _viewModel.observableBalances.value).map((item) {
                                     final balance = item.second;
                                     return Container(
                                         margin: const EdgeInsets.symmetric(vertical: 8),
                                         child: Obx(() => WalletItem(
                                           token: item.first,
                                           tokenAmount: balance,
-                                          tokenPrice: _viewModel.prices.value[item.first]?.price ?? 0,
+                                          tokenPrice: _viewModel.observablePrices.value[item.first]?[_preference.userCurrencyType.value]?.price ?? 0,
                                           currencyType: _preference.userCurrencyType.value,
                                         ))
                                     );

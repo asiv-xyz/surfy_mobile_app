@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:app_links/app_links.dart';
@@ -19,7 +20,10 @@ import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
+import 'package:surfy_mobile_app/domain/transaction/get_transaction_history.dart';
+import 'package:surfy_mobile_app/domain/transaction/save_transaction.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
+import 'package:surfy_mobile_app/domain/user/onboarding.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
@@ -33,7 +37,9 @@ import 'package:surfy_mobile_app/service/merchant/merchant_service.dart';
 import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/service/router/router_service.dart';
 import 'package:surfy_mobile_app/service/token/token_price_service.dart';
+import 'package:surfy_mobile_app/service/blockchain/blockchain_service.dart';
 import 'package:surfy_mobile_app/service/transaction/transaction_service.dart';
+import 'package:surfy_mobile_app/service/user/user_service.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/navigation_controller.dart';
@@ -85,7 +91,7 @@ Future<void> buildDependencies() async {
   Get.put(MerchantRepository(service: Get.find()));
 
   Get.put(ClickPlace());
-  Get.put(TransactionService(keyService: Get.find()));
+  Get.put(BlockchainService(keyService: Get.find()));
   Get.put(SendP2pToken(transactionService: Get.find()));
 
   Get.put(QRService());
@@ -93,6 +99,13 @@ Future<void> buildDependencies() async {
   Get.put(GetMerchants(placeService: Get.find()));
 
   Get.put(IsMerchant(service: Get.find()));
+  Get.put(UserService());
+  Get.put(TransactionService());
+  Get.put(Onboarding());
+
+  final saveTransaction = Get.put(SaveTransaction());
+
+  Get.put(GetTransactionHistory());
 }
 
 Future<void> web3AuthInit() async {
@@ -102,10 +115,19 @@ Future<void> web3AuthInit() async {
   } else {
     redirectUrl = Uri.parse('com.example.surfyMobileApp://auth');
   }
+
+  final loginConfig = HashMap<String, LoginConfigItem>();
+  loginConfig['google'] = LoginConfigItem(
+      verifier: "auth0twitter", // get it from web3auth dashboard
+      typeOfLogin: TypeOfLogin.twitter,
+      clientId: "akswT25yazNZeHJHQVFUSE1zODA6MTpjaQ" // google's client id
+  );
+
   await Web3AuthFlutter.init(Web3AuthOptions(
     clientId: dotenv.env["WEB3AUTH_CLIENT_ID"] ?? "",
     network: Network.sapphire_devnet,
     redirectUrl: redirectUrl,
+    loginConfig: loginConfig,
   ));
   await Web3AuthFlutter.initialize();
 }
@@ -132,7 +154,6 @@ void main() async {
   dioObject.transformer = BackgroundTransformer()
     ..jsonDecodeCallback = parseJson;
   await buildDependencies();
-  // setEventBus();
   WidgetsFlutterBinding.ensureInitialized();
   MapboxOptions.setAccessToken(dotenv.env["MAPBOX_API_KEY"] ?? "");
 
@@ -140,10 +161,12 @@ void main() async {
   await loadDefaultData();
   String initialLocation = "";
   try {
-    final userInfo = await Web3AuthFlutter.getUserInfo();
-    print('userInfo: ${userInfo}');
+    final user = await Web3AuthFlutter.getUserInfo();
+    final Onboarding onboarding = Get.find();
+    await onboarding.run(user.name ?? "", user.typeOfLogin ?? "");
     initialLocation = "/wallet";
   } catch (e) {
+    print('Route to login: $e');
     initialLocation = "/login";
   }
   final goRouter = await generateRouter(Get.find(), Get.find(), initialLocation);
