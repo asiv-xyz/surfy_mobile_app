@@ -14,7 +14,7 @@ class SelectPaymentTokenViewModel {
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
 
   final Rx<List<FiatBalance>> observableBalanceList = Rx([]);
-  final Rx<Map<Token, TokenPrice>> observableTokenPrices = Rx({});
+  final Rx<Map<Token, Map<CurrencyType, TokenPrice>>> observableTokenPrices = Rx({});
 
   void setView(SelectPaymentTokenView view) {
     this.view = view;

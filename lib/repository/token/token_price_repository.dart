@@ -12,7 +12,7 @@ class TokenPriceRepository {
   final TokenPriceCache tokenPriceCache;
   final TokenPriceService service;
 
-  Future<Map<Token, TokenPrice>> getTokenPriceList(List<Token> tokenList, CurrencyType currencyType) async {
+  Future<Map<Token, Map<CurrencyType, TokenPrice>>> getTokenPriceList(List<Token> tokenList, CurrencyType currencyType) async {
 
     final List<String> cgIdentifierList = [];
     final getBalanceFromCache = tokenList.map((token) async {
@@ -38,15 +38,25 @@ class TokenPriceRepository {
     }).toList();
     final result2 = await Future.wait(job);
 
-    final ret = <Token, TokenPrice>{};
+    final ret = <Token, Map<CurrencyType, TokenPrice>>{};
     for (var item in result1) {
+      print('item(result1): $item');
       if (item.price != -1) {
-        ret[item.token] = item;
+        if (ret[item.token] == null) {
+          ret[item.token] = {};
+        }
+        ret[item.token]?[currencyType] = item;
       }
     }
     for (var item in result2) {
-      ret[item.token] = item;
+      print('item(result1): $item');
+      if (ret[item.token] == null) {
+        ret[item.token] = {};
+      }
+      ret[item.token]?[currencyType] = item;
     }
+
+    print('!!! result !!! $ret');
     return ret;
   }
 
@@ -54,7 +64,7 @@ class TokenPriceRepository {
     final needToUpdate = await tokenPriceCache.needToUpdate(token, currencyType);
     if (needToUpdate) {
       final price = await getTokenPriceList([token], currencyType);
-      return TokenPrice(token: token, price: price[token]?.price ?? 0.0, currency: currencyType.name.toLowerCase());
+      return TokenPrice(token: token, price: price[token]?[currencyType]?.price ?? 0.0, currency: currencyType.name.toLowerCase());
     }
 
     final item = await tokenPriceCache.getTokenPrice(token, currencyType);

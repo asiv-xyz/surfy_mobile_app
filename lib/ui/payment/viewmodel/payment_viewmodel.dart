@@ -1,5 +1,6 @@
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
@@ -18,6 +19,7 @@ class PaymentViewModel {
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final GetMerchants _getMerchantsUseCase = Get.find();
   final SettingsPreference _preference = Get.find();
+  final Calculator _calculator = Get.find();
 
   final Rx<Token?> observableSelectedToken = Rx(null);
   final Rx<Blockchain?> observableSelectedBlockchain = Rx(null);
@@ -36,35 +38,58 @@ class PaymentViewModel {
   }
 
   Future<void> init(String merchantId) async {
-    _view.onLoading();
+    try {
+      _view.startLoading();
 
-    final userBalances = await _getWalletBalancesUseCase.getBalancesByDesc(getSupportedTokenAndNetworkList(), _preference.userCurrencyType.value);
-    observableUserBalanceList.value = userBalances;
+      final userBalances = await _getWalletBalancesUseCase.getBalancesByDesc(getSupportedTokenAndNetworkList(), _preference.userCurrencyType.value);
+      observableUserBalanceList.value = userBalances;
 
-    observableSelectedToken.value = userBalances[0].token;
-    observableSelectedBlockchain.value = userBalances[0].blockchain;
+      observableSelectedToken.value = userBalances[0].token;
+      observableSelectedBlockchain.value = userBalances[0].blockchain;
 
-    final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(userBalances[0].token, _preference.userCurrencyType.value);
-    observableTokenPrice.value = tokenPrice;
+      final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(userBalances[0].token, _preference.userCurrencyType.value);
+      observableTokenPrice.value = tokenPrice;
 
-    final merchant = await _getMerchantsUseCase.getSingle(merchantId);
-    observableMerchant.value = merchant;
+      final merchant = await _getMerchantsUseCase.getSingle(merchantId);
+      observableMerchant.value = merchant;
 
-    final tokenPriceByMerchant = await _getTokenPriceUseCase.getSingleTokenPrice(userBalances[0].token, findCurrencyTypeByName(merchant?.currency ?? ""));
-    observableTokenPriceByMerchantCurrency.value = tokenPriceByMerchant;
-
-    _view.offLoading();
+      final tokenPriceByMerchant = await _getTokenPriceUseCase.getSingleTokenPrice(userBalances[0].token, findCurrencyTypeByName(merchant?.currency ?? ""));
+      observableTokenPriceByMerchantCurrency.value = tokenPriceByMerchant;
+    } catch (e) {
+      _view.onError("$e");
+    } finally {
+      _view.finishLoading();
+    }
   }
 
   Future<void> changePaymentMethod(Token token, Blockchain blockchain) async {
-    _view.onLoading();
-    observableSelectedToken.value = token;
-    observableSelectedBlockchain.value = blockchain;
-    observableTokenPrice.value = await _getTokenPriceUseCase.getSingleTokenPrice(token, _preference.userCurrencyType.value);
+    try {
+      _view.startLoading();
+      observableSelectedToken.value = token;
+      observableSelectedBlockchain.value = blockchain;
+      observableTokenPrice.value = await _getTokenPriceUseCase.getSingleTokenPrice(token, _preference.userCurrencyType.value);
 
-    final tokenPriceByMerchant = await _getTokenPriceUseCase.getSingleTokenPrice(token, findCurrencyTypeByName(observableMerchant.value?.currency ?? ""));
-    observableTokenPriceByMerchantCurrency.value = tokenPriceByMerchant;
-    _view.offLoading();
+      final tokenPriceByMerchant = await _getTokenPriceUseCase.getSingleTokenPrice(token, findCurrencyTypeByName(observableMerchant.value?.currency ?? ""));
+      observableTokenPriceByMerchantCurrency.value = tokenPriceByMerchant;
+    } catch (e) {
+      _view.onError("$e");
+    } finally {
+      _view.finishLoading();
+    }
+  }
+
+  Future<void> processPayment(Token token, Blockchain blockchain) async {
+
+  }
+
+  double getFiat() {
+    if (observableIsFiatInputMode.isTrue) {
+      return observableInputAmount.value.toDouble();
+    } else {
+      return _calculator.cryptoAmountToFiatV2(
+          observableInputAmount.value.toDouble(),
+          observableTokenPrice.value?.price ?? 0);
+    }
   }
 
   FiatBalance getSelectedTokenBalance() {

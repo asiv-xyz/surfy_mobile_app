@@ -1,19 +1,9 @@
-import 'dart:math';
-
 import 'package:dartx/dartx.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
-import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/service/transaction/exceptions/exceptions.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
@@ -94,11 +84,12 @@ class _SendPageState extends State<SendPage> implements SendView {
                 var amount = BigInt.zero;
                 var fiat = 0.0;
                 if (_viewModel.observableIsFiatInputMode.isTrue) {
-                  amount = _calculator.fiatToCryptoAmount(_viewModel.observableInputData.value.toDouble(), widget.token);
+                  amount = _calculator.fiatToCryptoAmountV2(_viewModel.observableInputData.value.toDouble(), widget.token, _viewModel.observableTokenPrice.value);
+                  print('token Amount: $amount');
                   fiat = _viewModel.observableInputData.value.toDouble();
                 } else {
                   amount = _calculator.cryptoWithDecimal(widget.token, _viewModel.observableInputData.value.toDouble());
-                  fiat = _calculator.cryptoAmountToFiat(widget.token, _viewModel.observableInputData.value.toDouble(), _preference.userCurrencyType.value);
+                  fiat = _calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
                 }
                 context.push('/sendConfirm', extra: SendingConfirmViewProps(
                   token: widget.token,
@@ -107,6 +98,7 @@ class _SendPageState extends State<SendPage> implements SendView {
                   receiver: _viewModel.observableReceiverAddress.value,
                   amount: amount,
                   fiat: fiat,
+                  currencyType: _preference.userCurrencyType.value,
                 ));
               }
             },
@@ -146,9 +138,9 @@ class _SendPageState extends State<SendPage> implements SendView {
                           const SizedBox(height: 10),
                           Obx(() {
                             if (_viewModel.observableIsFiatInputMode.isTrue) {
-                              return Text(formatCrypto(widget.token, _calculator.fiatToCrypto(_viewModel.observableInputData.value.toDouble(), widget.token)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                              return Text(formatCrypto(widget.token, _calculator.fiatToCryptoV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                             } else {
-                              return Text(formatFiat(_calculator.cryptoAmountToFiat(widget.token, _viewModel.observableInputData.value.toDouble(), _preference.userCurrencyType.value), _preference.userCurrencyType.value), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                              return Text(formatFiat(_calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value), _preference.userCurrencyType.value), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                             }
                           }),
                           Container(
@@ -157,7 +149,7 @@ class _SendPageState extends State<SendPage> implements SendView {
                                 children: [
                                   Text('Balance', style: Theme.of(context).textTheme.labelSmall),
                                   const SizedBox(width: 5),
-                                  Obx(() => Text(formatFiat(_calculator.cryptoToFiat(widget.token, _viewModel.observableCryptoBalance.value, _preference.userCurrencyType.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.labelSmall)),
+                                  Obx(() => Text(formatFiat(_calculator.cryptoToFiatV2(widget.token, _viewModel.observableCryptoBalance.value, _viewModel.observableTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.labelSmall)),
                                   const SizedBox(width: 2),
                                   Obx(() => Text("(${formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, _viewModel.observableCryptoBalance.value))})", style: Theme.of(context).textTheme.labelSmall))
                                 ],

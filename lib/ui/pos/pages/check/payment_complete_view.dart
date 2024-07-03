@@ -63,7 +63,6 @@ class _PaymentCompletePageState extends State<PaymentCompletePage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 150,),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

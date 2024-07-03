@@ -4,10 +4,13 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
+import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
+import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/payment/viewmodel/payment_viewmodel.dart';
+import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
@@ -26,9 +29,9 @@ class PaymentPage extends StatefulWidget {
 }
 
 abstract class PaymentView {
-  void onLoading();
-  void offLoading();
-
+  void startLoading();
+  void finishLoading();
+  void onError(String e);
 }
 
 class _PaymentPageState extends State<PaymentPage> implements PaymentView {
@@ -40,12 +43,12 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
   final _isLoading = false.obs;
 
   @override
-  void onLoading() {
+  void startLoading() {
     _isLoading.value = true;
   }
 
   @override
-  void offLoading() {
+  void finishLoading() {
     _isLoading.value = false;
   }
 
@@ -57,11 +60,17 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
   }
 
   @override
+  void onError(String e) {
+    logger.e('Error: $e');
+    context.push('/error');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: const Text('Payment',),
+        title: const Text('Payment'),
       ),
       body: Container(
           height: MediaQuery.of(context).size.height,
@@ -70,19 +79,18 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
             children: [
               Obx(() {
                 if (_isLoading.value == true) {
-                  return Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                          color: SurfyColor.black.withOpacity(0.8)),
-                      child: const Center(
-                          child: CircularProgressIndicator(
-                              color: SurfyColor.blue)));
+                  return const LoadingWidget(opacity: 0);
                 } else {
                   return KeyboardView(
                     buttonText: 'Send',
                     isFiatInputMode: _viewModel.observableIsFiatInputMode.value,
-                    onClickSend: () {},
+                    onClickSend: () {
+                      context.push('/pos/payment', extra: PaymentConfirmPageProps(
+                          storeId: widget.storeId,
+                          receiveCurrency: findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? "usd"),
+                          wantToReceiveAmount: _viewModel.getFiat())
+                      );
+                    },
                     inputAmount: _viewModel.observableInputAmount,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +176,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                               blockchain,
                                           );
                                         },
-                                        receiveCurrency: findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? ""),
+                                        receiveCurrency: _preference.userCurrencyType.value,
                                         wantToReceiveAmount: _viewModel.getMayPaidAmount(),
                                     );
                                     context.push("/pos/select", extra: props);

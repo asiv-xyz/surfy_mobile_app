@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
@@ -8,11 +7,12 @@ import 'package:surfy_mobile_app/abi/erc20.dart';
 import 'package:surfy_mobile_app/abi/erc20.g.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
-import 'package:surfy_mobile_app/service/transaction/exceptions/exceptions.dart';
+import 'package:surfy_mobile_app/service/blockchain//exceptions/exceptions.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 import 'package:surfy_mobile_app/utils/tron_http_service.dart';
 import 'package:surfy_mobile_app/utils/xrpl_http_service.dart';
+import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 import 'package:http/http.dart' as http;
@@ -52,6 +52,7 @@ class SendEthereumHandler implements SendTokenHandler {
 
   @override
   Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
+    logger.i('Send: $blockchain, $to, $amount');
     final blockchainData = blockchains[blockchain];
     final client = Web3Client(blockchainData?.rpc ?? "", http.Client());
     final secp256K1 = (await keyService.getKey()).first;
@@ -202,8 +203,10 @@ class SendSolanaHandler implements SendTokenHandler {
 
     final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
     final key = await keyService.getKey();
-    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: key.second.codeUnits);
-    final result = await client.transferLamports(source: userWallet,
+    final keyHex = hexToBytes(key.second);
+    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
+    final result = await client.transferLamports(
+      source: userWallet,
       destination: Ed25519HDPublicKey.fromBase58(to),
       lamports: amount.toInt(),
       commitment: Commitment.confirmed
@@ -289,9 +292,7 @@ class SendXrpHandler implements SendTokenHandler {
     if (!result.isSuccess) {
       throw TransactionFailedException(token: Token.XRP, blockchain: blockchain, message: result.engineResultMessage);
     }
-    print('engine result: ${result.engineResult}');
-    print('engine result msg: ${result.engineResultMessage}');
-    print('is success: ${result.isSuccess}');
+
     return SendTokenResponse(
       token: Token.XRP,
       blockchain: blockchain,

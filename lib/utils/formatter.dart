@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:dartx/dartx.dart';
 import 'package:intl/intl.dart';
-import 'package:surfy_mobile_app/service/transaction/exceptions/exceptions.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 

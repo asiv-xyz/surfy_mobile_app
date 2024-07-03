@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
-import 'package:surfy_mobile_app/service/transaction/handlers/send_token_handler.dart';
-import 'package:surfy_mobile_app/service/transaction/transaction_service.dart';
+import 'package:surfy_mobile_app/service/blockchain/handlers/send_token_handler.dart';
+import 'package:surfy_mobile_app/service/blockchain/blockchain_service.dart';
 import 'package:surfy_mobile_app/utils/blockchains.dart';
 import 'package:surfy_mobile_app/utils/tokens.dart';
 
 class SendP2pToken {
   SendP2pToken({required this.transactionService});
 
-  final TransactionService transactionService;
+  final BlockchainService transactionService;
   final EventBus bus = Get.find();
 
   Future<SendTokenResponse> send(Token token, Blockchain blockchain, String from, String to, BigInt amount) async {
@@ -19,6 +19,7 @@ class SendP2pToken {
       address: from,
       amount: amount,
     ));
+    bus.emit(ReloadHistoryEvent());
     return result;
   }
 

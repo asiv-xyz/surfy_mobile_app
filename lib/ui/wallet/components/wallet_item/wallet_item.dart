@@ -30,7 +30,11 @@ class WalletItem extends StatefulWidget {
   }
 }
 
-class _WalletItemState extends State<WalletItem> {
+abstract class WalletItemView {
+
+}
+
+class _WalletItemState extends State<WalletItem> implements WalletItemView {
   final SettingsPreference preference = Get.find();
   final Calculator _calculator = Get.find();
 
@@ -43,7 +47,7 @@ class _WalletItemState extends State<WalletItem> {
   }
 
   Future<Widget> _buildTotalBalanceTab() async {
-    final fiat = await _calculator.cryptoToFiat(widget.token, widget.tokenAmount, widget.currencyType);
+    final fiat = _calculator.cryptoToFiatV2(widget.token, widget.tokenAmount, widget.tokenPrice);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [

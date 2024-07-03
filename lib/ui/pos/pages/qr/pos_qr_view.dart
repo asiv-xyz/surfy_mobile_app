@@ -61,6 +61,7 @@ class _PosQrPageState extends State<PosQrPage> implements PosQrView {
   void initState() {
     super.initState();
     _viewModel.setView(this);
+    _viewModel.init(widget.storeId, widget.wantToReceiveAmount, widget.receivedCurrencyType);
   }
 
   @override

@@ -9,13 +9,11 @@ class GetTokenPrice {
   GetTokenPrice({required this.repository});
 
   final TokenPriceRepository repository;
-  final Rx<Map<Token, TokenPrice>> tokenPriceObs = Rx({});
 
 
-  Future<Map<Token, TokenPrice>> getTokenPrice(List<Token> tokenList, CurrencyType currency) async {
+  Future<Map<Token, Map<CurrencyType, TokenPrice>>> getTokenPrice(List<Token> tokenList, CurrencyType currency) async {
     logger.i('getTokenPrice: token=$tokenList, currency=$currency');
     final result = await repository.getTokenPriceList(tokenList, currency);
-    tokenPriceObs.value = result;
     return result;
   }
 

@@ -1,13 +1,14 @@
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
+import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/user/onboarding.dart';
 import 'package:surfy_mobile_app/ui/login/login_view.dart';
+import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
-import 'package:go_router/go_router.dart';
 
 class LoginViewModel {
   late LoginView _view;
+
+  final Onboarding _onboardingUseCase = Get.find();
 
   void setView(LoginView view) {
     _view = view;
@@ -17,13 +18,25 @@ class LoginViewModel {
     try {
       _view.startLoading();
       final loginResponse = await Web3AuthFlutter.login(params);
-      final bytes = utf8.encode(loginResponse.userInfo?.idToken ?? "");
-      print('oAuthIdToken: ${loginResponse.userInfo?.oAuthIdToken}');
-      print('oAuthAccessToken: ${loginResponse.userInfo?.oAuthAccessToken}');
-      final hash = sha1.convert(bytes);
-      print('user id hash: ${hash.toString()}');
+      var sso = "";
+      switch (params.loginProvider) {
+        case Provider.google:
+          sso = "google";
+          break;
+        case Provider.twitter:
+          sso = "twitter";
+          break;
+        case Provider.farcaster:
+          sso = "farcaster";
+          break;
+        default:
+          throw Exception("Unsupported login provider: ${params.loginProvider}");
+      }
+
+      await _onboardingUseCase.run(loginResponse.userInfo?.name ?? "", sso);
       onSuccess.call();
     } catch (e) {
+      print('Error!!: $e');
       _view.onError("$e");
     } finally {
       _view.finishLoading();
