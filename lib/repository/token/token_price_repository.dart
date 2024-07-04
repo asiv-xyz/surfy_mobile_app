@@ -4,7 +4,7 @@ import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/token/token_price_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class TokenPriceRepository {
   TokenPriceRepository({required this.service, required this.tokenPriceCache});
@@ -19,12 +19,10 @@ class TokenPriceRepository {
       final needToUpdate = await tokenPriceCache.needToUpdate(token, currencyType);
       if (needToUpdate) {
         // from remote
-        print('token: $token need to get remote');
         cgIdentifierList.add(tokens[token]?.cgIdentifier ?? "");
         return TokenPrice(token: token, price: -1, currency: currencyType.name );
       } else {
         // from  cache
-        print('token: $token is from cache!');
         final result = await tokenPriceCache.getTokenPrice(token, currencyType);
         return TokenPrice(token: token, price: result, currency: currencyType.name);
       }
@@ -40,7 +38,6 @@ class TokenPriceRepository {
 
     final ret = <Token, Map<CurrencyType, TokenPrice>>{};
     for (var item in result1) {
-      print('item(result1): $item');
       if (item.price != -1) {
         if (ret[item.token] == null) {
           ret[item.token] = {};
@@ -49,14 +46,11 @@ class TokenPriceRepository {
       }
     }
     for (var item in result2) {
-      print('item(result1): $item');
       if (ret[item.token] == null) {
         ret[item.token] = {};
       }
       ret[item.token]?[currencyType] = item;
     }
-
-    print('!!! result !!! $ret');
     return ret;
   }
 

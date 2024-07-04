@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
+import 'package:surfy_mobile_app/ui/history/components/transaction_badge.dart';
 import 'package:surfy_mobile_app/ui/history/viewmodel/history_viewmodel.dart';
-import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
+import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -40,7 +42,10 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+        appBar: AppBar(
+
+          title: const Text('History')
+        ),
       body: Obx(() {
         if (_isLoading.isTrue) {
           return const LoadingWidget(opacity: 0);
@@ -48,9 +53,20 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
           return SingleChildScrollView(
             child: Column(
               children: _viewModel.observableTransactionList.value.map((tx) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SurfyColor.black,
+                    padding: const EdgeInsets.all(0)
+                  ),
+                  onPressed: () {
+                    context.push('/history/detail', extra: tx);
+                  }, child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   width: double.infinity,
+                  decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: SurfyColor.lightGrey, width: 0.2))
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -61,7 +77,8 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(tx.type.name, style: Theme.of(context).textTheme.displaySmall),
+                              // Text(tx.type.name, style: Theme.of(context).textTheme.displaySmall),
+                              TransactionBadge(type: tx.type),
                               Text('to: ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.displaySmall),
                               Text(tx.createdAt.toString(), style: Theme.of(context).textTheme.labelSmall)
                             ],
@@ -71,7 +88,7 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                       Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displaySmall)
                     ],
                   ),
-                );
+                ));
               }).toList(),
             ),
           );

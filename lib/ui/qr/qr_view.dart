@@ -4,13 +4,11 @@ import 'package:camera/camera.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/router/router_service.dart';
-import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:vibration/vibration.dart';
 
@@ -25,24 +23,13 @@ class QRPage extends StatefulWidget {
   }
 }
 
-class _QRPageState extends State<QRPage> implements INavigationLifeCycle {
+class _QRPageState extends State<QRPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   Barcode? _result;
   final GetQRController _getQRController = Get.find();
 
   final RxString _scannedUrl = "".obs;
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('didChangeAppLifecycleState, $state}');
-    switch (state) {
-      case AppLifecycleState.paused:
-        break;
-      default:
-        break;
-    }
-  }
 
   void _onQRViewCreated(QRViewController controller) {
     _getQRController.qrViewController.value = controller;
@@ -79,8 +66,6 @@ class _QRPageState extends State<QRPage> implements INavigationLifeCycle {
   @override
   void initState() {
     super.initState();
-    final NavigationController navController = Get.find();
-    navController.addListener(1, this);
   }
 
   void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
@@ -133,19 +118,4 @@ class _QRPageState extends State<QRPage> implements INavigationLifeCycle {
       )
     );
   }
-
-  @override
-  void onPageEnd() {
-    print('onQRPageEnd!');
-    _getQRController.qrViewController.value?.pauseCamera();
-    _result = null;
-    _scannedUrl.value = "";
-  }
-
-  @override
-  void onPageStart() {
-    print('onQRPageStart!');
-    _getQRController.qrViewController.value?.resumeCamera();
-  }
-
 }

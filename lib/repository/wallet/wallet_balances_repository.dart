@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class WalletBalancesRepository implements EventListener {
   WalletBalancesRepository({required this.walletService, required this.walletCache});
@@ -21,7 +21,6 @@ class WalletBalancesRepository implements EventListener {
     }
 
     if (!await walletCache.needToUpdate(token, blockchain, address)) {
-      print('balance from cache!');
       return await walletCache.getBalance(token, blockchain, address);
     }
 

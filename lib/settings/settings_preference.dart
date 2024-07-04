@@ -18,7 +18,6 @@ Map<CurrencyType, dynamic> currencyTypes = {
 };
 
 CurrencyType findCurrencyTypeByName(String name) {
-  print('currency name: $name');
   final list = CurrencyType.values.where((ct) => ct.name.toLowerCase() == name.toLowerCase());
   if (list.isEmpty) {
     throw Exception('No currency type');

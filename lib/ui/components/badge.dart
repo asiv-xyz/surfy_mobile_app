@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class TokenBadge extends StatelessWidget {
   const TokenBadge({super.key, required this.token});

@@ -15,7 +15,7 @@ void main() {
   // });
 
   test('domain test', () async {
-    final domain = GetMerchants(placeService: MerchantService());
+    final domain = GetMerchants(service: MerchantService());
     print(await domain.getSingle('testStore'));
   });
 }

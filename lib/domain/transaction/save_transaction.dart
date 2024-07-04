@@ -3,8 +3,8 @@ import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/service/transaction/transaction_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class SaveTransaction {
 

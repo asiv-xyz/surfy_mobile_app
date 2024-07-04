@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class UserHeader extends StatelessWidget {

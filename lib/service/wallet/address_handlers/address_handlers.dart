@@ -1,3 +1,4 @@
+import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:solana/solana.dart';
@@ -96,4 +97,15 @@ class TronAddressHandler implements AddressHandler {
 
     return address!;
   }
+}
+
+class DogeAddressHandler implements AddressHandler {
+  @override
+  Future<String> getAddress(String privateKey) async {
+    final ecPrivate = ECPrivate.fromBytes(BytesUtils.fromHexString(privateKey));
+    final pubKey = ecPrivate.getPublic();
+    final p2pkhAddress = DogeAddress.fromBaseAddress(pubKey.toAddress());
+    return p2pkhAddress.address;
+  }
+
 }

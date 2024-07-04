@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class Calculator {
   Calculator({required this.getTokenPrice});
@@ -17,7 +17,6 @@ class Calculator {
 
     final visibleTokenAmount = amount / BigInt.from(pow(10, tokenData.decimal));
     final result = visibleTokenAmount * tokenPrice;
-    print('cryptoToFiatV2: token=$token, amount=$visibleTokenAmount, tokenprice=$tokenPrice, fiat=$result');
     return result;
   }
 
@@ -26,6 +25,7 @@ class Calculator {
   }
 
   double cryptoToDouble(Token token, BigInt amount) {
+    print('cryptoToDouble, $token, $amount');
     final tokenData = tokens[token];
     if (tokenData == null) {
       return 0.0;
@@ -49,11 +49,12 @@ class Calculator {
   }
 
   BigInt cryptoWithDecimal(Token token, double visibleCrypto) {
+    print('cryptoWithDecimal, $token, $visibleCrypto');
     final tokenData = tokens[token];
     if (tokenData == null) {
       return BigInt.zero;
     }
 
-    return BigInt.from(visibleCrypto) * BigInt.from(pow(10, tokenData.decimal));
+    return BigInt.from(visibleCrypto * pow(10, tokenData.decimal));
   }
 }

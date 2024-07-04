@@ -10,12 +10,9 @@ class Onboarding {
     final userHash = await _keyService.getKeyHash();
     try {
       final user = await _userService.getUserById(userHash);
-      print('user: $user');
     } on NoUserException catch (e) {
-      print('NoUserException: $e');
       await _userService.postUser(userHash, userName, sso);
     } catch (e) {
-      print('Exception!!: $e');
       rethrow;
     }
   }

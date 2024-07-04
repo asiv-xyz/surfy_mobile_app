@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class TokenPriceCache {
   static const tokenPriceBoxName = 'token-price';

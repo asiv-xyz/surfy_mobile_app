@@ -1,4 +1,4 @@
-import 'package:dartx/dartx.dart';
+import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:http/http.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:solana/solana.dart';
@@ -6,10 +6,11 @@ import 'package:surfy_mobile_app/abi/erc20.dart';
 import 'package:surfy_mobile_app/abi/erc20.g.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/utils/bitcoin_explorer_service.dart';
 import 'package:surfy_mobile_app/utils/tron_http_service.dart';
 import 'package:surfy_mobile_app/utils/xrpl_http_service.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 import 'package:http/http.dart' as http;
@@ -56,8 +57,8 @@ class UsdcBalanceHandler implements BalanceHandler {
     const erc20 = Erc20BalanceHandler(token: Token.USDC);
     const spl = SplBalanceHandler(token: Token.USDC);
     switch (blockchain) {
-      case Blockchain.SOLANA:
-      case Blockchain.SOLANA_DEVNET:
+      case Blockchain.solana:
+      case Blockchain.solana_devnet:
         return await spl.getBalance(token, blockchain, address);
       default:
         return await erc20.getBalance(token, blockchain, address);
@@ -248,3 +249,22 @@ class TrcBalanceHandler implements BalanceHandler {
 
 }
 
+class DogeBalanceHandler implements BalanceHandler {
+  @override
+  Future<UserTokenData> getBalance(Token token, Blockchain blockchain, String address) async {
+    final service = BitcoinApiService();
+    final api = ApiProvider.fromBlocCypher(DogecoinNetwork.mainnet, service);
+    final pubKey = P2pkhAddress.fromAddress(address: address, network: DogecoinNetwork.mainnet);
+    final dogeAddress = DogeAddress.fromBaseAddress(pubKey);
+    final utxo = await api.getAccountUtxo(
+      UtxoAddressDetails(publicKey: pubKey.toString(), address: dogeAddress.baseAddress)
+    );
+    BigInt balance = BigInt.zero;
+    for (var item in utxo) {
+      balance += item.utxo.value;
+    }
+
+    return UserTokenData(blockchain: blockchain, token: token, amount: balance, decimal: 8, address: address);
+  }
+
+}

@@ -1,4 +1,4 @@
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class TokenPrice {
   TokenPrice({required this.token, required this.price, required this.currency});

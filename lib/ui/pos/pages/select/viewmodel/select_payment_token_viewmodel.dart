@@ -5,7 +5,7 @@ import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class SelectPaymentTokenViewModel {
   late SelectPaymentTokenView view;

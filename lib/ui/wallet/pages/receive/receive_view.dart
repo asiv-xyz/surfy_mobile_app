@@ -6,9 +6,9 @@ import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/receive/viewmodel/receive_viewmodel.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class ReceivePage extends StatefulWidget {
   const ReceivePage({super.key, required this.token, required this.blockchain});
@@ -81,7 +81,6 @@ class _ReceivePageState extends State<ReceivePage> implements ReceiveView {
                     } else {
                       return Expanded(
                           child: Image.network(_viewModel.observableQrData.value, loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                            print('loadingProcess: $loadingProgress');
                             if (loadingProgress == null) {
                               return child;
                             }
@@ -122,7 +121,7 @@ class _ReceivePageState extends State<ReceivePage> implements ReceiveView {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("Network", style: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.bold, fontSize: 14)),
-                      NetworkBadge(blockchain: _viewModel.observableSelectedBlockchain.value ?? Blockchain.ETHEREUM)
+                      NetworkBadge(blockchain: _viewModel.observableSelectedBlockchain.value ?? Blockchain.ethereum)
                     ],
                   ),
                   const SizedBox(height: 10,),

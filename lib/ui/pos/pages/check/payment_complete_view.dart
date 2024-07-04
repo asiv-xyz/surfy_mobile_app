@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:go_router/go_router.dart';

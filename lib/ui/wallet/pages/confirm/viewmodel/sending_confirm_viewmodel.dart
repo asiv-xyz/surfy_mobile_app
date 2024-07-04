@@ -6,8 +6,8 @@ import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/sending_confirm_view.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:vibration/vibration.dart';
 
 class SendingConfirmViewModel {
@@ -21,6 +21,7 @@ class SendingConfirmViewModel {
   final Rx<BigInt> observableGas = BigInt.zero.obs;
   final Rx<Token> observableGasToken = Rx(Token.ETHEREUM);
   final RxDouble observableTokenPrice = 0.0.obs;
+  final RxDouble observableGasTokenPrice = 0.0.obs;
 
   final sessionTime = DateTime.now().millisecondsSinceEpoch;
 
@@ -34,8 +35,14 @@ class SendingConfirmViewModel {
       final gas = await _sendP2pTokenUseCase.estimateGas(token, blockchain, receiver, amount);
       observableGas.value = gas;
 
+      final gasToken = blockchains[blockchain]?.feeCoin ?? Token.ETHEREUM;
+      observableGasToken.value = gasToken;
+
       final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, currencyType);
       observableTokenPrice.value = tokenPrice?.price ?? 0;
+
+      final gasTokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(observableGasToken.value, currencyType);
+      observableGasTokenPrice.value = gasTokenPrice?.price ?? 0;
 
       final feeCoin = blockchains[blockchain]?.feeCoin;
       if (feeCoin == null) {
@@ -43,13 +50,13 @@ class SendingConfirmViewModel {
       }
       observableGasToken.value = feeCoin;
     } catch (e) {
-      observableGas.value = BigInt.zero;
+      // observableGas.value = BigInt.zero;
+      view.onError("$e");
     }
     view.finishLoading();
   }
 
   Future<String> processTransfer(Token token, Blockchain blockchain, String sender, String receiver, BigInt amount) async {
-    print('processTransfer: $token, $blockchain, $sender, $receiver, $amount');
     view.onSending();
     Vibration.vibrate(duration: 100);
     final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, amount);

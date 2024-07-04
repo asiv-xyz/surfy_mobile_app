@@ -17,10 +17,10 @@ import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/detail/viewmodel/wallet_detail_viewmodel.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class WalletDetailPage extends StatefulWidget {
   const WalletDetailPage({super.key, required this.token});

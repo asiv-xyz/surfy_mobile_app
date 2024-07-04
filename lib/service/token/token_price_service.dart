@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:surfy_mobile_app/entity/token/token_price.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/dio_utils.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class TokenPriceService {
   Future<Map<Token, TokenPrice>> getTokenBalance(List<String> cgIdentifierList, CurrencyType currencyType) async {

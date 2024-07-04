@@ -1,67 +1,76 @@
+import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/service/blockchain/handlers/send_token_handler.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class BlockchainService {
   BlockchainService({required this.keyService}) {
     sendHandlers = {
       Token.ETHEREUM: {
-        Blockchain.ETHEREUM: SendEthereumHandler(keyService: keyService),
-        Blockchain.ETHEREUM_SEPOLIA: SendEthereumHandler(keyService: keyService),
+        Blockchain.ethereum: SendEthereumHandler(keyService: keyService),
+        Blockchain.ethereum_sepolia: SendEthereumHandler(keyService: keyService),
 
-        Blockchain.BASE: SendEthereumHandler(keyService: keyService),
-        Blockchain.BASE_SEPOLIA: SendEthereumHandler(keyService: keyService),
+        Blockchain.base: SendEthereumHandler(keyService: keyService),
+        Blockchain.base_sepolia: SendEthereumHandler(keyService: keyService),
       },
       Token.USDC: {
-        Blockchain.ETHEREUM: SendUsdcHandler(
+        Blockchain.ethereum: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         ),
-        Blockchain.ETHEREUM_SEPOLIA: SendUsdcHandler(
+        Blockchain.ethereum_sepolia: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         ),
-        Blockchain.BASE: SendUsdcHandler(
+        Blockchain.base: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         ),
-        Blockchain.BASE_SEPOLIA: SendUsdcHandler(
+        Blockchain.base_sepolia: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         ),
-        Blockchain.SOLANA: SendUsdcHandler(
+        Blockchain.solana: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         ),
-        Blockchain.SOLANA_DEVNET: SendUsdcHandler(
+        Blockchain.solana_devnet: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         )
       },
       Token.DEGEN: {
-        Blockchain.BASE: SendErc20Handler(keyService: keyService, token: Token.DEGEN)
+        Blockchain.base: SendErc20Handler(keyService: keyService, token: Token.DEGEN)
       },
       Token.USDT: {
-        Blockchain.ETHEREUM: SendErc20Handler(keyService: keyService, token: Token.USDT),
-        Blockchain.TRON: SendTrcHandler(keyService: keyService, token: Token.USDT)
+        Blockchain.ethereum: SendErc20Handler(keyService: keyService, token: Token.USDT),
+        Blockchain.tron: SendTrcHandler(keyService: keyService, token: Token.USDT)
       },
       Token.SOLANA: {
-        Blockchain.SOLANA: SendSolanaHandler(keyService: keyService),
-        Blockchain.SOLANA_DEVNET: SendSolanaHandler(keyService: keyService)
+        Blockchain.solana: SendSolanaHandler(keyService: keyService),
+        Blockchain.solana_devnet: SendSolanaHandler(keyService: keyService)
       },
 
       Token.TRON: {
-        Blockchain.TRON: SendTronHandler(keyService: keyService),
+        Blockchain.tron: SendTronHandler(keyService: keyService),
       },
 
       Token.BNB: {
-        Blockchain.BSC: SendEthereumHandler(keyService: keyService),
-        Blockchain.OP_BNB: SendEthereumHandler(keyService: keyService)
+        Blockchain.bsc: SendEthereumHandler(keyService: keyService),
+        Blockchain.opbnb: SendEthereumHandler(keyService: keyService)
       },
 
       Token.XRP: {
-        Blockchain.XRPL: SendXrpHandler(keyService: keyService),
+        Blockchain.xrpl: SendXrpHandler(keyService: keyService),
+      },
+
+      Token.DOGE: {
+        Blockchain.dogechain: SendDogeHandler(keyService: keyService)
+      },
+
+      Token.FRAX: {
+        Blockchain.ethereum: SendErc20Handler(keyService: keyService, token: Token.FRAX)
       }
     };
   }
@@ -78,6 +87,7 @@ class BlockchainService {
 
       return await handler.send(blockchain, to, amount);
     } catch (e) {
+      logger.e("send error: $e");
       rethrow;
     }
   }
@@ -90,8 +100,8 @@ class BlockchainService {
       }
       return await handler.estimateFee(blockchain, to, amount);
     } catch (e) {
-      print('error: $e');
-      return BigInt.zero;
+      logger.e("estimateGas error: $e");
+      rethrow;
     }
   }
 }

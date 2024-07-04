@@ -29,6 +29,9 @@ class LoginViewModel {
         case Provider.farcaster:
           sso = "farcaster";
           break;
+        case Provider.discord:
+          sso = "discord";
+          break;
         default:
           throw Exception("Unsupported login provider: ${params.loginProvider}");
       }
@@ -36,7 +39,6 @@ class LoginViewModel {
       await _onboardingUseCase.run(loginResponse.userInfo?.name ?? "", sso);
       onSuccess.call();
     } catch (e) {
-      print('Error!!: $e');
       _view.onError("$e");
     } finally {
       _view.finishLoading();

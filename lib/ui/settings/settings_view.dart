@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -103,26 +104,20 @@ class SettingsPage extends StatelessWidget {
                         color: SurfyColor.black,
                         child: InkWell(
                             onTap: () async {
-                              print('export key');
                               final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
-                              print('canAuthenticateWithBiometrics: $canAuthenticateWithBiometrics');
                               final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
-                              print('canAuthenticate: $canAuthenticate');
                               if (canAuthenticate) {
                                 final List<BiometricType> availableBiometrics = await auth.getAvailableBiometrics();
-                                print('availableBiometrics: $availableBiometrics');
                                 if (availableBiometrics.contains(BiometricType.strong)) {
                                   try {
                                     final bool didAuthenticate = await auth.authenticate(
                                         localizedReason: 'Please authenticate to show account balance',
                                         options: const AuthenticationOptions(useErrorDialogs: false));
-                                    print('didAuthenticate: $didAuthenticate');
                                     if (didAuthenticate) {
                                       // show key
                                     }
 
                                   } on PlatformException catch (e) {
-                                    print('e: $e');
                                     if (e.code == auth_error.notAvailable) {
                                       // Add handling of no hardware here.
                                     } else if (e.code == auth_error.notEnrolled) {
@@ -190,6 +185,8 @@ class SettingsPage extends StatelessWidget {
                                 onPressed: () async {
                                   await Web3AuthFlutter.logout();
                                   logger.i("Logout success! Move to login page.");
+                                  WalletCache cache = Get.find();
+                                  await cache.clearCache();
                                   context.go('/login');
                                 },
                                 color: SurfyColor.blue,

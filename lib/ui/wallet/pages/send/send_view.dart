@@ -10,10 +10,10 @@ import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/sending_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/send/viewmodel/send_viewmodel.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class SendPage extends StatefulWidget {
   const SendPage({super.key, required this.token, required this.blockchain});
@@ -85,12 +85,12 @@ class _SendPageState extends State<SendPage> implements SendView {
                 var fiat = 0.0;
                 if (_viewModel.observableIsFiatInputMode.isTrue) {
                   amount = _calculator.fiatToCryptoAmountV2(_viewModel.observableInputData.value.toDouble(), widget.token, _viewModel.observableTokenPrice.value);
-                  print('token Amount: $amount');
                   fiat = _viewModel.observableInputData.value.toDouble();
                 } else {
                   amount = _calculator.cryptoWithDecimal(widget.token, _viewModel.observableInputData.value.toDouble());
                   fiat = _calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
                 }
+                print('amount: $amount, fiat: $fiat');
                 context.push('/sendConfirm', extra: SendingConfirmViewProps(
                   token: widget.token,
                   blockchain: widget.blockchain,
