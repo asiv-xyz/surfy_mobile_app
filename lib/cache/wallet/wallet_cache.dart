@@ -1,7 +1,7 @@
 import 'package:hive_flutter/adapters.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class WalletCache {
   static const walletBoxName = 'wallet';

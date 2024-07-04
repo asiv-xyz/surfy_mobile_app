@@ -1,81 +1,91 @@
-import 'dart:isolate';
-
+import 'package:surfy_mobile_app/abi/erc20.g.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/service/wallet/address_handlers/address_handlers.dart';
 import 'package:surfy_mobile_app/service/wallet/balance_handlers/balance_handlers.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class WalletService {
   final Map<Blockchain, AddressHandler> addressHandlers = {
     // TODO : fix each handler to singleton
-    Blockchain.ETHEREUM: EthereumAddressHandler(),
-    Blockchain.ETHEREUM_SEPOLIA: EthereumAddressHandler(),
+    Blockchain.ethereum: EthereumAddressHandler(),
+    Blockchain.ethereum_sepolia: EthereumAddressHandler(),
 
-    Blockchain.BASE: EthereumAddressHandler(),
-    Blockchain.BASE_SEPOLIA: EthereumAddressHandler(),
+    Blockchain.base: EthereumAddressHandler(),
+    Blockchain.base_sepolia: EthereumAddressHandler(),
 
-    Blockchain.OPTIMISM: EthereumAddressHandler(),
-    Blockchain.OPTIMISM_SEPOLIA: EthereumAddressHandler(),
+    Blockchain.optimism: EthereumAddressHandler(),
+    Blockchain.optimism_sepolia: EthereumAddressHandler(),
 
-    Blockchain.ARBITRUM: EthereumAddressHandler(),
-    Blockchain.ARBITRUM_SEPOLIA: EthereumAddressHandler(),
+    Blockchain.arbitrum: EthereumAddressHandler(),
+    Blockchain.arbitrum_sepolia: EthereumAddressHandler(),
 
-    Blockchain.BSC: EthereumAddressHandler(),
+    Blockchain.bsc: EthereumAddressHandler(),
 
-    Blockchain.OP_BNB: EthereumAddressHandler(),
+    Blockchain.opbnb: EthereumAddressHandler(),
 
-    Blockchain.SOLANA: SolanaAddressHandler(),
-    Blockchain.SOLANA_DEVNET: SolanaAddressHandler(),
+    Blockchain.solana: SolanaAddressHandler(),
+    Blockchain.solana_devnet: SolanaAddressHandler(),
 
-    Blockchain.XRPL: XrplAddressHandler(),
+    Blockchain.xrpl: XrplAddressHandler(),
 
-    Blockchain.TRON: TronAddressHandler(),
+    Blockchain.tron: TronAddressHandler(),
+
+    Blockchain.dogechain: DogeAddressHandler(),
   };
 
   final Map<Token, Map<Blockchain, BalanceHandler>> balanceHandlers = {
     Token.ETHEREUM: {
-      Blockchain.ETHEREUM: EthereumBalanceHandler(),
-      Blockchain.ETHEREUM_SEPOLIA: EthereumBalanceHandler(),
-      Blockchain.BASE: EthereumBalanceHandler(),
-      Blockchain.BASE_SEPOLIA: EthereumBalanceHandler(),
+      Blockchain.ethereum: EthereumBalanceHandler(),
+      Blockchain.ethereum_sepolia: EthereumBalanceHandler(),
+      Blockchain.base: EthereumBalanceHandler(),
+      Blockchain.base_sepolia: EthereumBalanceHandler(),
     },
 
     Token.USDC: {
-      Blockchain.ETHEREUM: UsdcBalanceHandler(),
-      Blockchain.ETHEREUM_SEPOLIA: UsdcBalanceHandler(),
-      Blockchain.BASE: UsdcBalanceHandler(),
-      Blockchain.BASE_SEPOLIA: UsdcBalanceHandler(),
+      Blockchain.ethereum: UsdcBalanceHandler(),
+      Blockchain.ethereum_sepolia: UsdcBalanceHandler(),
+      Blockchain.base: UsdcBalanceHandler(),
+      Blockchain.base_sepolia: UsdcBalanceHandler(),
 
-      Blockchain.SOLANA: UsdcBalanceHandler()
+      Blockchain.solana: UsdcBalanceHandler()
     },
 
     Token.USDT: {
-      Blockchain.ETHEREUM: const Erc20BalanceHandler(token: Token.USDT),
-      Blockchain.TRON: TrcBalanceHandler(),
+      Blockchain.ethereum: const Erc20BalanceHandler(token: Token.USDT),
+      Blockchain.tron: TrcBalanceHandler(),
     },
 
     Token.DEGEN: {
-      Blockchain.BASE: const Erc20BalanceHandler(token: Token.DEGEN)
+      Blockchain.base: const Erc20BalanceHandler(token: Token.DEGEN)
+    },
+
+    Token.DOGE: {
+      // Blockchain.bsc: const Erc20BalanceHandler(token: Token.DOGE),
+      Blockchain.dogechain: DogeBalanceHandler(),
     },
     // Token.DOGE: const Erc20BalanceHandler(token: Token.DOGE),
 
     Token.BNB: {
-      Blockchain.BSC: EthereumBalanceHandler(),
-      Blockchain.OP_BNB: EthereumBalanceHandler(),
+      Blockchain.bsc: EthereumBalanceHandler(),
+      Blockchain.opbnb: Erc20BalanceHandler(token: Token.BNB),
     },
 
     Token.SOLANA: {
-      Blockchain.SOLANA: SolanaBalanceHandler(),
-      Blockchain.SOLANA_DEVNET: SolanaBalanceHandler(),
+      Blockchain.solana: SolanaBalanceHandler(),
+      Blockchain.solana_devnet: SolanaBalanceHandler(),
     },
 
     Token.XRP: {
-      Blockchain.XRPL: XrpBalanceHandler()
+      Blockchain.xrpl: XrpBalanceHandler()
     },
 
     Token.TRON: {
-      Blockchain.TRON: TronBalanceHandler(),
+      Blockchain.tron: TronBalanceHandler(),
+    },
+
+    Token.FRAX: {
+      Blockchain.ethereum: Erc20BalanceHandler(token: Token.FRAX),
     }
   };
 
@@ -91,17 +101,14 @@ class WalletService {
   Future<UserTokenData> getBalance(Token token, Blockchain blockchain, String address) async {
     try {
       var startTime = DateTime.now().millisecondsSinceEpoch;
-      print('getBalance: $token, $blockchain, $startTime');
       final balanceHandler = balanceHandlers[token]?[blockchain];
       if (balanceHandler == null) {
         throw Exception('No balance handler for token: $token, chain: $blockchain');
       }
 
       final result = await balanceHandler.getBalance(token, blockchain, address);
-      print('getBalance end: $token, $blockchain, ${DateTime.now().millisecondsSinceEpoch - startTime}');
       return result;
     } catch (e) {
-      print('catch: $e');
       return UserTokenData(token: token, blockchain: blockchain, address: address, amount: BigInt.zero, decimal: tokens[token]?.decimal ?? 0);
     }
   }

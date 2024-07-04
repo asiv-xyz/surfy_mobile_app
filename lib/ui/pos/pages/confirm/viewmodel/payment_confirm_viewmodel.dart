@@ -12,9 +12,9 @@ import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:vibration/vibration.dart';
 
 class PaymentConfirmViewModel {
@@ -30,7 +30,7 @@ class PaymentConfirmViewModel {
   final KeyService _keyService = Get.find();
 
   final Rx<Token> observableSelectedToken = Rx(Token.ETHEREUM);
-  final Rx<Blockchain> observableSelectedBlockchain = Rx(Blockchain.ETHEREUM);
+  final Rx<Blockchain> observableSelectedBlockchain = Rx(Blockchain.ethereum);
 
   final Rx<BigInt> observableGas = BigInt.zero.obs;
   final Rx<BigInt> observablePayCrypto = BigInt.zero.obs;
@@ -114,7 +114,6 @@ class PaymentConfirmViewModel {
     final userBalance = await _getWalletBalancesUseCase.getBalance(observableSelectedToken.value, observableSelectedBlockchain.value, observableSenderWallet.value);
     final fiat = cryptoToFiat(observableSelectedToken.value,
         userBalance, tokenPrice?.price ?? 0, merchantCurrencyType);
-    print('targetFiat: $targetFiat, userBalance: $fiat');
     observableCanPay.value = fiat > targetFiat;
   }
 
@@ -128,7 +127,6 @@ class PaymentConfirmViewModel {
       String receiver,
       BigInt cryptoAmount) async {
     try {
-      print('processPayment: token=$token, blockchain=$blockchain, sender=$sender, receiver=$receiver, cryptoAmount=$cryptoAmount');
       Vibration.vibrate(duration: 100);
       view.onStartPayment();
       final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, cryptoAmount);
@@ -145,10 +143,8 @@ class PaymentConfirmViewModel {
           fiat: fiat,
           currencyType: paymentCurrencyType,
       );
-      print('processPayment: $response');
       observableTransactionHash.value = response.transactionHash;
     } catch (e) {
-      print('processPayment error: $e');
       rethrow;
     } finally {
       view.onFinishPayment();

@@ -41,7 +41,7 @@ dependencies:
       url: https://github.com/dola99/qr_code_scanner
       ref: update
   vibration: ^1.9.0
-  xrpl_dart: ^4.3.0
+  xrpl_dart: ^4.4.0
   local_auth: ^2.2.0
   tron: ^0.0.2
   grpc: ^3.2.4
@@ -52,12 +52,14 @@ dependencies:
   flutter_dotenv: ^5.1.0
   gif: ^2.3.0
   lottie: ^3.1.2
+  bitcoin_base: ^4.5.0
+  decimal: ^2.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: ^2.4.11
-  hive_generator: ^2.0.1
+  # hive_generator: ^2.0.1
   flutter_launcher_icons: ^0.13.1
 
   flutter_lints: ^2.0.0
@@ -68,6 +70,20 @@ flutter_launcher_icons:
   min_sdk_android: 21
   ios: true
   image_path: "assets/images/app_ic.png"
+
+
+targets:
+  $default:
+    builders:
+      # Typically the builder key is just the package name, run
+      # `dart run build_runner doctor` to check your config.
+      hive_generator:hive_generator:
+        generate_for:
+          # Example glob for only the Dart files under `lib/models`
+          - lib/main.dart
+      web3dart_builders:
+        generate_for:
+          - lib/abi/**.abi.dart
 
 
 flutter_native_splash:

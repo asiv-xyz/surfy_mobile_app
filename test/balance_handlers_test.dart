@@ -1,14 +1,34 @@
 import 'dart:isolate';
+import 'dart:math';
 
+import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:solana/dto.dart';
+import 'package:solana/solana.dart';
+import 'package:solana/solana_pay.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
 import 'package:surfy_mobile_app/service/wallet/balance_handlers/balance_handlers.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/utils/bitcoin_explorer_service.dart';
+import 'package:surfy_mobile_app/utils/electrum_ssl_service.dart';
 
 void main() {
-  test('isolate test', () async {
+
+  test('doge test', () async {
+    final blockchainData = blockchains[Blockchain.solana];
+    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData?.rpc ?? ""), websocketUrl: Uri.parse(blockchainData?.websocket ?? ""));
+
+    // 5sJqTZUyby79qehzah26GjLJMRg1jYQjG2c9nHX2kW1p9WhR8U4Zg4NxAkW28rMmtkEFXj1wV4H7W4Ltn9M4QPrD
+    final tx = await client.findSolanaPayTransaction(
+      reference: Ed25519HDPublicKey.fromBase58("3gCcy66kYE9AdcFT7H42HSduozdiqAfxHMNLegVB8uKm")
+    );
+
+    print(tx);
+  });
+
+  //test('isolate test', () async {
     // final handler = TronBalanceHandler();
     // final balance = await handler.getBalance(Token.TRON, Blockchain.TRON, "TEPSrSYPDSQ7yXpMFPq91Fb1QEWpMkRGfn");
     // print(balance.toVisibleAmount());
@@ -17,7 +37,7 @@ void main() {
     // print(result.toVisibleAmount());
 
 
-  });
+  //});
   // test('ethereum balance handler test', () async {
   //   final handler = EthereumBalanceHandler();
   //   final balance = await handler.getBalance(Token.ETHEREUM, Blockchain.BASE, "0x8341B0d5d2d2672BF092C7c6A8142530e7ed4C73");

@@ -1,5 +1,5 @@
 import 'package:surfy_mobile_app/utils/rpc.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 enum EllipticCurve {
@@ -8,27 +8,29 @@ enum EllipticCurve {
 }
 
 enum Blockchain {
-  ETHEREUM,
-  ETHEREUM_SEPOLIA,
+  ethereum,
+  ethereum_sepolia,
 
-  OPTIMISM,
-  OPTIMISM_SEPOLIA,
+  optimism,
+  optimism_sepolia,
 
-  ARBITRUM,
-  ARBITRUM_SEPOLIA,
+  arbitrum,
+  arbitrum_sepolia,
 
-  BASE,
-  BASE_SEPOLIA,
+  base,
+  base_sepolia,
 
-  SOLANA,
-  SOLANA_DEVNET,
+  solana,
+  solana_devnet,
 
-  BSC,
-  OP_BNB,
+  bsc,
+  opbnb,
 
-  TRON,
+  tron,
 
-  XRPL,
+  xrpl,
+
+  dogechain,
 }
 
 Blockchain findBlockchainByName(String name) {
@@ -68,7 +70,7 @@ class BlockchainData {
 
 final Map<Blockchain, BlockchainData> blockchains = {
   // ETHEREUM
-  Blockchain.ETHEREUM: BlockchainData(
+  Blockchain.ethereum: BlockchainData(
       chainId: 1,
       name: 'Ethereum',
       category: 'evm',
@@ -80,7 +82,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://etherscan.io/tx/$tx",
   ),
-  Blockchain.ETHEREUM_SEPOLIA: BlockchainData(
+  Blockchain.ethereum_sepolia: BlockchainData(
       chainId: 11155111,
       name: 'Ethereum Sepolia',
       category: 'evm',
@@ -94,7 +96,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // OPTIMISM
-  Blockchain.OPTIMISM: BlockchainData(
+  Blockchain.optimism: BlockchainData(
       chainId: 10,
       name: 'Optimism',
       category: 'evm',
@@ -106,7 +108,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://optimistic.etherscan.io/tx/$tx",
   ),
-  Blockchain.OPTIMISM_SEPOLIA: BlockchainData(
+  Blockchain.optimism_sepolia: BlockchainData(
       chainId: 11155420,
       name: 'Optimism Sepolia',
       category: 'evm',
@@ -120,7 +122,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // ARBITRUM
-  Blockchain.ARBITRUM: BlockchainData(
+  Blockchain.arbitrum: BlockchainData(
       chainId: 42161,
       name: 'Arbitrum Sepolia',
       category: 'evm',
@@ -132,7 +134,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://arbiscan.io/tx/$tx"
   ),
-  Blockchain.ARBITRUM_SEPOLIA: BlockchainData(
+  Blockchain.arbitrum_sepolia: BlockchainData(
       chainId: 421614,
       name: 'Arbitrum',
       category: 'evm',
@@ -146,7 +148,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // BASE
-  Blockchain.BASE: BlockchainData(
+  Blockchain.base: BlockchainData(
       chainId: 8453,
       name: 'Base',
       category: 'evm',
@@ -158,7 +160,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://basescan.org/tx/$tx"
   ),
-  Blockchain.BASE_SEPOLIA: BlockchainData(
+  Blockchain.base_sepolia: BlockchainData(
       chainId: 84532,
       name: 'Base Sepolia',
       category: 'evm',
@@ -172,7 +174,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // SOLANA
-  Blockchain.SOLANA: BlockchainData(
+  Blockchain.solana: BlockchainData(
       chainId: null,
       name: 'Solana',
       category: 'solana',
@@ -184,7 +186,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       feeCoin: Token.SOLANA,
       getScanUrl: (String tx) => "https://explorer.solana.com/tx/$tx"
   ),
-  Blockchain.SOLANA_DEVNET: BlockchainData(
+  Blockchain.solana_devnet: BlockchainData(
       chainId: null,
       name: 'Solana Devnet',
       category: 'solana',
@@ -198,7 +200,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // BSC
-  Blockchain.BSC: BlockchainData(
+  Blockchain.bsc: BlockchainData(
       chainId: 56,
       name: 'Binance Smart Chain',
       category: 'evm',
@@ -213,7 +215,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // OP_BNB
-  Blockchain.OP_BNB: BlockchainData(
+  Blockchain.opbnb: BlockchainData(
     chainId: 204,
     name: 'opBNB',
     category: 'evm',
@@ -228,7 +230,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
 
   // TRON
-  Blockchain.TRON: BlockchainData(
+  Blockchain.tron: BlockchainData(
       chainId: null,
       name: 'Tron',
       category: 'tron',
@@ -242,7 +244,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
   ),
 
   // XRPL
-  Blockchain.XRPL: BlockchainData(
+  Blockchain.xrpl: BlockchainData(
     chainId: null,
     name: 'XRPL',
     category: 'xrpl',
@@ -253,5 +255,19 @@ final Map<Blockchain, BlockchainData> blockchains = {
     curve: EllipticCurve.SECP256K1,
     feeCoin: Token.XRP,
     getScanUrl: (String tx) => "https://xrpscan.com/tx/$tx",
+  ),
+
+  // DOGECHAIN
+  Blockchain.dogechain: BlockchainData(
+    chainId: null,
+    name: 'DogeChain',
+    category: 'dogechain',
+    icon: 'assets/images/tokens/ic_dogecoin.png',
+    isTestnet: false,
+    rpc: '',
+    websocket: null,
+    curve: EllipticCurve.SECP256K1,
+    feeCoin: Token.DOGE,
+    getScanUrl: (String tx) => "https://dogechain.info/tx/$tx",
   )
 };

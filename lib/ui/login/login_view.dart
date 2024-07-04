@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
 
   @override
   void onError(String error) {
-    print('onError: $error');
+    _isLoading.value = false;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
@@ -150,12 +150,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                           MaterialButton(
                               padding: EdgeInsets.zero,
                               onPressed: () async {
-                                await _viewModel.processLogin(LoginParams(loginProvider: Provider.twitter,
-                                    extraLoginOptions: ExtraLoginOptions(
-                                        domain: dotenv.env["AUTH0_DOMAIN"],
-                                        client_id: dotenv.env["AUTH0_CLIENT_ID"],
-                                        redirect_uri: "surfy://com.riverbank.surfy/auth"
-                                    )), () {
+                                await _viewModel.processLogin(LoginParams(loginProvider: Provider.discord), () {
                                   if (mounted) {
                                     context.go('/wallet');
                                   }
@@ -172,13 +167,9 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          const Image(
-                                              image: AssetImage(
-                                                  'assets/images/ic_x.png'),
-                                              width: 20,
-                                              height: 20),
+                                          const Icon(Icons.discord_outlined, size: 20, color: SurfyColor.white,),
                                           const SizedBox(width: 10),
-                                          Text('Sign In with X',
+                                          Text('Sign In with Discord',
                                               style: GoogleFonts.sora(
                                                   textStyle: const TextStyle(
                                                       color: Colors.white,

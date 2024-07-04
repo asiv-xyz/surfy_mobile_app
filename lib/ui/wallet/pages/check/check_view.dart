@@ -7,9 +7,9 @@ import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.da
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/viewmodel/check_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class CheckViewProps {
   CheckViewProps({

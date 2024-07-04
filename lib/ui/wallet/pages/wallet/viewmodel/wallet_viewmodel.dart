@@ -9,7 +9,7 @@ import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/wallet/wallet_view.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
@@ -54,9 +54,6 @@ class WalletViewModel implements EventListener {
         final address = await _getWalletAddressUseCase.getAddress(network);
         final balance = fromRemote ? await _getWalletBalancesUseCase.getBalanceFromRemote(token, network, address)
             : await _getWalletBalancesUseCase.getBalance(token, network, address);
-        if (!fromRemote) {
-          print('Event and updated balance: ${balance}');
-        }
         return Balance(
           token: token,
           blockchain: network,
@@ -74,7 +71,6 @@ class WalletViewModel implements EventListener {
     }
 
     final tokenPrices = await _getTokenPrice.getTokenPrice(Token.values, _preference.userCurrencyType.value);
-    print('tokenPrices: $tokenPrices');
     observablePrices.value = tokenPrices;
 
     listener.offLoading();
@@ -84,10 +80,8 @@ class WalletViewModel implements EventListener {
   @override
   Future<void> onEventReceived(GlobalEvent event) async {
     if (event is UpdateTokenBalanceCompleteEvent) {
-      print('Event: UpdateTokenBalanceCompleteEvent received');
       await refresh(false);
     } else if (event is ChangeCurrecnyTypeEvent) {
-      print('Event: ChangeCurrencyTypeEvent received');
       await refresh(true);
     }
   }

@@ -1,15 +1,24 @@
+import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:decimal/decimal.dart';
 import 'package:on_chain/on_chain.dart' as tron;
+import 'package:solana/dto.dart' as solana_dto;
+import 'package:solana/encoder.dart' as solana_encoder;
 import 'package:solana/solana.dart';
+import 'package:solana/solana_pay.dart';
+import 'package:surfy_mobile_app/abi/erc1559.g.dart';
 import 'package:surfy_mobile_app/abi/erc20.dart';
 import 'package:surfy_mobile_app/abi/erc20.g.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/service/blockchain//exceptions/exceptions.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/utils/bitcoin_explorer_service.dart';
 import 'package:surfy_mobile_app/utils/tron_http_service.dart';
 import 'package:surfy_mobile_app/utils/xrpl_http_service.dart';
 import 'package:web3dart/crypto.dart';
@@ -64,9 +73,8 @@ class SendEthereumHandler implements SendTokenHandler {
       to: EthereumAddress.fromHex(to),
       value: EtherAmount.fromBigInt(EtherUnit.wei, amount),
       gasPrice: gasPrice,
-      maxGas: 200000,
+      maxGas: 50000,
     );
-    print('chaindId: ${blockchainData?.chainId}');
     final result = await client.sendTransaction(credential, tx, chainId: blockchainData?.chainId);
     return SendTokenResponse(token: Token.ETHEREUM, blockchain: blockchain, sentAmount: amount, transactionHash: result);
   }
@@ -75,7 +83,6 @@ class SendEthereumHandler implements SendTokenHandler {
   Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     final blockchainData = blockchains[blockchain];
     final client = Web3Client(blockchainData?.rpc ?? "", http.Client());
-    print('chainId: ${await client.getChainId()}');
     final secp256K1 = (await keyService.getKey()).first;
     final credential = EthPrivateKey.fromHex(secp256K1);
     final result = await client.estimateGas(
@@ -99,17 +106,17 @@ class SendUsdcHandler implements SendTokenHandler {
   @override
   Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
     switch (blockchain) {
-      case Blockchain.SOLANA:
-      case Blockchain.SOLANA_DEVNET:
+      case Blockchain.solana:
+      case Blockchain.solana_devnet:
         return await splHandler.send(blockchain, to, amount);
-      case Blockchain.ETHEREUM:
-      case Blockchain.ARBITRUM:
-      case Blockchain.OPTIMISM:
-      case Blockchain.BASE:
-      case Blockchain.ETHEREUM_SEPOLIA:
-      case Blockchain.ARBITRUM_SEPOLIA:
-      case Blockchain.OPTIMISM_SEPOLIA:
-      case Blockchain.BASE_SEPOLIA:
+      case Blockchain.ethereum:
+      case Blockchain.arbitrum:
+      case Blockchain.optimism:
+      case Blockchain.base:
+      case Blockchain.ethereum_sepolia:
+      case Blockchain.arbitrum_sepolia:
+      case Blockchain.optimism_sepolia:
+      case Blockchain.base_sepolia:
         return await erc20Handler.send(blockchain, to, amount);
       default:
         throw NoBlockchainException(blockchain: blockchain);
@@ -119,17 +126,17 @@ class SendUsdcHandler implements SendTokenHandler {
   @override
   Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
     switch (blockchain) {
-      case Blockchain.SOLANA:
-      case Blockchain.SOLANA_DEVNET:
+      case Blockchain.solana:
+      case Blockchain.solana_devnet:
         return await splHandler.estimateFee(blockchain, to, amount);
-      case Blockchain.ETHEREUM:
-      case Blockchain.ARBITRUM:
-      case Blockchain.OPTIMISM:
-      case Blockchain.BASE:
-      case Blockchain.ETHEREUM_SEPOLIA:
-      case Blockchain.ARBITRUM_SEPOLIA:
-      case Blockchain.OPTIMISM_SEPOLIA:
-      case Blockchain.BASE_SEPOLIA:
+      case Blockchain.ethereum:
+      case Blockchain.arbitrum:
+      case Blockchain.optimism:
+      case Blockchain.base:
+      case Blockchain.ethereum_sepolia:
+      case Blockchain.arbitrum_sepolia:
+      case Blockchain.optimism_sepolia:
+      case Blockchain.base_sepolia:
         return await erc20Handler.estimateFee(blockchain, to, amount);
       default:
         throw NoBlockchainException(blockchain: blockchain);
@@ -161,7 +168,7 @@ class SendErc20Handler implements SendTokenHandler {
       credentials: credential,
       transaction: Transaction(
         gasPrice: gasPrice,
-        maxGas: 200000,
+        maxGas: 100000,
       )
     );
     return SendTokenResponse(token: token, blockchain: blockchain, sentAmount: amount, transactionHash: result);
@@ -169,19 +176,30 @@ class SendErc20Handler implements SendTokenHandler {
 
   @override
   Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
+    print('estimateFee: $blockchain, $to, $amount');
     final tokenData = tokens[token];
     final blockchainData = blockchains[blockchain];
     final contractAddress = tokenData?.tokenContractAddress[blockchain];
     final client = Web3Client(blockchainData?.rpc ?? "", http.Client());
-    final erc20 = Erc20(address: EthereumAddress.fromHex(contractAddress ?? "0x0"), client: client);
+
+    final erc1559 = Erc1559(address: EthereumAddress.fromHex(contractAddress ?? "0x0"), chainId: blockchainData?.chainId, client: client);
+    final erc20 = Erc20(address: EthereumAddress.fromHex(contractAddress ?? "0x0"), chainId: blockchainData?.chainId, client: client);
     final secp256K1 = (await keyService.getKey()).first;
     final credential = EthPrivateKey.fromHex(secp256K1);
-    final encodedData = erc20.self.function('transfer').encodeCall([
-      erc20.self.address, amount
-    ]);
-    final result = await client.estimateGas(sender: credential.address, to: EthereumAddress.fromHex(to), data: encodedData);
     final gasPrice = await client.getGasPrice();
-    return gasPrice.getInWei * result;
+    final tx = Transaction.callContract(
+        contract: erc1559.self,
+        function: erc1559.self.function('transfer'),
+        parameters: [EthereumAddress.fromHex(to), amount],
+    );
+    final result = await client.estimateGas(
+        sender: credential.address,
+        to: EthereumAddress.fromHex(to),
+        data: tx.data,
+        gasPrice: gasPrice
+    );
+    final correction = BigInt.from(result.toDouble() * 2);
+    return gasPrice.getInWei * correction;
   }
 }
 
@@ -205,11 +223,13 @@ class SendSolanaHandler implements SendTokenHandler {
     final key = await keyService.getKey();
     final keyHex = hexToBytes(key.second);
     final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
-    final result = await client.transferLamports(
-      source: userWallet,
-      destination: Ed25519HDPublicKey.fromBase58(to),
-      lamports: amount.toInt(),
-      commitment: Commitment.confirmed
+    final solAmount = amount / BigInt.from(pow(10, 9));
+
+    final result = await client.sendSolanaPay(
+      payer: userWallet,
+      recipient: Ed25519HDPublicKey.fromBase58(to),
+      amount: Decimal.parse(solAmount.toString()),
+      commitment: Commitment.processed
     );
 
     return SendTokenResponse(token: Token.SOLANA, blockchain: blockchain, sentAmount: amount, transactionHash: result);
@@ -217,6 +237,7 @@ class SendSolanaHandler implements SendTokenHandler {
 
   @override
   Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
+    print('solana pay: $blockchain $to $amount');
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -227,8 +248,23 @@ class SendSolanaHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
+    final key = await keyService.getKey();
+    final keyHex = hexToBytes(key.second);
+    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
+
     final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
-    return BigInt.zero;
+    final solAmount = amount / BigInt.from(pow(10, 9));
+    final msg = await client.createSolanaPayMessage(
+        payer: userWallet,
+        recipient: Ed25519HDPublicKey.fromBase58(to),
+        amount: Decimal.parse(solAmount.toString()),
+    );
+
+    final latestBlockHash = await client.rpcClient.getLatestBlockhash();
+    final compiledMsg = msg.compile(recentBlockhash: latestBlockHash.value.blockhash, feePayer: userWallet.publicKey);
+    final base64EncodedMsg = Base64Encoder().convert(compiledMsg.toByteArray().toList());
+    final fee = await client.rpcClient.getFeeForMessage(base64EncodedMsg);
+    return BigInt.from(fee ?? 0);
   }
 
 }
@@ -251,12 +287,82 @@ class SendSplHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
-    return SendTokenResponse(token: token, blockchain: blockchain, sentAmount: BigInt.zero, transactionHash: "");
+    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
+    final key = await keyService.getKey();
+    final keyHex = hexToBytes(key.second);
+    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
+
+    final tokenContractAddress = tokens[token]?.tokenContractAddress[Blockchain.solana];
+
+    final solAmount = amount / BigInt.from(pow(10, tokens[token]?.decimal ?? 0));
+
+    final mint = await client.getMint(address: Ed25519HDPublicKey.fromBase58(tokenContractAddress ?? ""));
+    final value = Decimal.parse(solAmount.toString()).shift(mint.decimals).toBigInt().toInt();
+    final payerAccount = await client.getAssociatedTokenAccount(
+        owner: userWallet.publicKey,
+        mint: mint.address);
+    final recipientAccount = await client.getAssociatedTokenAccount(
+        owner: Ed25519HDPublicKey.fromBase58(to),
+        mint: mint.address);
+    final instruction = TokenInstruction.transferChecked(
+        amount: value,
+        decimals: mint.decimals,
+        source: Ed25519HDPublicKey.fromBase58(payerAccount?.pubkey ?? ""),
+        mint: mint.address,
+        destination: Ed25519HDPublicKey.fromBase58(recipientAccount?.pubkey ?? ""),
+        owner: userWallet.publicKey);
+    // TODO: add memo
+    var memo = null;
+    final message = solana_encoder.Message(
+        instructions: [
+          if (memo != null) MemoInstruction(signers: const [], memo: memo),
+          instruction
+        ]
+    );
+
+    final result = await client.rpcClient.signAndSendTransaction(
+        message,
+        [userWallet],
+    );
+
+    return SendTokenResponse(
+        token: token,
+        blockchain: blockchain,
+        sentAmount: amount,
+        transactionHash: result
+    );
   }
 
   @override
   Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
-    return BigInt.zero;
+    final blockchainData = blockchains[blockchain];
+    if (blockchainData == null) {
+      throw NoBlockchainException(blockchain: blockchain);
+    }
+
+    final tokenData = tokens[Token.SOLANA];
+    if (tokenData == null) {
+      throw NoTokenException(token: Token.SOLANA);
+    }
+
+    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
+    final key = await keyService.getKey();
+    final keyHex = hexToBytes(key.second);
+    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
+    final tokenContractAddress = tokens[token]?.tokenContractAddress[Blockchain.solana];
+    final solAmount = amount / BigInt.from(pow(10, tokens[token]?.decimal ?? 0));
+    final msg = await client.createSolanaPayMessage(
+      payer: userWallet,
+      recipient: Ed25519HDPublicKey.fromBase58(to),
+      amount: Decimal.parse(solAmount.toString()),
+      splToken: Ed25519HDPublicKey.fromBase58(tokenContractAddress ?? ""),
+    );
+
+    final latestBlockHash = await client.rpcClient.getLatestBlockhash();
+    final compiledMsg = msg.compile(recentBlockhash: latestBlockHash.value.blockhash, feePayer: userWallet.publicKey);
+    final base64EncodedMsg = Base64Encoder().convert(compiledMsg.toByteArray().toList());
+    final fee = await client.rpcClient.getFeeForMessage(base64EncodedMsg);
+    return BigInt.from(fee ?? 0);
   }
 }
 
@@ -284,6 +390,7 @@ class SendXrpHandler implements SendTokenHandler {
       fee: BigInt.from(fee.calculateFeeDynamically()),
       signer: XRPLSignature.signer(wallet.getPublic().toHex()),
     );
+    print('xrp payment: ${payment.amount}');
     await XRPHelper.autoFill(syncRpc, payment);
     final sig = wallet.sign(payment.toBlob());
     payment.setSignature(sig);
@@ -522,5 +629,69 @@ class SendTrcHandler implements SendTokenHandler {
         blockchain: blockchain,
         sentAmount: amount, transactionHash: result.txId ?? "");
   }
+}
 
+class SendDogeHandler implements SendTokenHandler {
+  SendDogeHandler({required this.keyService});
+
+  final KeyService keyService;
+
+  @override
+  Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
+    final service = BitcoinApiService();
+    final api = ApiProvider.fromBlocCypher(DogecoinNetwork.mainnet, service);
+    final fee = await api.getNetworkFeeRate();
+    final result = (fee.high + fee.medium) / BigInt.from(2);
+    final b = BigInt.from(result);
+    return b;
+  }
+
+  @override
+  Future<SendTokenResponse> send(Blockchain blockchain, String to, BigInt amount) async {
+    final keys = await keyService.getKey();
+    final privateKey = keys.first;
+    final ecPrivate = ECPrivate.fromBytes(BytesUtils.fromHexString(privateKey));
+    final pubKey = ecPrivate.getPublic();
+    final p2pkhAddress = DogeAddress.fromBaseAddress(pubKey.toAddress());
+
+    final service = BitcoinApiService();
+    final api = ApiProvider.fromBlocCypher(DogecoinNetwork.mainnet, service);
+    final receiver = P2pkhAddress.fromAddress(address: to, network: DogecoinNetwork.mainnet);
+
+    final utxos = await api.getAccountUtxo(
+        UtxoAddressDetails(
+            publicKey: pubKey.toString(),
+            address: p2pkhAddress.baseAddress
+        )
+    );
+
+    final utxoList = <UtxoWithAddress>[];
+    for (var utxo in utxos) {
+      final detail = UtxoAddressDetails(publicKey: pubKey.toHex(), address: pubKey.toAddress());
+      final utxoWithAddress = UtxoWithAddress(utxo: utxo.utxo, ownerDetails: detail);
+      utxoList.add(utxoWithAddress);
+    }
+    final totalBalance = utxos.sumOfUtxosValue();
+    final fee = BtcUtils.toSatoshi("0.1");
+    final builder = BitcoinTransactionBuilder(
+        outPuts: [
+          BitcoinOutput(address: receiver, value: amount),
+          BitcoinOutput(address: pubKey.toAddress(), value: totalBalance - amount - fee)
+        ],
+        fee: fee,
+        network: DogecoinNetwork.mainnet,
+        utxos: utxoList,
+    );
+    final tr = builder.buildTransaction((trDigest, utxo, publicKey, sigHash) {
+      return ecPrivate.signInput(trDigest, sigHash: sigHash);
+    });
+
+    final result = await api.sendRawTransaction(tr.serialize());
+    return SendTokenResponse(
+        token: Token.DOGE,
+        blockchain: blockchain,
+        sentAmount: amount,
+        transactionHash: result
+    );
+  }
 }

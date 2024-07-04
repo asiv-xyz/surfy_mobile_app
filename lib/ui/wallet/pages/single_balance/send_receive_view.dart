@@ -14,10 +14,10 @@ import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/single_balance/viewmodel/send_receive_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class SingleBalancePage extends StatefulWidget {
   const SingleBalancePage({super.key, required this.token, required this.blockchain});

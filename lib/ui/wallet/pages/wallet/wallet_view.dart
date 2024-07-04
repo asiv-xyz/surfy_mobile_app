@@ -10,9 +10,9 @@ import 'package:surfy_mobile_app/ui/components/user_header.dart';
 import 'package:surfy_mobile_app/ui/wallet/components/wallet_item/wallet_item.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/wallet/viewmodel/wallet_viewmodel.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class WalletPage extends StatefulWidget {
@@ -70,6 +70,7 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
             if (!_preference.isShowTestnet.value && (blockchains[t.blockchain]?.isTestnet ?? true)) {
               return false;
             }
+
             return true;
           })
           .reduce((prev, curr) {
@@ -133,7 +134,7 @@ class _WalletPageState extends State<WalletPage> implements WalletPageInterface 
                               )),
                               const SizedBox(height: 8),
                               Column(
-                                  children: _balanceListByDesc(Token.values, _viewModel.observableBalances.value).map((item) {
+                                  children: _balanceListByDesc(supportedToken, _viewModel.observableBalances.value).map((item) {
                                     final balance = item.second;
                                     return Container(
                                         margin: const EdgeInsets.symmetric(vertical: 8),

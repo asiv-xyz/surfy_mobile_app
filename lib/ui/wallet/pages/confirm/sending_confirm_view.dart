@@ -11,10 +11,10 @@ import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/viewmodel/sending_confirm_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class SendingConfirmViewProps {
   SendingConfirmViewProps({
@@ -92,6 +92,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
 
   final RxBool _isLoading = false.obs;
   final RxBool _isSending = false.obs;
+  final RxBool _isError = false.obs;
   final EventBus eventBus = Get.find();
   final SettingsPreference _preference = Get.find();
 
@@ -117,6 +118,10 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
 
   @override
   void onError(String error) {
+    print('onError!!!!');
+    _isSending.value = false;
+    _isLoading.value = false;
+    _isError.value = true;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
@@ -248,9 +253,9 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(formatFiat(_calculator.cryptoToFiatV2(widget.token, widget.amount, _viewModel.observableTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall),
+                                Obx(() => Text(formatFiat(_calculator.cryptoToFiatV2(_viewModel.observableGasToken.value, _viewModel.observableGas.value, _viewModel.observableGasTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall)),
                                 const SizedBox(height: 2),
-                                Text(formatCrypto(_viewModel.observableGasToken.value, _calculator.cryptoToDouble(widget.token, _viewModel.observableGas.value)), style: Theme.of(context).textTheme.labelSmall)
+                                Obx(() => Text(formatCrypto(_viewModel.observableGasToken.value, _calculator.cryptoToDouble(_viewModel.observableGasToken.value, _viewModel.observableGas.value)), style: Theme.of(context).textTheme.labelSmall))
                               ],
                             )
                           ],
@@ -260,7 +265,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                   ],
                 ),
                 Obx(() {
-                  if (_isSending.isFalse) {
+                  if (_isSending.isFalse && _isError.isFalse) {
                     return SwipeButton.expand(
                         height: 60,
                         onSwipe: () async {
@@ -295,14 +300,10 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                   fiat: widget.fiat
                               ));
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Error: ${e}", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
-                                  backgroundColor: Colors.black,
-                                ),
-                              );
+                              onError("$e");
                             }
                             _isLoading.value = false;
+                            _isSending.value = false;
                           }
                         },
                         borderRadius: BorderRadius.circular(0),
@@ -310,6 +311,14 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                         activeThumbColor: SurfyColor.blue,
                         child: Text('Swipe to confirm', style: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.bold, fontSize: 16),)
                     );
+                  } else if (_isError.isTrue) {
+                    return Container(
+                        width: double.infinity,
+                        height: 60,
+                        color: SurfyColor.deepRed,
+                        child: Center(
+                            child: Text('Error!', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),)
+                        ));
                   } else {
                     return Container(
                         width: double.infinity,
@@ -317,13 +326,13 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                         color: SurfyColor.blue,
                         child: Center(
                             child: Text('Sending...', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),)
-                    ));
+                        ));
                   }
                 })
               ],
             ),
             Obx(() {
-              if (_isLoading.isTrue) {
+              if (_isLoading.isTrue || _isSending.isTrue) {
                 return const LoadingWidget(opacity: 0.4);
               } else {
                 return Container();

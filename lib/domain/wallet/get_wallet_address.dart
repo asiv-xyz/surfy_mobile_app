@@ -1,6 +1,6 @@
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/service/wallet/wallet_service.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 
 class GetWalletAddress {
   GetWalletAddress({required this.service, required this.keyService});

@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class UserTokenData {
   const UserTokenData({required this.blockchain, required this.token, required this.amount, required this.decimal, required this.address});

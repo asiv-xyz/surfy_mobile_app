@@ -6,9 +6,9 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class WalletItem extends StatefulWidget {
   const WalletItem({
@@ -147,7 +147,6 @@ class _WalletItemState extends State<WalletItem> implements WalletItemView {
                     }
 
                     if (state.hasError) {
-                      print('error: ${state.error}');
                       return Text('Error...');
                     }
 

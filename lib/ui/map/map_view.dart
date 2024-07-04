@@ -7,10 +7,8 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
-import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/map/viewmodel/map_viewmodel.dart';
-import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class MapPage extends StatefulWidget {
@@ -35,8 +33,6 @@ class AnnotationClickListener extends OnPointAnnotationClickListener {
 
   @override
   void onPointAnnotationClick(PointAnnotation annotation) {
-    print('onPointAnnotationClick!: ${annotation.id}, ${annotationMap[annotation
-        .id]}');
     if (clickPlaceUseCase.isClicked.isTrue) {
       clickPlaceUseCase.isClicked.value = false;
     } else {
@@ -52,7 +48,7 @@ abstract class MapView {
   void offLoading();
 }
 
-class _MapPageState extends State<MapPage> implements INavigationLifeCycle, MapView {
+class _MapPageState extends State<MapPage> implements MapView {
   final ClickPlace _clickPlaceUseCase = Get.find();
   MapboxMap? mapboxMap;
 
@@ -107,7 +103,6 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle, MapV
 
   Future<void> _setCurrentUserPosition(MapboxMap mapboxMap) async {
     final position = await geolocator.Geolocator.getCurrentPosition();
-    print('position: $position');
     mapboxMap.easeTo(mapbox.CameraOptions(
         center: Point(
             coordinates: Position(position.longitude, position.latitude)),
@@ -289,15 +284,5 @@ class _MapPageState extends State<MapPage> implements INavigationLifeCycle, MapV
     return Center(
       child: Text('Access token is not valid.'),
     );
-  }
-
-  @override
-  void onPageEnd() {
-    print('onPageEnd');
-  }
-
-  @override
-  void onPageStart() {
-    print('onPageStart');
   }
 }

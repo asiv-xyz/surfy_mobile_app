@@ -89,14 +89,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  bitcoin_base:
+    dependency: "direct main"
+    description:
+      name: bitcoin_base
+      sha256: "2d4d301803b364c430444b93346ea543b5788358de44a9ee35f0d18fedf765d8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.5.0"
   blockchain_utils:
     dependency: "direct main"
     description:
       name: blockchain_utils
-      sha256: "3e0590f46485b209e88fea63a19425aad52c264d059c4e1379abdce80c448605"
+      sha256: f78783b522b5247faab0a811bfa83bf121fccdbfbbae0c3488543a690d3de480
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.0"
+    version: "3.2.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -338,7 +346,7 @@ packages:
     source: hosted
     version: "1.2.0"
   decimal:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: decimal
       sha256: "24a261d5d5c87e86c7651c417a5dbdf8bcd7080dd592533910e8d0505a279f21"
@@ -720,14 +728,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  hive_generator:
-    dependency: "direct dev"
-    description:
-      name: hive_generator
-      sha256: "06cb8f58ace74de61f63500564931f9505368f45f98958bd7a6c35ba24159db4"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.1"
   html:
     dependency: transitive
     description:
@@ -1222,22 +1222,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.30.4"
-  source_gen:
-    dependency: transitive
-    description:
-      name: source_gen
-      sha256: "14658ba5f669685cd3d63701d01b31ea748310f7ab854e471962670abcf57832"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.0"
-  source_helper:
-    dependency: transitive
-    description:
-      name: source_helper
-      sha256: "6adebc0006c37dd63fe05bca0a929b99f06402fc95aa35bf36d67f5c06de01fd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.4"
   source_span:
     dependency: transitive
     description:
@@ -1578,10 +1562,10 @@ packages:
     dependency: "direct main"
     description:
       name: xrpl_dart
-      sha256: "94b619e44a4856870ea9261598038257ccddf95a443d91a358ec2a447c424ca1"
+      sha256: "39cc1b6891c0070144f4a4899a866be4b3e61d738faad9f6478ef401a109ed92"
       url: "https://pub.dev"
     source: hosted
-    version: "4.3.0"
+    version: "4.4.0"
   yaml:
     dependency: transitive
     description:

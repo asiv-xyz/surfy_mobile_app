@@ -15,10 +15,10 @@ import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/check/payment_complete_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/viewmodel/payment_confirm_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class PaymentConfirmPageProps {
   PaymentConfirmPageProps({required this.storeId, required this.receiveCurrency, required this.wantToReceiveAmount});
@@ -248,8 +248,6 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                   decimal: tokens[blockchains[_viewModel.observableSelectedBlockchain.value]?.feeCoin]?.decimal ?? 1,
                                   address: "");
                               final gasFiat = gasData.toVisibleAmount() * (_viewModel.observableTokenPrice.value[_preference.userCurrencyType.value] ?? 0.0);
-                              print('gas: $gasData');
-                              print('gasFiat: $gasFiat');
                               return Container(
                                 margin: const EdgeInsets.symmetric(horizontal: 20),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

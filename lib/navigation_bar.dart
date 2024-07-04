@@ -5,11 +5,12 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
+import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/ui/common/error/error_page.dart';
+import 'package:surfy_mobile_app/ui/history/detail/history_detail_view.dart';
 import 'package:surfy_mobile_app/ui/history/history_view.dart';
 import 'package:surfy_mobile_app/ui/login/login_view.dart';
 import 'package:surfy_mobile_app/ui/map/map_view.dart';
-import 'package:surfy_mobile_app/ui/navigation_controller.dart';
 import 'package:surfy_mobile_app/ui/payment/payment_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/check/payment_complete_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
@@ -26,10 +27,10 @@ import 'package:surfy_mobile_app/ui/wallet/pages/detail/wallet_detail_view.dart'
 import 'package:surfy_mobile_app/ui/wallet/pages/send/send_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/single_balance/send_receive_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/wallet/wallet_view.dart';
-import 'package:surfy_mobile_app/utils/blockchains.dart';
-import 'package:surfy_mobile_app/utils/tokens.dart';
+import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 
-Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationController controller, String initialLocation) async {
+Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, String initialLocation) async {
   final GoRouter goRouter =
   GoRouter(initialLocation: initialLocation,
       routes: <RouteBase>[
@@ -51,12 +52,7 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                   GetQRController qrController = Get.find();
                   qrController.qrViewController.value?.resumeCamera();
                 }
-                final NavigationController navController = Get.find();
-                if (navController.currentIndex != index) {
-                  navController.onPageEnd(navController.currentIndex);
-                }
-                navController.currentIndex = index;
-                navController.onPageStart(index);
+
                 switch (index) {
                   case 0:
                     context.go('/wallet');
@@ -128,7 +124,17 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
           StatefulShellBranch(routes: <RouteBase>[
             GoRoute(
                 path: '/history',
-                builder: (context, state) => const HistoryPage()),
+                builder: (context, state) => const HistoryPage(),
+                routes: [
+                  GoRoute(
+                    path: 'detail',
+                    builder: (context, state) {
+                      final tx = state.extra as Transaction;
+                      return HistoryDetailPage(tx: tx);
+                    }
+                  )
+                ]
+            ),
           ]),
           StatefulShellBranch(routes: <RouteBase>[
             GoRoute(path: '/map', builder: (context, state) => const MapPage()),
@@ -198,7 +204,6 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                   path: ':storeId',
                   builder: (context, state) {
                     final storeId = state.pathParameters['storeId'];
-                    print('route to payment page with storeId: $storeId');
                     return PaymentPage(storeId: storeId ?? 'none');
                   }
               ),
@@ -258,7 +263,6 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                 GoRoute(
                     path: '/sendConfirm',
                     builder: (context, state) {
-                      print('extra: ${state.extra}');
                       final SendingConfirmViewProps extra = state.extra as SendingConfirmViewProps;
                       return SendingConfirmPage(
                         token: extra.token,
@@ -275,7 +279,6 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, NavigationControll
                     path: '/check',
                     builder: (context, state) {
                       final CheckViewProps extra = state.extra as CheckViewProps;
-                      print('extra: $extra');
                       return CheckView(
                           token: extra.token,
                           blockchain: extra.blockchain,
