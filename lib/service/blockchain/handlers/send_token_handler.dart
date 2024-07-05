@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -6,10 +5,8 @@ import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:decimal/decimal.dart';
 import 'package:on_chain/on_chain.dart' as tron;
-import 'package:solana/dto.dart' as solana_dto;
 import 'package:solana/encoder.dart' as solana_encoder;
-import 'package:solana/solana.dart';
-import 'package:solana/solana_pay.dart';
+import 'package:solana/solana.dart' as solana;
 import 'package:surfy_mobile_app/abi/erc1559.g.dart';
 import 'package:surfy_mobile_app/abi/erc20.dart';
 import 'package:surfy_mobile_app/abi/erc20.g.dart';
@@ -219,25 +216,44 @@ class SendSolanaHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
-    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
+    final client = solana.SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
     final key = await keyService.getKey();
     final keyHex = hexToBytes(key.second);
-    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
-    final solAmount = amount / BigInt.from(pow(10, 9));
+    final userWallet = await solana.Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
 
-    final result = await client.sendSolanaPay(
-      payer: userWallet,
-      recipient: Ed25519HDPublicKey.fromBase58(to),
-      amount: Decimal.parse(solAmount.toString()),
-      commitment: Commitment.processed
+    final instructions = [];
+    final transferInstruction = solana.SystemInstruction.transfer(
+        fundingAccount: userWallet.publicKey,
+        recipientAccount: solana.Ed25519HDPublicKey.fromBase58(to),
+        lamports: amount.toInt());
+    instructions.add(transferInstruction);
+
+    // TODO: add memo
+    var memo = null;
+    final message = solana_encoder.Message(
+        instructions: [
+          if (memo != null) solana.MemoInstruction(signers: const [], memo: memo),
+          ...instructions,
+        ]
     );
 
-    return SendTokenResponse(token: Token.SOLANA, blockchain: blockchain, sentAmount: amount, transactionHash: result);
+    final signedMsg = await client.rpcClient.signMessage(message, [userWallet]);
+    final result = await client.rpcClient.sendTransaction(
+      signedMsg.encode(),
+      skipPreflight: true,
+    );
+
+    return SendTokenResponse(
+        token: Token.SOLANA,
+        blockchain: blockchain,
+        sentAmount: amount,
+        transactionHash: result
+    );
   }
 
   @override
   Future<BigInt> estimateFee(Blockchain blockchain, String to, BigInt amount) async {
-    print('solana pay: $blockchain $to $amount');
+    // print('solana pay: $blockchain $to $amount');
     final blockchainData = blockchains[blockchain];
     if (blockchainData == null) {
       throw NoBlockchainException(blockchain: blockchain);
@@ -248,23 +264,13 @@ class SendSolanaHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
-    final key = await keyService.getKey();
-    final keyHex = hexToBytes(key.second);
-    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
+    final client = solana.SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
 
-    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
-    final solAmount = amount / BigInt.from(pow(10, 9));
-    final msg = await client.createSolanaPayMessage(
-        payer: userWallet,
-        recipient: Ed25519HDPublicKey.fromBase58(to),
-        amount: Decimal.parse(solAmount.toString()),
-    );
-
-    final latestBlockHash = await client.rpcClient.getLatestBlockhash();
-    final compiledMsg = msg.compile(recentBlockhash: latestBlockHash.value.blockhash, feePayer: userWallet.publicKey);
-    final base64EncodedMsg = Base64Encoder().convert(compiledMsg.toByteArray().toList());
-    final fee = await client.rpcClient.getFeeForMessage(base64EncodedMsg);
-    return BigInt.from(fee ?? 0);
+    final receiverInfo = await client.rpcClient.getAccountInfo(to);
+    if (receiverInfo.value == null) {
+      return BigInt.from(2000000);
+    }
+    return BigInt.from(5000);
   }
 
 }
@@ -287,42 +293,88 @@ class SendSplHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
-    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
+    final client = solana.SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
     final key = await keyService.getKey();
     final keyHex = hexToBytes(key.second);
-    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
+    final userWallet = await solana.Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
 
     final tokenContractAddress = tokens[token]?.tokenContractAddress[Blockchain.solana];
 
     final solAmount = amount / BigInt.from(pow(10, tokens[token]?.decimal ?? 0));
 
-    final mint = await client.getMint(address: Ed25519HDPublicKey.fromBase58(tokenContractAddress ?? ""));
+    final mint = await client.getMint(address: solana.Ed25519HDPublicKey.fromBase58(tokenContractAddress ?? ""));
     final value = Decimal.parse(solAmount.toString()).shift(mint.decimals).toBigInt().toInt();
     final payerAccount = await client.getAssociatedTokenAccount(
         owner: userWallet.publicKey,
         mint: mint.address);
-    final recipientAccount = await client.getAssociatedTokenAccount(
-        owner: Ed25519HDPublicKey.fromBase58(to),
+
+    var instructions = [];
+    final derivedAddress = await solana.Ed25519HDPublicKey.findProgramAddress(
+      seeds: [
+        solana.Ed25519HDPublicKey.fromBase58(to).bytes,
+        solana.TokenProgram.id.toByteArray(),
+        mint.address.bytes
+      ],
+      programId: solana.AssociatedTokenAccountProgram.id,
+    );
+
+    final setComputeUnitPrice = solana.ComputeBudgetInstruction.setComputeUnitPrice(
+        microLamports: 20000000
+    );
+    instructions.add(setComputeUnitPrice);
+
+    final setComputeUnitLimit = solana.ComputeBudgetInstruction.setComputeUnitLimit(
+        units: 200000
+    );
+    instructions.add(setComputeUnitLimit);
+
+
+    var recipientTokenAccount = await client.getAssociatedTokenAccount(
+        owner: solana.Ed25519HDPublicKey.fromBase58(to),
         mint: mint.address);
-    final instruction = TokenInstruction.transferChecked(
-        amount: value,
-        decimals: mint.decimals,
-        source: Ed25519HDPublicKey.fromBase58(payerAccount?.pubkey ?? ""),
-        mint: mint.address,
-        destination: Ed25519HDPublicKey.fromBase58(recipientAccount?.pubkey ?? ""),
-        owner: userWallet.publicKey);
+
+    if (recipientTokenAccount == null) {
+      print('not exist...');
+      final instruction = solana.AssociatedTokenAccountInstruction.createAccount(
+          funder: userWallet.publicKey,
+          address: derivedAddress,
+          owner: solana.Ed25519HDPublicKey.fromBase58(to),
+          mint: mint.address);
+      instructions.add(instruction);
+
+      final transferInstruction = solana.TokenInstruction.transferChecked(
+          amount: value,
+          decimals: mint.decimals,
+          source: solana.Ed25519HDPublicKey.fromBase58(payerAccount?.pubkey ?? ""),
+          mint: mint.address,
+          destination: derivedAddress,
+          owner: userWallet.publicKey);
+      instructions.add(transferInstruction);
+    } else {
+      print('existing address...');
+      final instruction = solana.TokenInstruction.transferChecked(
+          amount: value,
+          decimals: mint.decimals,
+          source: solana.Ed25519HDPublicKey.fromBase58(payerAccount?.pubkey ?? ""),
+          mint: mint.address,
+          destination: derivedAddress,
+          owner: userWallet.publicKey);
+      instructions.add(instruction);
+    }
+
     // TODO: add memo
     var memo = null;
     final message = solana_encoder.Message(
         instructions: [
-          if (memo != null) MemoInstruction(signers: const [], memo: memo),
-          instruction
+          if (memo != null) solana.MemoInstruction(signers: const [], memo: memo),
+          ...instructions,
         ]
     );
 
-    final result = await client.rpcClient.signAndSendTransaction(
-        message,
-        [userWallet],
+    final signedMsg = await client.rpcClient.signMessage(message, [userWallet]);
+    final result = await client.rpcClient.sendTransaction(
+      signedMsg.encode(),
+      skipPreflight: true,
     );
 
     return SendTokenResponse(
@@ -345,24 +397,13 @@ class SendSplHandler implements SendTokenHandler {
       throw NoTokenException(token: Token.SOLANA);
     }
 
-    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
-    final key = await keyService.getKey();
-    final keyHex = hexToBytes(key.second);
-    final userWallet = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: keyHex.take(32).toList());
-    final tokenContractAddress = tokens[token]?.tokenContractAddress[Blockchain.solana];
-    final solAmount = amount / BigInt.from(pow(10, tokens[token]?.decimal ?? 0));
-    final msg = await client.createSolanaPayMessage(
-      payer: userWallet,
-      recipient: Ed25519HDPublicKey.fromBase58(to),
-      amount: Decimal.parse(solAmount.toString()),
-      splToken: Ed25519HDPublicKey.fromBase58(tokenContractAddress ?? ""),
-    );
+    final client = solana.SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
 
-    final latestBlockHash = await client.rpcClient.getLatestBlockhash();
-    final compiledMsg = msg.compile(recentBlockhash: latestBlockHash.value.blockhash, feePayer: userWallet.publicKey);
-    final base64EncodedMsg = Base64Encoder().convert(compiledMsg.toByteArray().toList());
-    final fee = await client.rpcClient.getFeeForMessage(base64EncodedMsg);
-    return BigInt.from(fee ?? 0);
+    final receiverInfo = await client.rpcClient.getAccountInfo(to);
+    if (receiverInfo.value == null) {
+      return BigInt.from(2000000);
+    }
+    return BigInt.from(5000);
   }
 }
 

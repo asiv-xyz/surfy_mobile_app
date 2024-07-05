@@ -54,6 +54,7 @@ class WalletService {
     Token.USDT: {
       Blockchain.ethereum: const Erc20BalanceHandler(token: Token.USDT),
       Blockchain.tron: TrcBalanceHandler(),
+      Blockchain.solana: const SplBalanceHandler(token: Token.USDT),
     },
 
     Token.DEGEN: {

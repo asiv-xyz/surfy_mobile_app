@@ -21,11 +21,13 @@ void main() {
     final client = SolanaClient(rpcUrl: Uri.parse(blockchainData?.rpc ?? ""), websocketUrl: Uri.parse(blockchainData?.websocket ?? ""));
 
     // 5sJqTZUyby79qehzah26GjLJMRg1jYQjG2c9nHX2kW1p9WhR8U4Zg4NxAkW28rMmtkEFXj1wV4H7W4Ltn9M4QPrD
-    final tx = await client.findSolanaPayTransaction(
-      reference: Ed25519HDPublicKey.fromBase58("3gCcy66kYE9AdcFT7H42HSduozdiqAfxHMNLegVB8uKm")
-    );
+    // final tx = await client.findSolanaPayTransaction(
+    //   reference: Ed25519HDPublicKey.fromBase58("3gCcy66kYE9AdcFT7H42HSduozdiqAfxHMNLegVB8uKm")
+    // );
 
-    print(tx);
+    final acc = await client.rpcClient.getAccountInfo("3gCcy66kYE9AdcFT7H42HSduozdiqAfxHMNLegVB8uKm");
+
+    print(acc.value);
   });
 
   //test('isolate test', () async {

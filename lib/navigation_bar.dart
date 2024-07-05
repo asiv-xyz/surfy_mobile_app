@@ -18,6 +18,7 @@ import 'package:surfy_mobile_app/ui/pos/pages/pos/pos_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/qr/pos_qr_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/ui/qr/qr_view.dart';
+import 'package:surfy_mobile_app/ui/settings/private_key_view.dart';
 import 'package:surfy_mobile_app/ui/settings/settings_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/direct_send_view.dart';
@@ -194,7 +195,13 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, String initialLoca
           ]),
           StatefulShellBranch(routes: <RouteBase>[
             GoRoute(
-                path: '/settings', builder: (context, state) => SettingsPage()),
+              path: '/settings',
+              builder: (context, state) => SettingsPage(),
+            ),
+            GoRoute(
+              path: '/key',
+              builder: (context, state) => const PrivateKeyPage(),
+            )
           ]),
           StatefulShellBranch(routes: <RouteBase>[
             GoRoute(path: '/payment', builder: (context, state) {

@@ -34,51 +34,58 @@ class SettingsPage extends StatelessWidget {
                 width: double.infinity,
                 child: Column(
                   children: [
-                    PopupMenuButton<CurrencyType>(
-                        onSelected: (currencyType) async {
-                          await _preference.changeCurrencyType(currencyType);
-                          await _bus.emit(ChangeCurrecnyTypeEvent());
-                        },
-                        itemBuilder: (context) => CurrencyType.values.map((currencyType) => PopupMenuItem(
-                            value: currencyType,
-                            child: Text(currencyType.name))
-                        ).toList(),
-                        child: Obx(() => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          color: SurfyColor.black,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Change currency type: ${_preference.userCurrencyType.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
-                              Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
-                            ],
-                          )
-                        ))
-                    ),
                     Container(
-                        child: PopupMenuButton<ThemeMode>(
-                            onSelected: (theme) async {
-                              await _preference.setTheme(theme);
-                            },
-                            itemBuilder: (context) => ThemeMode.values.map((themeType) => PopupMenuItem(
-                                value: themeType,
-                                child: Text(themeType.name))
-                            ).toList(),
-                            child: Obx(() => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                color: SurfyColor.black,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('Theme: ${_preference.themeObs.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
-                                    Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
-                                  ],
-                                )
-                            ))
-                        )
+                      width: double.infinity,
+                      height: 60,
+                      child: PopupMenuButton<CurrencyType>(
+                          onSelected: (currencyType) async {
+                            await _preference.changeCurrencyType(currencyType);
+                            await _bus.emit(ChangeCurrecnyTypeEvent());
+                          },
+                          itemBuilder: (context) => CurrencyType.values.map((currencyType) => PopupMenuItem(
+                              value: currencyType,
+                              child: Text(currencyType.name))
+                          ).toList(),
+                          child: Obx(() => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              color: SurfyColor.black,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Change currency type: ${_preference.userCurrencyType.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
+                                  Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                                ],
+                              )
+                          ))
+                      )
                     ),
+                    // Container(
+                    //     width: double.infinity,
+                    //     height: 60,
+                    //     child: PopupMenuButton<ThemeMode>(
+                    //         onSelected: (theme) async {
+                    //           await _preference.setTheme(theme);
+                    //         },
+                    //         itemBuilder: (context) => ThemeMode.values.map((themeType) => PopupMenuItem(
+                    //             value: themeType,
+                    //             child: Text(themeType.name))
+                    //         ).toList(),
+                    //         child: Obx(() => Container(
+                    //             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    //             color: SurfyColor.black,
+                    //             child: Row(
+                    //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //               children: [
+                    //                 Text('Theme: ${_preference.themeObs.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
+                    //                 Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                    //               ],
+                    //             )
+                    //         ))
+                    //     )
+                    // ),
                     Container(
                         width: double.infinity,
+                        height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         color: SurfyColor.black,
                         child: InkWell(
@@ -100,6 +107,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Container(
                         width: double.infinity,
+                        height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         color: SurfyColor.black,
                         child: InkWell(
@@ -115,6 +123,7 @@ class SettingsPage extends StatelessWidget {
                                         options: const AuthenticationOptions(useErrorDialogs: false));
                                     if (didAuthenticate) {
                                       // show key
+                                      context.push('/key');
                                     }
 
                                   } on PlatformException catch (e) {
@@ -141,6 +150,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Container(
                         width: double.infinity,
+                        height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         color: SurfyColor.black,
                         child: InkWell(
