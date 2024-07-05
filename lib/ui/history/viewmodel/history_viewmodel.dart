@@ -22,7 +22,7 @@ class HistoryViewModel implements EventListener {
     _view.startLoading();
     final userId = await _keyService.getKeyHash();
     final txList = await _getTransactionHistoryUseCase.get(userId);
-    observableTransactionList.value = txList;
+    observableTransactionList.value = txList.reversed.toList();
     _view.finishLoading();
   }
 

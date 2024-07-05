@@ -54,6 +54,7 @@ dependencies:
   lottie: ^3.1.2
   bitcoin_base: ^4.5.0
   decimal: ^2.3.3
+  beamer: ^1.6.1
 
 dev_dependencies:
   flutter_test:

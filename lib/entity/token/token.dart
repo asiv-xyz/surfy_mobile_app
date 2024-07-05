@@ -23,6 +23,7 @@ final List<Token> supportedToken = [
   Token.DEGEN,
   Token.XRP,
   Token.FRAX,
+  Token.TRON,
 ];
 
 Token findTokenByName(String name) {
@@ -98,7 +99,9 @@ const Map<Token, TokenData> tokens = {
       Blockchain.base,
       Blockchain.base_sepolia,
       Blockchain.solana,
-      Blockchain.solana_devnet
+      Blockchain.solana_devnet,
+      Blockchain.optimism,
+      Blockchain.arbitrum,
     ],
     iconAsset: "assets/images/tokens/ic_usdc.png",
     isToken: true,
@@ -107,6 +110,10 @@ const Map<Token, TokenData> tokens = {
       Blockchain.ethereum_sepolia: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
       Blockchain.base: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       Blockchain.base_sepolia: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+
+      Blockchain.optimism: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      Blockchain.arbitrum: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+
       Blockchain.solana: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       Blockchain.solana_devnet: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
     },
@@ -121,7 +128,7 @@ const Map<Token, TokenData> tokens = {
     supportedBlockchain: [
       Blockchain.ethereum,
       Blockchain.solana,
-      Blockchain.tron,
+      // Blockchain.tron,
     ],
     iconAsset: "assets/images/tokens/ic_tether.png",
     isToken: true,
