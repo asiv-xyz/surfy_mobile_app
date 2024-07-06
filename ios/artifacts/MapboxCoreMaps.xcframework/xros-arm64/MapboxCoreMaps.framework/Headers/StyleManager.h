@@ -1,0 +1,18 @@
+// This file is generated and will be overwritten automatically.
+
+#import "MBMCustomRasterSourceTileStatus.h"
+#import "MBMStylePropertyValueKind.h"
+#import "MBMStyleObjectInfo.h"
+#import "MBMTransitionOptions.h"
+#import "MBMCanonicalTileID.h"
+#import "MBMTileOptions.h"
+#import "MBMCustomGeometrySourceOptions.h"
+#import "MBMCustomRasterSourceOptions.h"
+#import "MBMCustomRasterSourceTileData.h"
+#import "MBMStylePropertyValue.h"
+#import "MBMCustomLayerRenderParameters.h"
+#import "MBMCustomLayerRenderConfiguration.h"
+#import "MBMElevationData.h"
+#import "MBMCustomLayerHost.h"
+#import "MBMTileFunctionCallback.h"
+#import "MBMCustomRasterSourceTileStatusChangedCallback.h"

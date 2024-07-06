@@ -59,50 +59,70 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                 await _viewModel.init();
               },
               color: SurfyColor.blue,
-              child: SingleChildScrollView(
-                child: Obx(() => Column(
-                  children: _viewModel.observableTransactionList.value.map((tx) {
-                    return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: SurfyColor.black,
-                            padding: const EdgeInsets.all(0)
-                        ),
-                        onPressed: () {
-                          context.push('/history/detail', extra: tx);
-                        }, child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                          border: Border(bottom: BorderSide(color: SurfyColor.lightGrey, width: 0.2))
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
+              child: Obx(() {
+                if (_isLoading.isFalse && _viewModel.observableTransactionList.value.isEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Center(
+                      child: Text('No History', style: Theme.of(context).textTheme.displaySmall,)
+                    )
+                  );
+                } else {
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: _viewModel.observableTransactionList.value.map((tx) {
+                        print('tx: $tx');
+                        return ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: SurfyColor.black,
+                                padding: const EdgeInsets.all(0)
+                            ),
+                            onPressed: () {
+                              context.push('/history/detail', extra: tx);
+                            }, child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                              border: Border(bottom: BorderSide(color: SurfyColor.lightGrey, width: 0.2))
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              TokenIconWithNetwork(blockchain: tx.blockchain, token: tx.token, width: 40, height: 40),
-                              const SizedBox(width: 10,),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                 children: [
-                                  // Text(tx.type.name, style: Theme.of(context).textTheme.displaySmall),
-                                  TransactionBadge(type: tx.type),
-                                  const SizedBox(height: 5),
-                                  Text('to: ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.bodyMedium),
-                                  const SizedBox(height: 5),
-                                  Text(_formatDateTime(tx.createdAt), style: Theme.of(context).textTheme.labelSmall)
+                                  TokenIconWithNetwork(blockchain: tx.blockchain, token: tx.token, width: 40, height: 40),
+                                  const SizedBox(width: 10,),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Text(tx.type.name, style: Theme.of(context).textTheme.displaySmall),
+                                      TransactionBadge(type: tx.type),
+                                      const SizedBox(height: 5),
+                                      Text('to: ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.bodyMedium),
+                                      const SizedBox(height: 5),
+                                      Text(_formatDateTime(tx.createdAt), style: Theme.of(context).textTheme.labelSmall)
+                                    ],
+                                  ),
                                 ],
                               ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displaySmall),
+                                  if (tx.fiat != null && tx.currencyType != null) Text(formatFiat(tx.fiat!, tx.currencyType!), style: Theme.of(context).textTheme.labelMedium),
+                                ],
+                              )
                             ],
                           ),
-                          Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displaySmall)
-                        ],
-                      ),
-                    ));
-                  }).toList(),
-                )),
-              )
+                        ));
+                      }).toList(),
+                    )
+                  );
+                }
+              }),
+
           ),
           Obx(() {
             if (_isLoading.isTrue) {

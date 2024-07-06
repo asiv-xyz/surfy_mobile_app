@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
@@ -69,7 +70,7 @@ class _WalletItemState extends State<WalletItem> implements WalletItemView {
         onTap: () {
           final token = tokens[widget.token];
           if (token != null) {
-            context.go("/wallet/${token.name}");
+            checkAuthAndGo(context, "/wallet/${token.name}");
           }
         },
         child: Container(

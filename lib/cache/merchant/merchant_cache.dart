@@ -4,7 +4,7 @@ import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 class MerchantCache {
   static const merchantBoxName = 'merchant';
   static const merchantUpdatedTimeBoxName = 'token-price-updated-time';
-  static const updateThreshold = 60000;
+  static const updateThreshold = 300000;
 
   Future<void> saveMerchant(String storeId, Merchant merchant) async {
     if (!Hive.isBoxOpen(merchantBoxName)) {

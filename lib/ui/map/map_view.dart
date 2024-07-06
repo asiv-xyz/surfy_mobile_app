@@ -25,19 +25,32 @@ class AnnotationClickListener extends OnPointAnnotationClickListener {
     required this.annotationMap,
     required this.clickPlaceUseCase,
     required this.moveCameraFunction,
+    required this.viewModel,
   });
 
   final Map<String, Merchant> annotationMap;
   final ClickPlace clickPlaceUseCase;
   final Function moveCameraFunction;
+  final MapViewModel viewModel;
 
   @override
   void onPointAnnotationClick(PointAnnotation annotation) {
-    if (clickPlaceUseCase.isClicked.isTrue) {
-      clickPlaceUseCase.isClicked.value = false;
+    print('click annotation: ${annotation.id}');
+    if (annotationMap[annotation.id] == null) {
+      return;
+    }
+    // if (clickPlaceUseCase.isClicked.isTrue) {
+    //   clickPlaceUseCase.isClicked.value = false;
+    // } else {
+    //   clickPlaceUseCase.isClicked.value = true;
+    //   clickPlaceUseCase.selectedPlaceAnnotationId = annotation.id;
+    //   moveCameraFunction.call();
+    // }
+    if (viewModel.observableIsAnnotationClicked.isTrue) {
+      viewModel.observableIsAnnotationClicked.value = false;
     } else {
-      clickPlaceUseCase.isClicked.value = true;
-      clickPlaceUseCase.selectedPlaceAnnotationId = annotation.id;
+      viewModel.observableIsAnnotationClicked.value = true;
+      viewModel.observableSelectedAnnotationId.value = annotation.id;
       moveCameraFunction.call();
     }
   }
@@ -126,7 +139,7 @@ class _MapPageState extends State<MapPage> implements MapView {
         showAccuracyRing: true,
     ));
     mapboxMap.annotations.createPointAnnotationManager().then((manager) async {
-      // final placeList = await _placeRepository.getPlaceList();
+      print('createPointAnnotationManager');
       for (final place in _viewModel.observableMerchantList.value) {
         var image = "";
         switch (place.category.toLowerCase()) {
@@ -150,29 +163,41 @@ class _MapPageState extends State<MapPage> implements MapView {
             geometry: Point(coordinates: Position(place.longitude, place.latitude)), image: list);
         options.add(option);
         final annotation = await manager.create(option);
-        _clickPlaceUseCase.annotationMap[annotation.id] = place;
+        _viewModel.observableAnnotationMap.value[annotation.id] = place;
         manager.createMulti(options);
       }
       manager.addOnPointAnnotationClickListener(
           AnnotationClickListener(
-            annotationMap: _clickPlaceUseCase.annotationMap,
+            annotationMap: _viewModel.observableAnnotationMap.value,
             clickPlaceUseCase: _clickPlaceUseCase,
-            moveCameraFunction: () {
+            viewModel: _viewModel,
+            moveCameraFunction: () async {
+              final cameraState = await mapboxMap.getCameraState();
+              _viewModel.observableCurrentMapLongitude.value = cameraState.center.coordinates.lng.toDouble();
+              _viewModel.observableCurrentMapLatitude.value = cameraState.center.coordinates.lat.toDouble();
+              _viewModel.observableCurrentZoom.value = cameraState.zoom;
+
+              final lnglat = _viewModel.getSelectedPlaceLngLat();
               mapboxMap.easeTo(mapbox.CameraOptions(
                 center: Point(
-                  coordinates: Position(
-                    _clickPlaceUseCase.annotationMap[_clickPlaceUseCase.selectedPlaceAnnotationId]?.longitude ?? 0.0,
-                    _clickPlaceUseCase.annotationMap[_clickPlaceUseCase.selectedPlaceAnnotationId]?.latitude ?? 0.0)),
+                  coordinates: Position(lnglat.first, lnglat.second)
+                ),
                 zoom: 15.0), MapAnimationOptions(duration: 1000, startDelay: 0));
             }
           )
       );
     });
     mapboxMap.setOnMapTapListener((context) {
-      if (_clickPlaceUseCase.isClicked.isTrue) {
-        _clickPlaceUseCase.isClicked.value = false;
-      } else {
-        _clickPlaceUseCase.isClicked.value = true;
+      if (_viewModel.observableIsAnnotationClicked.isTrue) {
+        _viewModel.observableIsAnnotationClicked.value = false;
+        mapboxMap.easeTo(mapbox.CameraOptions(
+            center: Point(
+                coordinates: Position(
+                    _viewModel.observableCurrentMapLongitude.value,
+                    _viewModel.observableCurrentMapLatitude.value
+                )
+            ),
+            zoom: _viewModel.observableCurrentZoom.value), MapAnimationOptions(duration: 1000, startDelay: 0));
       }
     });
   }
@@ -187,7 +212,7 @@ class _MapPageState extends State<MapPage> implements MapView {
   }
 
   Widget _buildPlaceInfo() {
-    final place = _clickPlaceUseCase.annotationMap[_clickPlaceUseCase.selectedPlaceAnnotationId];
+    final place = _viewModel.observableAnnotationMap.value[_viewModel.observableSelectedAnnotationId.value];
     return Container(
         width: double.infinity,
         height: 200,
@@ -222,7 +247,7 @@ class _MapPageState extends State<MapPage> implements MapView {
                     const SizedBox(height: 5,),
                     Row(
                       children: [
-                        Icon(Icons.location_on_sharp, color: SurfyColor.blue, size: 16,),
+                        const Icon(Icons.location_on_sharp, color: SurfyColor.blue, size: 16,),
                         const SizedBox(width: 5),
                         Text(_calculateDistance(_userLongitude.value, _userLatitude.value, place?.longitude ?? 0.0, place?.latitude ?? 0.0), style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 14),)
                       ],
@@ -239,7 +264,8 @@ class _MapPageState extends State<MapPage> implements MapView {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: Text('Find SURFY Store!')),
+          titleSpacing: 0,
+          title: const Text('Find SURFY Store!')),
         body: Obx(() {
           if (_isLoading.isTrue) {
             return const LoadingWidget(opacity: 0.4);
@@ -267,9 +293,9 @@ class _MapPageState extends State<MapPage> implements MapView {
                             style: ButtonStyle(
                               backgroundColor: WidgetStateProperty.all(SurfyColor.black),
                             ),
-                            icon: Icon(Icons.my_location_rounded, color: SurfyColor.blue,)),
-                        _clickPlaceUseCase.isClicked.isFalse ? SizedBox(height: 20,) : Container(),
-                        _clickPlaceUseCase.isClicked.isTrue ? _buildPlaceInfo() : Container()
+                            icon: const Icon(Icons.my_location_rounded, color: SurfyColor.blue,)),
+                        _viewModel.observableIsAnnotationClicked.isFalse ? const SizedBox(height: 20,) : Container(),
+                        _viewModel.observableIsAnnotationClicked.isTrue ? _buildPlaceInfo() : Container()
                       ],
                     )
                 );
@@ -281,7 +307,7 @@ class _MapPageState extends State<MapPage> implements MapView {
   }
 
   Widget buildAccessTokenWarning() {
-    return Center(
+    return const Center(
       child: Text('Access token is not valid.'),
     );
   }

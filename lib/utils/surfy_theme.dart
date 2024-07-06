@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SurfyColor {
-  static const blue = Color(0xFF3B85F3);
+  static const blue = Color(0xFF6DBCFE);
   static const lightGrey = Color(0xFFBAC2C7);
   static const darkGrey = Color(0xFF222222);
   static const greyBg = Color(0xFF1E1E1E);

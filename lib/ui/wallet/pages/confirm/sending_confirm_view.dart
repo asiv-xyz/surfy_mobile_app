@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
@@ -134,7 +135,12 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
   void initState() {
     super.initState();
     _viewModel.setView(this);
-    _viewModel.init(widget.token, widget.blockchain, widget.receiver, widget.amount, widget.currencyType);
+    _viewModel.init(widget.token,
+        widget.blockchain,
+        widget.receiver,
+        widget.amount,
+        widget.fiat,
+        widget.currencyType);
   }
 
   @override
@@ -277,7 +283,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                 backgroundColor: Colors.black,
                               ),
                             );
-                            context.go('/wallet');
+                            checkAuthAndGo(context, "/wallet");
                             return;
                           } else {
                             try {
@@ -286,11 +292,15 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                   widget.blockchain,
                                   widget.sender,
                                   widget.receiver,
-                                  widget.amount);
+                                  widget.amount,
+                                  fiat: widget.fiat,
+                                  currencyType: widget.currencyType,
+                              );
                               if (!mounted) {
                                 return;
                               }
-                              context.push('/check', extra: CheckViewProps(
+                              checkAuthAndPush(
+                                  context, '/check', extra: CheckViewProps(
                                   token: widget.token,
                                   blockchain: widget.blockchain,
                                   transactionHash: response,

@@ -159,7 +159,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                                           ],
                                         ),
                                         const SizedBox(height: 2),
-                                        Text("(${item.blockchain.name})", style: Theme.of(context).textTheme.labelMedium),
+                                        Text("${item.blockchain.name}", style: Theme.of(context).textTheme.labelMedium),
                                         const SizedBox(height: 2),
                                         AddressBadge(address: address, mainAxisAlignment: MainAxisAlignment.start,)
                                       ],

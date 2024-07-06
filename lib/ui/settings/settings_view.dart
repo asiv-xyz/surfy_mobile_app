@@ -113,20 +113,31 @@ class SettingsPage extends StatelessWidget {
                         child: InkWell(
                             onTap: () async {
                               final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
+                              print('canAuthenticateWithBiometrics: $canAuthenticateWithBiometrics');
                               final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+                              print('canAuthenticate: $canAuthenticate');
                               if (canAuthenticate) {
                                 final List<BiometricType> availableBiometrics = await auth.getAvailableBiometrics();
-                                if (availableBiometrics.contains(BiometricType.strong)) {
+                                print('availableBiometrics: $availableBiometrics');
+                                if (availableBiometrics.contains(BiometricType.strong) || availableBiometrics.contains(BiometricType.face) || availableBiometrics.contains(BiometricType.fingerprint)) {
                                   try {
                                     final bool didAuthenticate = await auth.authenticate(
                                         localizedReason: 'Please authenticate to show account balance',
                                         options: const AuthenticationOptions(useErrorDialogs: false));
                                     if (didAuthenticate) {
                                       // show key
+                                      print('auth');
                                       context.push('/key');
                                     }
 
                                   } on PlatformException catch (e) {
+                                    print("error: $e");
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                        backgroundColor: Colors.black,
+                                      ),
+                                    );
                                     if (e.code == auth_error.notAvailable) {
                                       // Add handling of no hardware here.
                                     } else if (e.code == auth_error.notEnrolled) {

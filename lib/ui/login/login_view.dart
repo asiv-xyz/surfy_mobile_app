@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/login/viewmodel/login_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -117,7 +118,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                                   loginProvider: Provider.google,
                                 ), () {
                                   if (mounted) {
-                                    context.go('/wallet');
+                                    checkAuthAndGo(context, "/wallet");
                                   }
                                 });
                               },

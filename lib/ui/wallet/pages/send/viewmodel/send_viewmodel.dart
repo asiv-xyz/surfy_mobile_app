@@ -1,4 +1,6 @@
+import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
@@ -14,7 +16,7 @@ class SendViewModel {
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final GetWalletAddress _getWalletAddressUseCase = Get.find();
-  final SendP2pToken _sendP2pTokenUseCase = Get.find();
+  final Calculator _calculator = Get.find();
 
   final RxString observableAddress = "".obs;
   final RxDouble observableTokenPrice = 0.0.obs;
@@ -40,5 +42,15 @@ class SendViewModel {
     observableCryptoBalance.value = balance;
 
     view.offLoading();
+  }
+
+  bool canPay(Token token) {
+    if (observableIsFiatInputMode.isTrue) {
+      final needToPayTokenAmount = _calculator.fiatToCryptoAmountV2(observableInputData.value.toDouble(), token, observableTokenPrice.value);
+      return needToPayTokenAmount <= observableCryptoBalance.value;
+    } else {
+      final needToPayTokenAmount = _calculator.cryptoWithDecimal(token, observableInputData.value.toDouble());
+      return needToPayTokenAmount <= observableCryptoBalance.value;
+    }
   }
 }

@@ -142,6 +142,8 @@ class PaymentConfirmViewModel {
           storeId: storeId,
           fiat: fiat,
           currencyType: paymentCurrencyType,
+          tokenPrice: observableTokenPrice.value[_settingsPreference.userCurrencyType.value],
+          tokenPriceCurrencyType: _settingsPreference.userCurrencyType.value,
       );
       observableTransactionHash.value = response.transactionHash;
     } catch (e) {

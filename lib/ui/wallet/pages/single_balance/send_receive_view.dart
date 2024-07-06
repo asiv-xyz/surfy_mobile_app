@@ -15,7 +15,6 @@ import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/single_balance/viewmodel/send_receive_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
-import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
@@ -32,40 +31,23 @@ class SingleBalancePage extends StatefulWidget {
 }
 
 abstract class SingleBalanceView {
-  void onCreate();
-  void onLoading();
-  void offLoading();
+  void startLoading();
+  void finishLoading();
 }
 
 class _SingleBalancePageState extends State<SingleBalancePage> implements SingleBalanceView {
-
   final SingleBalanceViewModel _viewModel = SingleBalanceViewModel();
-
   final Calculator _calculator = Get.find();
-
-  final GetTokenPrice _getTokenPriceUseCase = Get.find();
-  final GetWalletBalances _getWalletBalances = Get.find();
   final SettingsPreference _preference = Get.find();
-  final GetWalletAddress _getWalletAddressUseCase = Get.find();
-  final _address = "".obs;
-
-  final Rx<double> _cryptoBalance = Rx(0);
-  final Rx<double> _fiatBalance = Rx(0);
-  final Rx<double> _tokenPrice = Rx(0);
   final RxBool _isLoading = false.obs;
 
   @override
-  void onCreate() {
-
-  }
-
-  @override
-  void onLoading() {
+  void startLoading() {
     _isLoading.value = true;
   }
 
   @override
-  void offLoading() {
+  void finishLoading() {
     _isLoading.value = false;
   }
 
@@ -74,8 +56,6 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
     super.initState();
     _viewModel.setView(this);
     _viewModel.init(widget.token, widget.blockchain, _preference.userCurrencyType.value);
-    // _isLoading.value = true;
-    // _getMetadata().then((_) => _isLoading.value = false);
   }
 
   @override
@@ -86,7 +66,12 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            TokenIconWithNetwork(blockchain: widget.blockchain, token: widget.token, width: 40, height: 40),
+            TokenIconWithNetwork(
+                blockchain: widget.blockchain,
+                token: widget.token,
+                width: 40,
+                height: 40
+            ),
             const SizedBox(width: 10,),
             Text(tokens[widget.token]?.name ?? "")
           ],
@@ -107,14 +92,6 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Column(
-                        //   crossAxisAlignment: CrossAxisAlignment.start,
-                        //   children: [
-                        //     Obx(() => Text(formatFiat(_fiatBalance.value, _preference.userCurrencyType.value), style: Theme.of(context).textTheme.headlineLarge)),
-                        //     const SizedBox(height: 5,),
-                        //     Obx(() => Text(formatCrypto(widget.token, _cryptoBalance.value), style: Theme.of(context).textTheme.bodyLarge)),
-                        //   ],
-                        // ),
                         Obx(() => Container(
                             margin: const EdgeInsets.symmetric(vertical: 10),
                             child: BalanceView(
@@ -130,7 +107,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Obx(() => CurrentPrice(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     tokenName: tokens[widget.token]?.name ?? "",
                                     price: _viewModel.observableTokenPrice.value,
                                     currency: _preference.userCurrencyType.value)

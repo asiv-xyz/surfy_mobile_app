@@ -23,7 +23,7 @@ class SingleBalanceViewModel {
   }
 
   Future<void> init(Token token, Blockchain blockchain, CurrencyType currency) async {
-    view.onLoading();
+    view.startLoading();
     final address = await _getWalletAddress.getAddress(blockchain);
     final cryptoBalance = await _getWalletBalancesUseCase.getBalance(token, blockchain, address);
     final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, currency);
@@ -31,6 +31,6 @@ class SingleBalanceViewModel {
     observableAddress.value = address;
     observableCryptoBalance.value = cryptoBalance;
     observableTokenPrice.value = tokenPrice?.price ?? 0;
-    view.offLoading();
+    view.finishLoading();
   }
 }

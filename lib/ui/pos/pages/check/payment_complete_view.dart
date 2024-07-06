@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
@@ -96,7 +97,7 @@ class _PaymentCompletePageState extends State<PaymentCompletePage> {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 child: ElevatedButton(
                     onPressed: () {
-                      context.go('/wallet');
+                      checkAuthAndGo(context, "/wallet");
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: SurfyColor.blue,

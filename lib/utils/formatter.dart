@@ -7,6 +7,11 @@ import 'package:surfy_mobile_app/entity/token/token.dart';
 
 final formatter = NumberFormat.decimalPattern('en_US');
 
+String formatDateTime(DateTime time) {
+  final DateFormat formatter = DateFormat('yyyy-MM-dd hh:mm:ss');
+  return formatter.format(time);
+}
+
 String formatCrypto(Token? token, double amount) {
   final tokenData = tokens[token];
   int fixedDecimal = 0;

@@ -57,7 +57,12 @@ class HistoryDetailPage extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Center(
-                child: Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displayMedium,)
+                child: Column(
+                  children: [
+                    Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displayMedium,),
+                    if (tx.fiat != null && tx.currencyType != null) Text(formatFiat(tx.fiat!, tx.currencyType!), style: Theme.of(context).textTheme.labelMedium)
+                  ],
+                )
               )
             ),
             Container(
@@ -88,7 +93,23 @@ class HistoryDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Date', style: Theme.of(context).textTheme.titleSmall),
-                    Text(tx.createdAt.toString(), style: Theme.of(context).textTheme.bodySmall)
+                    Text(formatDateTime(tx.createdAt), style: Theme.of(context).textTheme.bodySmall)
+                  ],
+                )
+            ),
+            if (tx.tokenPrice != null && tx.tokenPriceCurrencyType != null) Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                    border: Border.all(color: SurfyColor.greyBg),
+                    borderRadius: BorderRadius.circular(14)
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Token price', style: Theme.of(context).textTheme.titleSmall),
+                    Text("1 ${tokens[tx.token]?.symbol} = ${formatFiat(tx.tokenPrice!, tx.tokenPriceCurrencyType!)}", style: Theme.of(context).textTheme.bodySmall)
                   ],
                 )
             ),

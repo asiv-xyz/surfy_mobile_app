@@ -34,7 +34,7 @@ abstract class SendView {
 }
 
 class _SendPageState extends State<SendPage> implements SendView {
-  final SendViewModel _viewModel = SendViewModel();
+  late final SendViewModel _viewModel;
 
   final SettingsPreference _preference = Get.find();
   final Calculator _calculator = Get.find();
@@ -60,6 +60,7 @@ class _SendPageState extends State<SendPage> implements SendView {
   @override
   void initState() {
     super.initState();
+    _viewModel = SendViewModel();
     _viewModel.setView(this);
     _viewModel.init(widget.token, widget.blockchain, _preference.userCurrencyType.value);
     _textController.addListener(() => _viewModel.observableReceiverAddress.value = _textController.text);
@@ -75,12 +76,14 @@ class _SendPageState extends State<SendPage> implements SendView {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          KeyboardView(
+          Obx(() => KeyboardView(
             buttonText: 'Send',
+            enable: _viewModel.canPay(widget.token),
+            disabledText: 'Insufficient Balance',
+            disabledColor: SurfyColor.deepRed,
             isFiatInputMode: _viewModel.observableIsFiatInputMode.value,
             onClickSend: () async {
               if (mounted) {
-                final address = _viewModel.observableReceiverAddress.value;
                 var amount = BigInt.zero;
                 var fiat = 0.0;
                 if (_viewModel.observableIsFiatInputMode.isTrue) {
@@ -158,10 +161,10 @@ class _SendPageState extends State<SendPage> implements SendView {
                         ],
                       ),
                       IconButton(
-                        onPressed: () {
-                          _viewModel.observableIsFiatInputMode.value = !_viewModel.observableIsFiatInputMode.value;
-                        },
-                        icon: const Icon(Icons.swap_vert_outlined, size: 50,)
+                          onPressed: () {
+                            _viewModel.observableIsFiatInputMode.value = !_viewModel.observableIsFiatInputMode.value;
+                          },
+                          icon: const Icon(Icons.swap_vert_outlined, size: 50,)
                       )
                     ],
                   ),
@@ -194,17 +197,17 @@ class _SendPageState extends State<SendPage> implements SendView {
                         )),
                         const SizedBox(width: 10),
                         Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: IconButton(
-                              onPressed: () {
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                                child: IconButton(
+                                  onPressed: () {
 
-                              },
-                              icon: Icon(Icons.qr_code_2_outlined, size: 30),
+                                  },
+                                  icon: Icon(Icons.qr_code_2_outlined, size: 30),
+                                )
                             )
-                          )
                         )
                       ],
                     )
@@ -212,7 +215,7 @@ class _SendPageState extends State<SendPage> implements SendView {
                 Divider(color: Theme.of(context).dividerColor),
               ],
             ),
-          ),
+          )),
           Obx(() {
             if (_isLoading.isTrue) {
               return const LoadingWidget(opacity: 0.4);

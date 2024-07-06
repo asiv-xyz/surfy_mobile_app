@@ -24,6 +24,8 @@ class SaveTransaction {
     String? storeId,
     double? fiat,
     CurrencyType? currencyType,
+    double? tokenPrice,
+    CurrencyType? tokenPriceCurrencyType,
   }) async {
     await _service.postTransaction(Transaction(
         id: "",
@@ -39,7 +41,9 @@ class SaveTransaction {
         createdAt: DateTime.now(),
         storeId: storeId,
         fiat: fiat,
-        currencyType: currencyType)
-    );
+        currencyType: currencyType,
+        tokenPrice: tokenPrice,
+        tokenPriceCurrencyType: tokenPriceCurrencyType,
+    ));
   }
 }

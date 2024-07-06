@@ -184,7 +184,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       websocket: RPC.wcSolanaMainnet,
       curve: EllipticCurve.ED25519,
       feeCoin: Token.SOLANA,
-      getScanUrl: (String tx) => "https://explorer.solana.com/tx/$tx"
+      getScanUrl: (String tx) => "https://solscan.io/tx/$tx"
   ),
   Blockchain.solana_devnet: BlockchainData(
       chainId: null,

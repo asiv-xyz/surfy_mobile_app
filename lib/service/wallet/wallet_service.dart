@@ -1,4 +1,5 @@
 import 'package:surfy_mobile_app/abi/erc20.g.dart';
+import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/service/wallet/address_handlers/address_handlers.dart';
 import 'package:surfy_mobile_app/service/wallet/balance_handlers/balance_handlers.dart';
@@ -6,33 +7,44 @@ import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class WalletService {
-  final Map<Blockchain, AddressHandler> addressHandlers = {
-    // TODO : fix each handler to singleton
-    Blockchain.ethereum: EthereumAddressHandler(),
-    Blockchain.ethereum_sepolia: EthereumAddressHandler(),
+  WalletService({required this.walletCache}) {
+    final ethereumAddressHandler = EthereumAddressHandler(walletCache: walletCache);
+    final solanaAddressHandler = SolanaAddressHandler(walletCache: walletCache);
+    final xrplAddressHandler = XrplAddressHandler(walletCache: walletCache);
+    final tronAddressHandler = TronAddressHandler(walletCache: walletCache);
+    final dogeAddressHandler = DogeAddressHandler(walletCache: walletCache);
+    addressHandlers = {
+      // TODO : fix each handler to singleton
+      Blockchain.ethereum: ethereumAddressHandler,
+      Blockchain.ethereum_sepolia: ethereumAddressHandler,
 
-    Blockchain.base: EthereumAddressHandler(),
-    Blockchain.base_sepolia: EthereumAddressHandler(),
+      Blockchain.base: ethereumAddressHandler,
+      Blockchain.base_sepolia: ethereumAddressHandler,
 
-    Blockchain.optimism: EthereumAddressHandler(),
-    Blockchain.optimism_sepolia: EthereumAddressHandler(),
+      Blockchain.optimism: ethereumAddressHandler,
+      Blockchain.optimism_sepolia: ethereumAddressHandler,
 
-    Blockchain.arbitrum: EthereumAddressHandler(),
-    Blockchain.arbitrum_sepolia: EthereumAddressHandler(),
+      Blockchain.arbitrum: ethereumAddressHandler,
+      Blockchain.arbitrum_sepolia: ethereumAddressHandler,
 
-    Blockchain.bsc: EthereumAddressHandler(),
+      Blockchain.bsc: ethereumAddressHandler,
 
-    Blockchain.opbnb: EthereumAddressHandler(),
+      Blockchain.opbnb: ethereumAddressHandler,
 
-    Blockchain.solana: SolanaAddressHandler(),
-    Blockchain.solana_devnet: SolanaAddressHandler(),
+      Blockchain.solana: solanaAddressHandler,
+      Blockchain.solana_devnet: solanaAddressHandler,
 
-    Blockchain.xrpl: XrplAddressHandler(),
+      Blockchain.xrpl: xrplAddressHandler,
 
-    Blockchain.tron: TronAddressHandler(),
+      Blockchain.tron: tronAddressHandler,
 
-    Blockchain.dogechain: DogeAddressHandler(),
-  };
+      Blockchain.dogechain: dogeAddressHandler,
+    };
+  }
+
+  final WalletCache walletCache;
+
+  late final Map<Blockchain, AddressHandler> addressHandlers;
 
   final Map<Token, Map<Blockchain, BalanceHandler>> balanceHandlers = {
     Token.ETHEREUM: {
@@ -96,12 +108,13 @@ class WalletService {
       throw Exception('No address handler for chain: $blockchain');
     }
 
-    return await handler.getAddress(privateKey);
+    final address = await handler.getAddress(privateKey);
+    print('blockchain=$blockchain, privatekey=$privateKey, address=$address');
+    return address;
   }
 
   Future<UserTokenData> getBalance(Token token, Blockchain blockchain, String address) async {
     try {
-      var startTime = DateTime.now().millisecondsSinceEpoch;
       final balanceHandler = balanceHandlers[token]?[blockchain];
       if (balanceHandler == null) {
         throw Exception('No balance handler for token: $token, chain: $blockchain');

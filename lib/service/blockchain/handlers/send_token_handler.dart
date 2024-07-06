@@ -399,11 +399,23 @@ class SendSplHandler implements SendTokenHandler {
 
     final client = solana.SolanaClient(rpcUrl: Uri.parse(blockchainData.rpc), websocketUrl: Uri.parse(blockchainData.websocket ?? ""));
 
+    var totalFee = BigInt.zero;
+
     final receiverInfo = await client.rpcClient.getAccountInfo(to);
     if (receiverInfo.value == null) {
-      return BigInt.from(2000000);
+      // return BigInt.from(2000000);
+      totalFee += BigInt.from(2000000);
     }
-    return BigInt.from(5000);
+
+    final tokenContractAddress = tokens[token]?.tokenContractAddress[Blockchain.solana];
+    final mint = await client.getMint(address: solana.Ed25519HDPublicKey.fromBase58(tokenContractAddress ?? ""));
+    var recipientTokenAccount = await client.getAssociatedTokenAccount(
+        owner: solana.Ed25519HDPublicKey.fromBase58(to),
+        mint: mint.address);
+    if (recipientTokenAccount == null) {
+      totalFee += BigInt.from(2000000);
+    }
+    return totalFee + BigInt.from(5000);
   }
 }
 

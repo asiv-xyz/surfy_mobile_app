@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/viewmodel/check_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
@@ -141,7 +142,7 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                 child: InkWell(
                   onTap: () {
                     if (mounted) {
-                      context.go('/wallet');
+                      checkAuthAndGo(context, "/wallet");
                     }
                   },
                   child: Center(

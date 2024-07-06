@@ -11,6 +11,9 @@ class KeyboardView extends StatefulWidget {
     required this.onClickSend,
     required this.isFiatInputMode,
     required this.buttonText,
+    this.enable,
+    this.disabledText,
+    this.disabledColor,
   });
 
   final Widget child;
@@ -18,6 +21,9 @@ class KeyboardView extends StatefulWidget {
   final Function onClickSend;
   final bool isFiatInputMode;
   final String buttonText;
+  final bool? enable;
+  final String? disabledText;
+  final Color? disabledColor;
 
   @override
   State<StatefulWidget> createState() {
@@ -27,10 +33,11 @@ class KeyboardView extends StatefulWidget {
 
 class _KeyboardViewState extends State<KeyboardView> {
   final _touchedItem = "".obs;
+
   _onClickKeyboard(String item) {
     _touchedItem.value = item;
     switch (item) {
-      case "<-":
+      case "<":
         if (widget.inputAmount.value.length == 1) {
           widget.inputAmount.value = "0";
         } else {
@@ -50,7 +57,7 @@ class _KeyboardViewState extends State<KeyboardView> {
         }
         if (widget.inputAmount.value.contains(".")) {
           final v = widget.inputAmount.value.split(".")[1].length;
-          if (!widget.isFiatInputMode && v == 2) {
+          if (!widget.isFiatInputMode && v == 5) {
             return;
           }
           if (widget.isFiatInputMode && v == 5) {
@@ -140,7 +147,7 @@ class _KeyboardViewState extends State<KeyboardView> {
                                   Expanded(
                                       child: Row(
                                         children: [
-                                          ...[".", "0", "<-"].map((item) => Expanded(
+                                          ...[".", "0", "<"].map((item) => Expanded(
                                               child: TextButton(
                                                   onPressed: () {
                                                     _onClickKeyboard(item);
@@ -160,15 +167,22 @@ class _KeyboardViewState extends State<KeyboardView> {
                       ),
                       Container(
                           height: 60,
-                          child: Material(
-                            color: SurfyColor.blue,
-                            child: InkWell(
-                              onTap: () {
-                                widget.onClickSend.call();
-                              },
-                              child: Center(
-                                child: Text(widget.buttonText, style: GoogleFonts.sora(fontWeight: FontWeight.bold, color: SurfyColor.white, fontSize: 16))
+                          child: widget.enable == true ? Material(
+                              color: SurfyColor.blue,
+                              child: InkWell(
+                                  onTap: () {
+                                    widget.onClickSend.call();
+                                  },
+                                  child: Center(
+                                      child: Text(widget.buttonText, style: GoogleFonts.sora(fontWeight: FontWeight.bold, color: SurfyColor.white, fontSize: 16))
+                                  )
                               )
+                          ) : Container(
+                            width: double.infinity,
+                            height: 60,
+                            color: widget.disabledColor,
+                            child: Center(
+                              child: Text(widget.disabledText ?? "", style: GoogleFonts.sora(fontWeight: FontWeight.bold, color: SurfyColor.white, fontSize: 16))
                             )
                           )
                       )

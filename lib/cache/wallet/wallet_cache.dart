@@ -6,10 +6,31 @@ import 'package:surfy_mobile_app/entity/token/token.dart';
 class WalletCache {
   static const walletBoxName = 'wallet';
   static const walletUpdatedTimeBoxName = 'wallet-updated-time';
-  static const updateThreshold = 60000;
+  static const walletAddress = 'walletAddress';
+  static const updateThreshold = 300000;
 
   String _generateKey(Token token, Blockchain blockchain, String address) {
     return "${token.name}-${blockchain.name}-$address";
+  }
+
+  Future<String> getWalletAddress(Blockchain blockchain) async {
+    if (!Hive.isBoxOpen(walletAddress)) {
+      await Hive.openBox(walletAddress);
+    }
+
+    final box = Hive.box(walletAddress);
+    final address = await box.get(blockchain.name, defaultValue: "");
+    return address;
+  }
+
+  Future<void> saveWalletAddress(Blockchain blockchain, String address) async {
+    if (!Hive.isBoxOpen(walletAddress)) {
+      await Hive.openBox(walletAddress);
+    }
+
+    final box = Hive.box(walletAddress);
+    final key = blockchain.name;
+    box.put(key, address);
   }
 
   Future<void> saveBalanceOnly(Token token, Blockchain blockchain, String address, BigInt amount) async {
@@ -88,6 +109,14 @@ class WalletCache {
 
     box = Hive.box(walletUpdatedTimeBoxName);
     await box.clear();
+
+    if (!Hive.isBoxOpen(walletAddress)) {
+      await Hive.openBox(walletAddress);
+    }
+
+    box = Hive.box(walletAddress);
+    await box.clear();
+
     logger.i('finish clearCache()');
   }
 }

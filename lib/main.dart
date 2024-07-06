@@ -14,7 +14,7 @@ import 'package:surfy_mobile_app/dependency.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/user/onboarding.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/navigation_bar.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/service/router/router_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/dio_utils.dart';

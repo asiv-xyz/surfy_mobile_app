@@ -22,6 +22,8 @@ class SendingConfirmViewModel {
   final Rx<Token> observableGasToken = Rx(Token.ETHEREUM);
   final RxDouble observableTokenPrice = 0.0.obs;
   final RxDouble observableGasTokenPrice = 0.0.obs;
+  final RxDouble observableFiat = 0.0.obs;
+  final Rx<CurrencyType> observableCurrencyType = Rx(CurrencyType.usd);
 
   final sessionTime = DateTime.now().millisecondsSinceEpoch;
 
@@ -29,9 +31,17 @@ class SendingConfirmViewModel {
     this.view = view;
   }
 
-  Future<void> init(Token token, Blockchain blockchain, String receiver, BigInt amount, CurrencyType currencyType) async {
+  Future<void> init(Token token,
+      Blockchain blockchain,
+      String receiver,
+      BigInt amount,
+      double fiat,
+      CurrencyType currencyType) async {
     view.startLoading();
     try {
+      observableFiat.value = fiat;
+      observableCurrencyType.value = currencyType;
+
       final gas = await _sendP2pTokenUseCase.estimateGas(token, blockchain, receiver, amount);
       observableGas.value = gas;
 
@@ -56,7 +66,16 @@ class SendingConfirmViewModel {
     view.finishLoading();
   }
 
-  Future<String> processTransfer(Token token, Blockchain blockchain, String sender, String receiver, BigInt amount) async {
+  Future<String> processTransfer(Token token,
+      Blockchain blockchain,
+      String sender,
+      String receiver,
+      BigInt amount,
+    {
+      double? fiat,
+      CurrencyType? currencyType,
+    }
+  ) async {
     view.onSending();
     Vibration.vibrate(duration: 100);
     final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, amount);
@@ -68,7 +87,11 @@ class SendingConfirmViewModel {
         receiverAddress: receiver,
         amount: amount,
         token: token,
-        blockchain: blockchain
+        blockchain: blockchain,
+        fiat: fiat,
+        currencyType: currencyType,
+        tokenPrice: observableTokenPrice.value,
+        tokenPriceCurrencyType: observableCurrencyType.value,
     );
     view.finishSending();
     return response.transactionHash;

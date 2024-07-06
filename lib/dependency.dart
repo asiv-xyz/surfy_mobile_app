@@ -50,10 +50,10 @@ void buildDependencies() {
   final Calculator calculator = Get.put(Calculator(getTokenPrice: getTokenPriceUseCase));
 
   // Wallet Domain
-  final WalletService walletService = Get.put(WalletService());
+  final WalletCache walletCache = Get.put(WalletCache());
+  final WalletService walletService = Get.put(WalletService(walletCache: walletCache));
   final GetWalletAddress getWalletAddressUseCase = Get.put(GetWalletAddress(service: walletService, keyService: keyService));
 
-  final WalletCache walletCache = Get.put(WalletCache());
   final WalletBalancesRepository walletBalancesRepository = Get.put(WalletBalancesRepository(walletService: walletService, walletCache: walletCache));
   eventBus.addEventListener(walletBalancesRepository);
 

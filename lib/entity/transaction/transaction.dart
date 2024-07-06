@@ -35,6 +35,8 @@ class Transaction {
     required this.storeId,
     required this.fiat,
     required this.currencyType,
+    required this.tokenPrice,
+    required this.tokenPriceCurrencyType,
   });
 
   final String id;
@@ -51,6 +53,8 @@ class Transaction {
   final String? storeId;
   final double? fiat;
   final CurrencyType? currencyType;
+  final double? tokenPrice;
+  final CurrencyType? tokenPriceCurrencyType;
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
@@ -67,7 +71,9 @@ class Transaction {
         createdAt: DateTime.parse(json["createdAt"]),
         storeId: json["storeId"],
         fiat: json["fiat"]?.toDouble(),
-        currencyType: json["currencyType"] == null ? null : findCurrencyTypeByName(json["currencyType"])
+        currencyType: json["currencyType"] == null ? null : findCurrencyTypeByName(json["currencyType"]),
+        tokenPrice: json["tokenPrice"]?.toDouble(),
+        tokenPriceCurrencyType: json["tokenPriceCurrencyType"] == null ? null : findCurrencyTypeByName(json["tokenPriceCurrencyType"])
     );
   }
 
@@ -87,6 +93,8 @@ class Transaction {
       "storeId": storeId,
       "fiat": fiat,
       "currencyType": currencyType?.name.toLowerCase(),
+      "tokenPrice": tokenPrice,
+      "tokenPriceCurrencyType": tokenPriceCurrencyType?.name.toLowerCase(),
     };
   }
 

@@ -24,10 +24,8 @@ class WalletPage extends StatefulWidget {
 
 abstract class WalletPageInterface {
   void onRefresh();
-
-  void onLoading();
-
-  void offLoading();
+  void startLoading();
+  void finishLoading();
 }
 
 class _WalletPageState extends State<WalletPage>
@@ -52,13 +50,13 @@ class _WalletPageState extends State<WalletPage>
   }
 
   @override
-  void onLoading() {
+  void startLoading() {
     logger.i('onLoading()');
     _isLoading.value = true;
   }
 
   @override
-  void offLoading() {
+  void finishLoading() {
     logger.i('offLoading()');
     _isLoading.value = false;
   }

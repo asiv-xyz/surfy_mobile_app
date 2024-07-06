@@ -44,7 +44,7 @@ class WalletViewModel implements EventListener {
   }
 
   Future<void> refresh(bool fromRemote) async {
-    listener.onLoading();
+    listener.startLoading();
 
     await _bus.emit(ReloadWalletEvent());
 
@@ -73,7 +73,7 @@ class WalletViewModel implements EventListener {
     final tokenPrices = await _getTokenPrice.getTokenPrice(Token.values, _preference.userCurrencyType.value);
     observablePrices.value = tokenPrices;
 
-    listener.offLoading();
+    listener.finishLoading();
   }
 
 

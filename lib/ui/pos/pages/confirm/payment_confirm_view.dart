@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loadable_widget.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
@@ -390,7 +391,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                       _viewModel.observableReceiverWallet.value,
                                       _viewModel.observablePayCrypto.value
                                   ).then((_) {
-                                    context.go('/pos/check', extra: PaymentCompletePageProps(
+                                    checkAuthAndGo(context, "/post/check", extra: PaymentCompletePageProps(
                                         storeName: widget.storeId,
                                         fiatAmount: widget.wantToReceiveAmount,
                                         currencyType: widget.receiveCurrency,

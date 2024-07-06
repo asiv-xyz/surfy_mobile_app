@@ -1,6 +1,5 @@
 import 'package:crypto/crypto.dart';
 import 'package:dartx/dartx.dart';
-import 'package:get/get.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 typedef Ed25519 = String;
