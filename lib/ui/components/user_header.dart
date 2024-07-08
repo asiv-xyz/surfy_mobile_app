@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -53,7 +54,7 @@ class UserHeader extends StatelessWidget {
             children: [
               IconButton(
                   onPressed: () {
-                    context.push('/settings');
+                    checkAuthAndPush(context, '/settings');
                   },
                   icon: const Icon(Icons.settings_outlined, size: 25)
               ),

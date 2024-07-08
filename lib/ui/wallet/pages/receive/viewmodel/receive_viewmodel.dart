@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/receive/receive_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
@@ -15,6 +16,7 @@ class ReceiveViewModel {
   final RxString observableQrData = "".obs;
 
   final QRService _qrService = Get.find();
+  final GetWalletAddress _getWalletAddressUseCase = Get.find();
 
   void setView(ReceiveView view) {
     _view = view;
@@ -25,8 +27,10 @@ class ReceiveViewModel {
 
     observableSelectedToken.value = token;
     observableSelectedBlockchain.value = blockchain;
+    observableUserAddress.value = await _getWalletAddressUseCase.getAddress(blockchain);
 
-    final qr = await _qrService.getQRcode("surfy://com.riverbank.surfy/send/${observableSelectedBlockchain.value?.name}/${observableSelectedToken.value?.name}/${observableUserAddress.value}/${observableAmount.value}");
+    // TODO : fix it!!!
+    final qr = await _qrService.getQRcode("surfy://com.riverbank.surfy/wallet/${observableSelectedToken.value?.name.toLowerCase()}/${observableSelectedBlockchain.value?.name.toLowerCase()}/send/${observableUserAddress.value}/${observableAmount.value}");
     observableQrData.value = qr;
 
     _view.finishQRLoading();
@@ -34,7 +38,9 @@ class ReceiveViewModel {
 
   Future<void> refreshQR() async {
     _view.onQRLoading();
-    final qr = await _qrService.getQRcode("surfy://com.riverbank.surfy/send/${observableSelectedBlockchain.value?.name}/${observableSelectedToken.value?.name}/${observableUserAddress.value}/${observableAmount.value}");
+
+    // TODO : fix it!!!
+    final qr = await _qrService.getQRcode("surfy://com.riverbank.surfy/wallet/${observableSelectedToken.value?.name.toLowerCase()}/${observableSelectedBlockchain.value?.name.toLowerCase()}/send/${observableUserAddress.value}/${observableAmount.value}");
     observableQrData.value = qr;
     _view.finishQRLoading();
   }

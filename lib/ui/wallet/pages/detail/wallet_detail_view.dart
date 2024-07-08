@@ -1,15 +1,6 @@
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
-import 'package:surfy_mobile_app/entity/token/token_price.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/address_badge.dart';
 import 'package:surfy_mobile_app/ui/components/balance_view.dart';
@@ -17,7 +8,7 @@ import 'package:surfy_mobile_app/ui/components/current_price.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/detail/viewmodel/wallet_detail_viewmodel.dart';
-import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
@@ -43,7 +34,6 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
 
   final WalletDetailViewModel _viewModel = WalletDetailViewModel();
   final SettingsPreference _preference = Get.find();
-  final Calculator _calculator = Get.find();
 
   final Rx<bool> _isLoading = Rx<bool>(false);
   final Rx<bool> _onlyHeldShow = Rx<bool>(true);
@@ -92,9 +82,8 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                       child: BalanceView(
                         token: widget.token,
                         currencyType: _preference.userCurrencyType.value,
-                        fiatBalance: _calculator.cryptoToFiatV2(widget.token, _viewModel.aggregateBalance(), _viewModel.tokenPrice.value),
-                        cryptoBalance: _calculator.cryptoToDouble(widget.token, _viewModel.aggregateBalance()),
-                      )
+                        fiatBalance: cryptoAmountToFiat(tokens[widget.token]!, _viewModel.aggregateBalance(), _viewModel.tokenPrice.value),
+                        cryptoBalance: cryptoAmountToDecimal(tokens[widget.token]!, _viewModel.aggregateBalance()),)
                   );
                 }),
                 Obx(() => Container(
@@ -126,7 +115,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                         onTap: () {
                           _onlyHeldShow.value = !_onlyHeldShow.value;
                         },
-                        child: Text('View only the coins I own', style: Theme.of(context).textTheme.labelLarge)
+                        child: Text('View only the assets I own', style: Theme.of(context).textTheme.labelLarge)
                     )
                   ],
                 ),
@@ -135,7 +124,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                     final address = _viewModel.addresses.value[item.blockchain] ?? "";
                     return InkWell(
                         onTap: () {
-                          context.push('/single-balance', extra: Pair<Token, Blockchain>(item.token, item.blockchain));
+                          checkAuthAndPush(context, '/wallet/${item.token.name}/${item.blockchain.name}');
                         },
                         child: Container(
                             width: double.infinity,
@@ -169,9 +158,12 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(formatFiat(_calculator.cryptoToFiatV2(widget.token, item.balance, _viewModel.tokenPrice.value),
-                                        _preference.userCurrencyType.value), style: Theme.of(context).textTheme.displaySmall),
-                                    Text(formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, item.balance)), style: Theme.of(context).textTheme.labelMedium)
+                                    Text(formatFiat(
+                                          cryptoAmountToFiat(tokens[widget.token]!, item.balance, _viewModel.tokenPrice.value),
+                                          _preference.userCurrencyType.value), style: Theme.of(context).textTheme.displaySmall),
+                                    Text(formatCrypto(widget.token,
+                                        cryptoAmountToDecimal(tokens[widget.token]!, item.balance)),
+                                        style: Theme.of(context).textTheme.labelMedium)
                                   ],
                                 )
                               ],

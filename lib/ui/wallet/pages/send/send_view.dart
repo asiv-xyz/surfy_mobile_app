@@ -1,9 +1,8 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
@@ -11,15 +10,24 @@ import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/sending_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/send/viewmodel/send_viewmodel.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
 class SendPage extends StatefulWidget {
-  const SendPage({super.key, required this.token, required this.blockchain});
+  const SendPage({super.key,
+    required this.token,
+    required this.blockchain,
+    this.defaultReceiverAddress,
+    this.defaultAmount,
+  });
 
   final Token token;
   final Blockchain blockchain;
+
+  final String? defaultReceiverAddress;
+  final double? defaultAmount;
 
   @override
   State<StatefulWidget> createState() {
@@ -37,7 +45,6 @@ class _SendPageState extends State<SendPage> implements SendView {
   late final SendViewModel _viewModel;
 
   final SettingsPreference _preference = Get.find();
-  final Calculator _calculator = Get.find();
 
   final _isLoading = false.obs;
   final _textController = TextEditingController();
@@ -62,8 +69,20 @@ class _SendPageState extends State<SendPage> implements SendView {
     super.initState();
     _viewModel = SendViewModel();
     _viewModel.setView(this);
-    _viewModel.init(widget.token, widget.blockchain, _preference.userCurrencyType.value);
+    _viewModel.init(
+        widget.token,
+        widget.blockchain,
+        _preference.userCurrencyType.value
+    );
     _textController.addListener(() => _viewModel.observableReceiverAddress.value = _textController.text);
+
+    if (widget.defaultAmount != null) {
+      _viewModel.observableInputData.value = widget.defaultAmount.toString();
+    }
+    if (widget.defaultReceiverAddress != null) {
+      _viewModel.observableReceiverAddress.value = widget.defaultReceiverAddress!;
+      _textController.text = widget.defaultReceiverAddress!;
+    }
   }
 
   @override
@@ -87,14 +106,15 @@ class _SendPageState extends State<SendPage> implements SendView {
                 var amount = BigInt.zero;
                 var fiat = 0.0;
                 if (_viewModel.observableIsFiatInputMode.isTrue) {
-                  amount = _calculator.fiatToCryptoAmountV2(_viewModel.observableInputData.value.toDouble(), widget.token, _viewModel.observableTokenPrice.value);
+                  amount = fiatToCryptoBigInt(_viewModel.observableInputData.value.toDouble(), tokens[widget.token]!, _viewModel.observableTokenPrice.value);
                   fiat = _viewModel.observableInputData.value.toDouble();
                 } else {
-                  amount = _calculator.cryptoWithDecimal(widget.token, _viewModel.observableInputData.value.toDouble());
-                  fiat = _calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
+                  amount = cryptoDecimalToBigInt(tokens[widget.token]!, _viewModel.observableInputData.value.toDouble());
+                  // fiat = _calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
+                  fiat = decimalCryptoAmountToFiat(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
                 }
-                print('amount: $amount, fiat: $fiat');
-                context.push('/sendConfirm', extra: SendingConfirmViewProps(
+
+                checkAuthAndPush(context, '/wallet/${widget.token.name}/${widget.blockchain.name}/send/sendConfirm', extra: SendingConfirmViewProps(
                   token: widget.token,
                   blockchain: widget.blockchain,
                   sender: _viewModel.observableAddress.value,
@@ -141,9 +161,14 @@ class _SendPageState extends State<SendPage> implements SendView {
                           const SizedBox(height: 10),
                           Obx(() {
                             if (_viewModel.observableIsFiatInputMode.isTrue) {
-                              return Text(formatCrypto(widget.token, _calculator.fiatToCryptoV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                              return Text(formatCrypto(widget.token,
+                                  fiatToVisibleCryptoAmount(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value)),
+                                  style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                             } else {
-                              return Text(formatFiat(_calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value), _preference.userCurrencyType.value), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                              return Text(formatFiat(
+                                decimalCryptoAmountToFiat(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value),
+                                  _preference.userCurrencyType.value),
+                                  style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                             }
                           }),
                           Container(
@@ -152,9 +177,14 @@ class _SendPageState extends State<SendPage> implements SendView {
                                 children: [
                                   Text('Balance', style: Theme.of(context).textTheme.labelSmall),
                                   const SizedBox(width: 5),
-                                  Obx(() => Text(formatFiat(_calculator.cryptoToFiatV2(widget.token, _viewModel.observableCryptoBalance.value, _viewModel.observableTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.labelSmall)),
+                                  Obx(() => Text(formatFiat(
+                                      cryptoAmountToFiat(tokens[widget.token]!, _viewModel.observableCryptoBalance.value, _viewModel.observableTokenPrice.value),
+                                      _preference.userCurrencyType.value), style: Theme.of(context).textTheme.labelSmall)),
                                   const SizedBox(width: 2),
-                                  Obx(() => Text("(${formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, _viewModel.observableCryptoBalance.value))})", style: Theme.of(context).textTheme.labelSmall))
+                                  Obx(() => Text("(${formatCrypto(
+                                      widget.token,
+                                      cryptoAmountToDecimal(tokens[widget.token]!, _viewModel.observableCryptoBalance.value))})",
+                                      style: Theme.of(context).textTheme.labelSmall))
                                 ],
                               )
                           ),

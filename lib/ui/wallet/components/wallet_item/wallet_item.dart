@@ -3,11 +3,10 @@ import 'dart:math';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
@@ -37,7 +36,6 @@ abstract class WalletItemView {
 
 class _WalletItemState extends State<WalletItem> implements WalletItemView {
   final SettingsPreference preference = Get.find();
-  final Calculator _calculator = Get.find();
 
   String visualizeAmount(Token token, BigInt amount) {
     final tokenData = tokens[token];
@@ -48,7 +46,7 @@ class _WalletItemState extends State<WalletItem> implements WalletItemView {
   }
 
   Future<Widget> _buildTotalBalanceTab() async {
-    final fiat = _calculator.cryptoToFiatV2(widget.token, widget.tokenAmount, widget.tokenPrice);
+    final fiat = cryptoAmountToFiat(tokens[widget.token]!, widget.tokenAmount, widget.tokenPrice);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [

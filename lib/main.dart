@@ -15,7 +15,7 @@ import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/user/onboarding.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/routing.dart';
-import 'package:surfy_mobile_app/service/router/router_service.dart';
+import 'package:surfy_mobile_app/service/router/deeplink_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/dio_utils.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
@@ -61,6 +61,13 @@ void main() async {
   await Hive.initFlutter();
   dioObject.transformer = BackgroundTransformer()
     ..jsonDecodeCallback = parseJson;
+  dioObject.interceptors.add(
+      InterceptorsWrapper(
+        onError: (DioException error, ErrorInterceptorHandler handler) {
+          logger.e('DioException: ${error.message}');
+        }
+      )
+  );
   buildDependencies();
   WidgetsFlutterBinding.ensureInitialized();
   MapboxOptions.setAccessToken(dotenv.env["MAPBOX_API_KEY"] ?? "");
@@ -100,8 +107,13 @@ class _SurfyAppState extends State<SurfyApp> {
     _appLinks = AppLinks();
     Get.put(RouterService(router: widget.goRouter));
     _appLinks.uriLinkStream.listen((uri) {
+      print('deep link : ${uri}');
       final RouterService routerService = Get.find();
       switch (uri.pathSegments[0]) {
+        case "wallet":
+          print('go to wallet: ${uri.path}');
+          checkAuthAndGo(context, uri.path);
+          break;
         case "payment":
           routerService.checkLoginAndPush("payment", uri.pathSegments);
           break;

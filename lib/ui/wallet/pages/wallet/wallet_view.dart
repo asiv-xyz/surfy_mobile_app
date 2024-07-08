@@ -1,7 +1,6 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
@@ -11,6 +10,7 @@ import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/wallet/viewmodel/wallet_viewmodel.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class WalletPage extends StatefulWidget {
@@ -33,7 +33,6 @@ class _WalletPageState extends State<WalletPage>
   final WalletViewModel _viewModel = WalletViewModel();
 
   final SettingsPreference _preference = Get.find();
-  final Calculator _calculator = Get.find();
   final RxBool _isLoading = false.obs;
 
   @override
@@ -62,8 +61,8 @@ class _WalletPageState extends State<WalletPage>
   }
 
   List<Pair<Token, BigInt>> _balanceListByDesc(
-      List<Token> tokens, List<Balance> balanceList) {
-    final list = tokens
+      List<Token> tokenList, List<Balance> balanceList) {
+    final list = tokenList
         .map((token) {
           if (_viewModel.observableBalances.value.isEmpty) {
             return Balance(
@@ -92,19 +91,8 @@ class _WalletPageState extends State<WalletPage>
         .toList();
 
     list.sort((a, b) {
-      final fiatA = _calculator.cryptoToFiatV2(
-          a.first,
-          a.second,
-          _viewModel.observablePrices
-                  .value[a.first]?[_preference.userCurrencyType.value]?.price ??
-              0.0);
-      final fiatB = _calculator.cryptoToFiatV2(
-          b.first,
-          b.second,
-          _viewModel.observablePrices
-                  .value[b.first]?[_preference.userCurrencyType.value]?.price ??
-              0.0);
-
+      final fiatA = cryptoAmountToFiat(tokens[a.first]!, a.second, _viewModel.observablePrices.value[a.first]?[_preference.userCurrencyType.value]?.price ?? 0.0);
+      final fiatB = cryptoAmountToFiat(tokens[b.first]!, b.second, _viewModel.observablePrices.value[b.first]?[_preference.userCurrencyType.value]?.price ?? 0.0);
       if (fiatA < fiatB) {
         return 1;
       } else if (fiatA == fiatB) {

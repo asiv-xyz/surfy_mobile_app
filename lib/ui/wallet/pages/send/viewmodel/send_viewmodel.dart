@@ -1,14 +1,13 @@
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/send/send_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 
 class SendViewModel {
   late SendView view;
@@ -16,8 +15,8 @@ class SendViewModel {
   final GetTokenPrice _getTokenPriceUseCase = Get.find();
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final GetWalletAddress _getWalletAddressUseCase = Get.find();
-  final Calculator _calculator = Get.find();
 
+  final Rx<TokenData?> observableTokenData = Rx(null);
   final RxString observableAddress = "".obs;
   final RxDouble observableTokenPrice = 0.0.obs;
   final Rx<BigInt> observableCryptoBalance = BigInt.zero.obs;
@@ -30,12 +29,32 @@ class SendViewModel {
     this.view = view;
   }
 
-  Future<void> init(Token token, Blockchain blockchain, CurrencyType currency) async {
+  Future<void> init(Token token,
+      Blockchain blockchain,
+      CurrencyType currency,
+  {
+    String? defaultReceiverAddress,
+    double? defaultReceiveAmount,
+  }
+  ) async {
     view.onLoading();
+    if (tokens[token] == null) {
+      throw Exception('Unsupported token: ${token.name}');
+    }
+
+    observableTokenData.value = tokens[token];
 
     final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(token, currency);
     final address = await _getWalletAddressUseCase.getAddress(blockchain);
     final balance = await _getWalletBalancesUseCase.getBalance(token, blockchain, address);
+
+    if (defaultReceiverAddress != null) {
+      observableReceiverAddress.value = defaultReceiverAddress;
+    }
+
+    if (defaultReceiveAmount != null) {
+      observableInputData.value = defaultReceiveAmount.toString();
+    }
 
     observableAddress.value = address;
     observableTokenPrice.value = tokenPrice?.price ?? 0;
@@ -45,11 +64,15 @@ class SendViewModel {
   }
 
   bool canPay(Token token) {
+    if (tokens[token] == null) {
+      throw Exception('Unsupported token: ${token.name}');
+    }
+
     if (observableIsFiatInputMode.isTrue) {
-      final needToPayTokenAmount = _calculator.fiatToCryptoAmountV2(observableInputData.value.toDouble(), token, observableTokenPrice.value);
+      final needToPayTokenAmount = fiatToCryptoBigInt(observableInputData.value.toDouble(), tokens[token]!, observableTokenPrice.value);
       return needToPayTokenAmount <= observableCryptoBalance.value;
     } else {
-      final needToPayTokenAmount = _calculator.cryptoWithDecimal(token, observableInputData.value.toDouble());
+      final needToPayTokenAmount = cryptoDecimalToBigInt(tokens[token]!, observableInputData.value.toDouble());
       return needToPayTokenAmount <= observableCryptoBalance.value;
     }
   }

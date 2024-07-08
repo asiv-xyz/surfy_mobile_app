@@ -1,11 +1,10 @@
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:surfy_mobile_app/domain/merchant/click_place.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/map/viewmodel/map_viewmodel.dart';
@@ -23,29 +22,20 @@ class MapPage extends StatefulWidget {
 class AnnotationClickListener extends OnPointAnnotationClickListener {
   AnnotationClickListener({
     required this.annotationMap,
-    required this.clickPlaceUseCase,
     required this.moveCameraFunction,
     required this.viewModel,
   });
 
   final Map<String, Merchant> annotationMap;
-  final ClickPlace clickPlaceUseCase;
   final Function moveCameraFunction;
   final MapViewModel viewModel;
 
   @override
   void onPointAnnotationClick(PointAnnotation annotation) {
-    print('click annotation: ${annotation.id}');
     if (annotationMap[annotation.id] == null) {
       return;
     }
-    // if (clickPlaceUseCase.isClicked.isTrue) {
-    //   clickPlaceUseCase.isClicked.value = false;
-    // } else {
-    //   clickPlaceUseCase.isClicked.value = true;
-    //   clickPlaceUseCase.selectedPlaceAnnotationId = annotation.id;
-    //   moveCameraFunction.call();
-    // }
+
     if (viewModel.observableIsAnnotationClicked.isTrue) {
       viewModel.observableIsAnnotationClicked.value = false;
     } else {
@@ -61,16 +51,16 @@ abstract class MapView {
   void offLoading();
 }
 
-class _MapPageState extends State<MapPage> implements MapView {
-  final ClickPlace _clickPlaceUseCase = Get.find();
-  MapboxMap? mapboxMap;
-
+class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapboxMap;
   final _userLatitude = 0.0.obs;
   final _userLongitude = 0.0.obs;
 
   final RxBool _isLoading = false.obs;
 
   final MapViewModel _viewModel = MapViewModel();
+
+  late PointAnnotationManager _pointAnnotationManager;
+  bool _isAnnotationHided = false;
 
   @override
   void onLoading() {
@@ -114,83 +104,125 @@ class _MapPageState extends State<MapPage> implements MapView {
     return await geolocator.Geolocator.getCurrentPosition();
   }
 
+  void _addLayerAndSource() async {
+    mapboxMap?.style.styleSourceExists("merchants").then((value) async {
+      if (!value) {
+        var source = _viewModel.toMapboxFeatureType();
+        mapboxMap?.style.addStyleSource("merchants", source);
+      }
+    });
+
+    mapboxMap?.style.styleLayerExists("clusters").then((value) async {
+      if (!value) {
+        var layer = await rootBundle.loadString('assets/cluster/cluster_layer.json');
+        mapboxMap?.style.addStyleLayer(layer, null);
+
+        var clusterCountLayer = await rootBundle.loadString('assets/cluster/cluster_count_layer.json');
+        mapboxMap?.style.addStyleLayer(clusterCountLayer, null);
+      }
+    });
+  }
+
   Future<void> _setCurrentUserPosition(MapboxMap mapboxMap) async {
     final position = await geolocator.Geolocator.getCurrentPosition();
-    mapboxMap.easeTo(mapbox.CameraOptions(
+    mapboxMap.easeTo(CameraOptions(
         center: Point(
             coordinates: Position(position.longitude, position.latitude)),
         zoom: 12.0), MapAnimationOptions(duration: 1000, startDelay: 0));
   }
 
+  void setAnnotations(PointAnnotationManager manager) async {
+    for (final place in _viewModel.observableMerchantList.value) {
+      var image = "";
+      switch (place.category.toLowerCase()) {
+        case "cafe":
+          image = "assets/images/ic_cafe.png";
+          break;
+        case "restaurant":
+          image = "assets/images/ic_restaurant.png";
+          break;
+        case "bar":
+          image = "assets/images/ic_bar.png";
+          break;
+        default:
+          break;
+      }
+      final ByteData bytes = await rootBundle.load(image);
+      final Uint8List list = bytes.buffer.asUint8List();
+
+      final options = <PointAnnotationOptions>[];
+      final option = PointAnnotationOptions(geometry: Point(coordinates: Position(place.longitude, place.latitude)), image: list);
+      options.add(option);
+      final annotation = await manager.create(option);
+      _viewModel.observableAnnotationMap.value[annotation.id] = place;
+      manager.createMulti(options);
+    }
+
+    manager.addOnPointAnnotationClickListener(
+        AnnotationClickListener(
+            annotationMap: _viewModel.observableAnnotationMap.value,
+            viewModel: _viewModel,
+            moveCameraFunction: () async {
+              final cameraState = await mapboxMap?.getCameraState();
+              _viewModel.observableCurrentMapLongitude.value = cameraState?.center.coordinates.lng.toDouble() ?? 0.0;
+              _viewModel.observableCurrentMapLatitude.value = cameraState?.center.coordinates.lat.toDouble() ?? 0.0;
+              _viewModel.observableCurrentZoom.value = cameraState?.zoom ?? 0.0;
+
+              final lnglat = _viewModel.getSelectedPlaceLngLat();
+              mapboxMap?.easeTo(CameraOptions(
+                  center: Point(
+                      coordinates: Position(lnglat.first, lnglat.second)
+                  ),
+                  zoom: 15.0), MapAnimationOptions(duration: 1000, startDelay: 0));
+            }
+        )
+    );
+  }
+
   _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
+
     _determinePosition().then((position) {
       _userLatitude.value = position.latitude;
       _userLongitude.value = position.longitude;
-      mapboxMap.setCamera(mapbox.CameraOptions(
+      mapboxMap.setCamera(CameraOptions(
           center: Point(
               coordinates: Position(position.longitude, position.latitude)),
           zoom: 12.0));
     });
+
     mapboxMap.location.updateSettings(LocationComponentSettings(
         enabled: true,
         puckBearingEnabled: true,
         pulsingEnabled: true,
         showAccuracyRing: true,
     ));
-    mapboxMap.annotations.createPointAnnotationManager().then((manager) async {
-      print('createPointAnnotationManager');
-      for (final place in _viewModel.observableMerchantList.value) {
-        var image = "";
-        switch (place.category.toLowerCase()) {
-          case "cafe":
-            image = "assets/images/ic_cafe.png";
-            break;
-          case "restaurant":
-            image = "assets/images/ic_restaurant.png";
-            break;
-          case "bar":
-            image = "assets/images/ic_bar.png";
-            break;
-          default:
-            break;
+
+    mapboxMap.setOnMapMoveListener((context) async {
+      final cameraState = await mapboxMap.getCameraState();
+      if (cameraState.zoom <= 11) {
+        // hide
+        if (!_isAnnotationHided) {
+          _isAnnotationHided = true;
+          _pointAnnotationManager.deleteAll();
         }
-        final ByteData bytes = await rootBundle.load(image);
-        final Uint8List list = bytes.buffer.asUint8List();
-
-        final options = <PointAnnotationOptions>[];
-        final option = PointAnnotationOptions(
-            geometry: Point(coordinates: Position(place.longitude, place.latitude)), image: list);
-        options.add(option);
-        final annotation = await manager.create(option);
-        _viewModel.observableAnnotationMap.value[annotation.id] = place;
-        manager.createMulti(options);
+      } else {
+        // show
+        if (_isAnnotationHided) {
+          _isAnnotationHided = false;
+          setAnnotations(_pointAnnotationManager);
+        }
       }
-      manager.addOnPointAnnotationClickListener(
-          AnnotationClickListener(
-            annotationMap: _viewModel.observableAnnotationMap.value,
-            clickPlaceUseCase: _clickPlaceUseCase,
-            viewModel: _viewModel,
-            moveCameraFunction: () async {
-              final cameraState = await mapboxMap.getCameraState();
-              _viewModel.observableCurrentMapLongitude.value = cameraState.center.coordinates.lng.toDouble();
-              _viewModel.observableCurrentMapLatitude.value = cameraState.center.coordinates.lat.toDouble();
-              _viewModel.observableCurrentZoom.value = cameraState.zoom;
+    });
 
-              final lnglat = _viewModel.getSelectedPlaceLngLat();
-              mapboxMap.easeTo(mapbox.CameraOptions(
-                center: Point(
-                  coordinates: Position(lnglat.first, lnglat.second)
-                ),
-                zoom: 15.0), MapAnimationOptions(duration: 1000, startDelay: 0));
-            }
-          )
-      );
+    mapboxMap.annotations.createPointAnnotationManager().then((manager) async {
+      _pointAnnotationManager = manager;
+      setAnnotations(manager);
     });
     mapboxMap.setOnMapTapListener((context) {
       if (_viewModel.observableIsAnnotationClicked.isTrue) {
         _viewModel.observableIsAnnotationClicked.value = false;
-        mapboxMap.easeTo(mapbox.CameraOptions(
+        mapboxMap.easeTo(CameraOptions(
             center: Point(
                 coordinates: Position(
                     _viewModel.observableCurrentMapLongitude.value,
@@ -200,6 +232,8 @@ class _MapPageState extends State<MapPage> implements MapView {
             zoom: _viewModel.observableCurrentZoom.value), MapAnimationOptions(duration: 1000, startDelay: 0));
       }
     });
+
+    _addLayerAndSource();
   }
 
   String _calculateDistance(double userLongitude, double userLatitude, double placeLongitude, double placeLatitude) {
@@ -230,7 +264,18 @@ class _MapPageState extends State<MapPage> implements MapView {
                 height: 150,
                 child: ClipRRect(
                     borderRadius: BorderRadius.circular(15),
-                    child: Image.network(place?.thumbnail ?? "", width: 150, height: 150, fit: BoxFit.fill,)
+                    child: place?.thumbnail.isNullOrEmpty == true ?
+                      Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.grey
+                        ),
+                        child: Center(
+                          child: Text('No image', style: Theme.of(context).textTheme.displaySmall,)
+                        ),
+                      ) :
+                      Image.network(place?.thumbnail ?? "", width: 150, height: 150, fit: BoxFit.fill,)
                 )
             ),
             const SizedBox(width: 10),
@@ -264,7 +309,6 @@ class _MapPageState extends State<MapPage> implements MapView {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          titleSpacing: 0,
           title: const Text('Find SURFY Store!')),
         body: Obx(() {
           if (_isLoading.isTrue) {
@@ -274,7 +318,7 @@ class _MapPageState extends State<MapPage> implements MapView {
           return Stack(
             fit: StackFit.expand,
             children: [
-              mapbox.MapWidget(
+              MapWidget(
                 onMapCreated: _onMapCreated,
               ),
               Obx(() {

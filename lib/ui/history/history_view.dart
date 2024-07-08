@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
+import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/history/components/transaction_badge.dart';
 import 'package:surfy_mobile_app/ui/history/viewmodel/history_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
@@ -29,7 +30,6 @@ abstract class HistoryView {
 class _HistoryPageState extends State<HistoryPage> implements HistoryView {
   final HistoryViewModel _viewModel = HistoryViewModel();
   final RxBool _isLoading = false.obs;
-  final Calculator _calculator = Get.find();
   final EventBus _bus = Get.find();
   
   String _formatDateTime(DateTime time) {
@@ -79,7 +79,7 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                                 padding: const EdgeInsets.all(0)
                             ),
                             onPressed: () {
-                              context.push('/history/detail', extra: tx);
+                              checkAuthAndPush(context, '/history/detail', extra: tx);
                             }, child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 20),
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -110,7 +110,10 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displaySmall),
+                                  Text(formatCrypto(
+                                      tx.token,
+                                      cryptoAmountToDecimal(tokens[tx.token]!, tx.amount)),
+                                      style: Theme.of(context).textTheme.displaySmall),
                                   if (tx.fiat != null && tx.currencyType != null) Text(formatFiat(tx.fiat!, tx.currencyType!), style: Theme.of(context).textTheme.labelMedium),
                                 ],
                               )

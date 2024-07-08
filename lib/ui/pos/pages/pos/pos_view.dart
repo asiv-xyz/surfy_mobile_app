@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
@@ -82,11 +83,12 @@ class _PosPageState extends State<PosPage> implements PosView {
           width: double.infinity,
           height: double.infinity,
           child: KeyboardView(
+            enable: true,
             buttonText: 'Create QR code',
             inputAmount: _inputAmount,
             onClickSend: () {
               if (mounted) {
-                context.push('/pos/qr', extra: PosQrPageProps(
+                checkAuthAndPush(context, '/pos/qr', extra: PosQrPageProps(
                     storeId: _viewModel.observableMerchant.value?.id ?? "",
                     receivedCurrencyType: _preference.userCurrencyType.value,
                     wantToReceiveAmount: _inputAmount.value.toDouble()));

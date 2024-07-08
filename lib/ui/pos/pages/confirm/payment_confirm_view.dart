@@ -3,9 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -17,6 +15,7 @@ import 'package:surfy_mobile_app/ui/pos/pages/check/payment_complete_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/viewmodel/payment_confirm_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
@@ -56,8 +55,6 @@ abstract class PaymentConfirmView {
 class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements PaymentConfirmView{
   final PaymentConfirmViewModel _viewModel = PaymentConfirmViewModel();
   final SettingsPreference _preference = Get.find();
-
-  final Calculator _calculator = Get.find();
 
   final RxBool _isLoading = false.obs;
   final RxBool _isSendProcessing = false.obs;
@@ -145,6 +142,26 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                     Obx(() => Text('You pay to ${_viewModel.observableMerchant.value?.storeName}', style: Theme.of(context).textTheme.displayMedium)),
                                     const SizedBox(height: 5,),
                                     Text(formatFiat(widget.wantToReceiveAmount, widget.receiveCurrency), style: GoogleFonts.sora(fontSize: 48, color: SurfyColor.blue),),
+                                    const SizedBox(height: 5,),
+                                    Obx(() {
+                                      return ShimmerLoading(
+                                          isLoading: _isChangePaymentMethodLoading.value,
+                                          child: LoadableWidget(
+                                            isLoading: _isChangePaymentMethodLoading.value,
+                                            loadingTemplate: Container(
+                                              width: 80,
+                                              height: 16,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.black,
+                                                  borderRadius: BorderRadius.circular(10)
+                                              ),
+                                            ),
+                                            child: Text(formatCrypto(_viewModel.observableSelectedToken.value,
+                                                cryptoAmountToDecimal(tokens[_viewModel.observableSelectedToken.value]!, _viewModel.observablePayCrypto.value)),
+                                                style: Theme.of(context).textTheme.displayMedium),
+                                          )
+                                      );
+                                    })
                                   ],
                                 )
                             ),
@@ -168,7 +185,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                               },
                                               receiveCurrency: _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd,
                                               wantToReceiveAmount: widget.wantToReceiveAmount);
-                                          context.push("/pos/select", extra: props);
+                                          checkAuthAndPush(context, '/pos/select', extra: props);
                                         }
                                       },
                                       child: Container(
@@ -203,10 +220,11 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                                 ),
                                                                 child: Text(
                                                                     formatFiat(
-                                                                        _calculator.cryptoToFiatV2(
-                                                                            _viewModel.observableSelectedToken.value,
+                                                                        cryptoAmountToFiat(
+                                                                            tokens[_viewModel.observableSelectedToken.value]!,
                                                                             _viewModel.observableUserBalance.value,
-                                                                            _viewModel.observableTokenPrice.value[_preference.userCurrencyType.value] ?? 0.0), _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14)
+                                                                            _viewModel.observableTokenPrice.value[_preference.userCurrencyType.value] ?? 0.0),
+                                                                        _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14)
                                                             )
                                                         ));
                                                       }),
@@ -224,7 +242,9 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                                       borderRadius: BorderRadius.circular(10)
                                                                   ),
                                                                 ),
-                                                                child: Text(formatCrypto(_viewModel.observableSelectedToken.value, _calculator.cryptoToDouble(_viewModel.observableSelectedToken.value, _viewModel.observableUserBalance.value)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14))
+                                                                child: Text(formatCrypto(_viewModel.observableSelectedToken.value,
+                                                                    cryptoAmountToDecimal(tokens[_viewModel.observableSelectedToken.value]!, _viewModel.observableUserBalance.value)),
+                                                                    style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14))
                                                             ));
                                                       }),
                                                     ],
@@ -261,53 +281,6 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Pay', style: Theme.of(context).textTheme.labelLarge),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Obx(() {
-                                              return ShimmerLoading(
-                                                isLoading: _isChangePaymentMethodLoading.value,
-                                                child: LoadableWidget(
-                                                  isLoading: _isChangePaymentMethodLoading.value,
-                                                  loadingTemplate: Container(
-                                                    width: 80,
-                                                    height: 16,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.black,
-                                                      borderRadius: BorderRadius.circular(10)
-                                                    ),
-                                                  ),
-                                                  child: Text(formatFiat(widget.wantToReceiveAmount, widget.receiveCurrency), style: Theme.of(context).textTheme.bodySmall)
-                                                )
-                                              );
-                                            }),
-                                            const SizedBox(height: 2,),
-                                            Obx(() {
-                                              return ShimmerLoading(
-                                                  isLoading: _isChangePaymentMethodLoading.value,
-                                                  child: LoadableWidget(
-                                                    isLoading: _isChangePaymentMethodLoading.value,
-                                                    loadingTemplate: Container(
-                                                      width: 80,
-                                                      height: 16,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.black,
-                                                        borderRadius: BorderRadius.circular(10)
-                                                      ),
-                                                    ),
-                                                    child: Text(formatCrypto(_viewModel.observableSelectedToken.value, _calculator.cryptoToDouble(_viewModel.observableSelectedToken.value, _viewModel.observablePayCrypto.value)), style: Theme.of(context).textTheme.bodySmall),
-                                                  )
-                                              );
-                                            })
-                                          ],
-                                        )
-                                      ],
-                                    ),
-                                    const Divider(color: SurfyColor.black),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
                                         Text('Fee', style: Theme.of(context).textTheme.labelLarge),
                                         Column(
                                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -325,7 +298,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                           borderRadius: BorderRadius.circular(10)
                                                       ),
                                                     ),
-                                                    child: Text(formatFiat(gasFiat, widget.receiveCurrency), style: Theme.of(context).textTheme.bodySmall),
+                                                    child: Text(formatFiat(gasFiat, _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall),
                                                   )
                                               );
                                             }),
@@ -391,7 +364,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                       _viewModel.observableReceiverWallet.value,
                                       _viewModel.observablePayCrypto.value
                                   ).then((_) {
-                                    checkAuthAndGo(context, "/post/check", extra: PaymentCompletePageProps(
+                                    checkAuthAndGo(context, "/pos/check", extra: PaymentCompletePageProps(
                                         storeName: widget.storeId,
                                         fiatAmount: widget.wantToReceiveAmount,
                                         currencyType: widget.receiveCurrency,

@@ -8,14 +8,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/service/router/router_service.dart';
+import 'package:surfy_mobile_app/service/router/deeplink_service.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:vibration/vibration.dart';
 
 class QRPage extends StatefulWidget {
-  const QRPage({super.key, required this.camera});
-
-  final CameraDescription camera;
+  const QRPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -87,10 +85,13 @@ class _QRPageState extends State<QRPage> {
         color: SurfyColor.white,
         child: InkWell(
           onTap: () {
+            _scannedUrl.value = "";
+            _result = null;
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
             final RouterService routerService = Get.find();
-            routerService.checkLoginAndGoByUrl(qrUrl);
-            _scannedUrl.value = "";
+            _getQRController.qrViewController.value?.pauseCamera();
+            dispose();
+            routerService.checkLoginAndGoByUrl(context, qrUrl);
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

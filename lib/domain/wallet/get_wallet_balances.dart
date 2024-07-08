@@ -1,18 +1,13 @@
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
-import 'package:surfy_mobile_app/event_bus/event_bus.dart';
-import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 
 import '../../settings/settings_preference.dart';
 
@@ -22,13 +17,11 @@ class GetWalletBalances {
     required this.getWalletAddressUseCase,
     required this.getTokenPriceUseCase,
     required this.keyService,
-    required this.calculator,
     required this.settingsPreference
   });
   final GetWalletAddress getWalletAddressUseCase;
   final GetTokenPrice getTokenPriceUseCase;
   final SettingsPreference settingsPreference;
-  final Calculator calculator;
 
   final WalletBalancesRepository repository;
   final KeyService keyService;
@@ -55,7 +48,7 @@ class GetWalletBalances {
       final address = await getWalletAddressUseCase.getAddress(pair.second);
       final balance = await getBalance(pair.first, pair.second, address);
       final tokenPrice = await getTokenPriceUseCase.getSingleTokenPrice(pair.first, currency);
-      final prettyBalance = calculator.cryptoToDouble(pair.first, balance);
+      final prettyBalance = cryptoAmountToDecimal(tokens[pair.first]!, balance);
       final fiat = prettyBalance * (tokenPrice?.price ?? 0);
       return FiatBalance(token: pair.first, blockchain: pair.second, balance: fiat, cryptoBalance: balance, currencyType: currency);
     });

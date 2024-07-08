@@ -1,8 +1,10 @@
 import 'package:dartx/dartx.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -11,10 +13,15 @@ class RouterService {
   RouterService({required this.router});
   final GoRouter router;
 
-  Future<void> checkLoginAndGoByUrl(String uri) async {
+  Future<void> checkLoginAndGoByUrl(BuildContext context, String uri) async {
     logger.i('checkLoginAndGoByUrl: $uri');
     Uri parsedUri = Uri.parse(uri);
-    await checkLoginAndPush(parsedUri.pathSegments[0], parsedUri.pathSegments);
+    // print('path: ${parsedUri.path}');
+    // final token = parsedUri.pathSegments[1];
+    // final blockchain = parsedUri.pathSegments[2];
+    // final address = parsedUri.pathSegments[3];
+    // final amount = parsedUri.pathSegments[4].toDouble();
+    checkAuthAndGo(context, parsedUri.path);
   }
 
   Future<void> checkLoginAndGo(String path, List<String> pathParameters) async {
@@ -46,7 +53,8 @@ class RouterService {
           router.push("/payment/${pathParameters[1]}");
           break;
         case "send":
-          router.push("/send/${pathParameters[1]}/${pathParameters[2]}/${pathParameters[3]}/${pathParameters[4]}");
+          // TODO : fix it!!!
+          router.push("/wallet/${pathParameters[1]}/${pathParameters[2]}/send/${pathParameters[3]}/${pathParameters[4]}");
           break;
         case "pos":
           // surfy://com.riverbank.surfy_mobile_app/pos/payment/testStore/8/usd

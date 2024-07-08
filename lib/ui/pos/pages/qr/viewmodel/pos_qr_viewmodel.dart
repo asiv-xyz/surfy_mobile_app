@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/qr/pos_qr_view.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
 
 class PosQrViewModel {
   late PosQrView _view;

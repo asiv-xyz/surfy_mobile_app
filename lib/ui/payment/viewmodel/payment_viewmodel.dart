@@ -1,6 +1,5 @@
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
@@ -10,6 +9,7 @@ import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/payment/payment_view.dart';
 import 'package:surfy_mobile_app/ui/type/balance.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
@@ -19,7 +19,6 @@ class PaymentViewModel {
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final GetMerchants _getMerchantsUseCase = Get.find();
   final SettingsPreference _preference = Get.find();
-  final Calculator _calculator = Get.find();
 
   final Rx<Token?> observableSelectedToken = Rx(null);
   final Rx<Blockchain?> observableSelectedBlockchain = Rx(null);
@@ -86,9 +85,7 @@ class PaymentViewModel {
     if (observableIsFiatInputMode.isTrue) {
       return observableInputAmount.value.toDouble();
     } else {
-      return _calculator.cryptoAmountToFiatV2(
-          observableInputAmount.value.toDouble(),
-          observableTokenPrice.value?.price ?? 0);
+      return decimalCryptoAmountToFiat(observableInputAmount.value.toDouble(), observableTokenPrice.value?.price ?? 0);
     }
   }
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/qr/viewmodel/pos_qr_viewmodel.dart';
+import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class PosQrPageProps {
@@ -120,7 +120,7 @@ class _PosQrPageState extends State<PosQrPage> implements PosQrView {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('Pay', style: GoogleFonts.sora(fontSize: 16, color: SurfyColor.white),),
-                                Text('${widget.wantToReceiveAmount} ${widget.receivedCurrencyType.name.toUpperCase()}', style: GoogleFonts.sora(fontSize: 24, color: SurfyColor.blue))
+                                Text(formatFiat(widget.wantToReceiveAmount, widget.receivedCurrencyType), style: GoogleFonts.sora(fontSize: 24, color: SurfyColor.blue))
                               ],
                             ),
                           )

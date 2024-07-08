@@ -6,6 +6,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -126,8 +127,7 @@ class SettingsPage extends StatelessWidget {
                                         options: const AuthenticationOptions(useErrorDialogs: false));
                                     if (didAuthenticate) {
                                       // show key
-                                      print('auth');
-                                      context.push('/key');
+                                      checkAuthAndPush(context, '/key');
                                     }
 
                                   } on PlatformException catch (e) {

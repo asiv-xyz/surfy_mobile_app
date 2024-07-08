@@ -14,6 +14,7 @@ class KeyboardView extends StatefulWidget {
     this.enable,
     this.disabledText,
     this.disabledColor,
+    this.initialValue,
   });
 
   final Widget child;
@@ -24,6 +25,7 @@ class KeyboardView extends StatefulWidget {
   final bool? enable;
   final String? disabledText;
   final Color? disabledColor;
+  final double? initialValue;
 
   @override
   State<StatefulWidget> createState() {

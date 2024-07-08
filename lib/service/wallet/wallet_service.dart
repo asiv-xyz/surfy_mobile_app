@@ -109,7 +109,6 @@ class WalletService {
     }
 
     final address = await handler.getAddress(privateKey);
-    print('blockchain=$blockchain, privatekey=$privateKey, address=$address');
     return address;
   }
 

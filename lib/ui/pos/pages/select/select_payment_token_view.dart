@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/viewmodel/select_payment_token_viewmodel.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
@@ -52,7 +52,6 @@ abstract class SelectPaymentTokenView {
 
 class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> implements SelectPaymentTokenView {
   final SelectPaymentTokenViewModel _viewModel = SelectPaymentTokenViewModel();
-  final Calculator _calculator = Get.find();
 
   final RxBool _isLoading = false.obs;
   final RxBool _isError = false.obs;
@@ -127,14 +126,23 @@ class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> impleme
                                         width: 40,
                                         height: 40),
                                     const SizedBox(width: 10,),
-                                    Text(tokens[balance.token]?.name ?? "", style: Theme.of(context).textTheme.titleLarge)
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(tokens[balance.token]?.name ?? "", style: Theme.of(context).textTheme.titleLarge),
+                                        const SizedBox(height: 5,),
+                                        Text(blockchains[balance.blockchain]?.name ?? "", style: Theme.of(context).textTheme.bodySmall)
+                                      ],
+                                    )
                                   ],
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(formatFiat(balance.balance, widget.receiveCurrency), style: Theme.of(context).textTheme.titleLarge),
-                                    Text(formatCrypto(balance.token, _calculator.cryptoToDouble(balance.token, balance.cryptoBalance)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
+                                    Text(formatCrypto(balance.token,
+                                          cryptoAmountToDecimal(tokens[balance.token]!, balance.cryptoBalance)),
+                                          style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
                                   ],
                                 )
                               ],

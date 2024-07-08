@@ -1,10 +1,9 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
@@ -13,6 +12,7 @@ import 'package:surfy_mobile_app/ui/payment/viewmodel/payment_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
@@ -39,7 +39,6 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
 
   final SettingsPreference _preference = Get.find();
 
-  final Calculator _calculator = Get.find();
   final _isLoading = false.obs;
 
   @override
@@ -62,7 +61,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
   @override
   void onError(String e) {
     logger.e('Error: $e');
-    context.push('/error');
+    checkAuthAndPush(context, '/error');
   }
 
   @override
@@ -85,7 +84,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                     buttonText: 'Send',
                     isFiatInputMode: _viewModel.observableIsFiatInputMode.value,
                     onClickSend: () {
-                      context.push('/pos/payment', extra: PaymentConfirmPageProps(
+                      checkAuthAndPush(context, '/pos/payment', extra: PaymentConfirmPageProps(
                           storeId: widget.storeId,
                           receiveCurrency: findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? "usd"),
                           wantToReceiveAmount: _viewModel.getFiat())
@@ -124,7 +123,9 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                             const SizedBox(
                                               height: 5,
                                             ),
-                                            Text(formatCrypto(_viewModel.observableSelectedToken.value!, _calculator.fiatToCryptoV2(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0)),
+                                            Text(formatCrypto(
+                                                _viewModel.observableSelectedToken.value!,
+                                                fiatToVisibleCryptoAmount(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0)),
                                                 style: GoogleFonts.sora(
                                                     color: SurfyColor.lightGrey, fontSize: 16)),
                                           ],
@@ -141,9 +142,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                             const SizedBox(
                                               height: 5,
                                             ),
-                                            Text(formatFiat(_calculator.cryptoAmountToFiatV2(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0), findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? "")),
-                                                style: GoogleFonts.sora(
-                                                    color: SurfyColor.lightGrey, fontSize: 16)),
+                                            Text(formatFiat(decimalCryptoAmountToFiat(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0), findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? ""),), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 16)),
                                           ],
                                         );
                                       }
@@ -179,7 +178,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                         receiveCurrency: _preference.userCurrencyType.value,
                                         wantToReceiveAmount: _viewModel.getMayPaidAmount(),
                                     );
-                                    context.push("/pos/select", extra: props);
+                                    checkAuthAndPush(context, '/pos/select');
                                   }
                                 },
                                 child: Container(
@@ -225,7 +224,9 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                                     );
                                                   }
 
-                                                  return Text(formatCrypto(_viewModel.observableSelectedToken.value, _calculator.cryptoToDouble(_viewModel.observableSelectedToken.value!, _viewModel.getSelectedTokenBalance().cryptoBalance)), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                                                  return Text(formatCrypto(_viewModel.observableSelectedToken.value,
+                                                      cryptoAmountToDecimal(tokens[_viewModel.observableSelectedToken.value!]!, _viewModel.getSelectedTokenBalance().cryptoBalance)),
+                                                      style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
                                                 })
                                               ],
                                             ),

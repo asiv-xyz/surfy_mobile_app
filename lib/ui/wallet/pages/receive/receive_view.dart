@@ -1,8 +1,8 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/receive/viewmodel/receive_viewmodel.dart';
@@ -47,6 +47,9 @@ class _ReceivePageState extends State<ReceivePage> implements ReceiveView {
     super.initState();
     _viewModel.setView(this);
     _viewModel.init(widget.token, widget.blockchain);
+    _textController.addListener(() {
+      _viewModel.observableAmount.value = _textController.value.text.toDouble();
+    });
   }
 
   @override
@@ -98,6 +101,10 @@ class _ReceivePageState extends State<ReceivePage> implements ReceiveView {
                   const SizedBox(height: 10,),
                   TextField(
                     cursorColor: SurfyColor.black,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly
+                    ],
                     decoration: InputDecoration(
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       label: Text('Amount to receive', style: GoogleFonts.sora(color: SurfyColor.black, fontSize: 12)),

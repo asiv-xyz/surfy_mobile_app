@@ -2,11 +2,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
-import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
+import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/balance_view.dart';
 import 'package:surfy_mobile_app/ui/components/current_price.dart';
@@ -15,6 +11,7 @@ import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/single_balance/viewmodel/send_receive_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
@@ -37,7 +34,6 @@ abstract class SingleBalanceView {
 
 class _SingleBalancePageState extends State<SingleBalancePage> implements SingleBalanceView {
   final SingleBalanceViewModel _viewModel = SingleBalanceViewModel();
-  final Calculator _calculator = Get.find();
   final SettingsPreference _preference = Get.find();
   final RxBool _isLoading = false.obs;
 
@@ -97,8 +93,8 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                             child: BalanceView(
                               token: widget.token,
                               currencyType: _preference.userCurrencyType.value,
-                              cryptoBalance: _calculator.cryptoToDouble(widget.token, _viewModel.observableCryptoBalance.value),
-                              fiatBalance: _calculator.cryptoToFiatV2(widget.token, _viewModel.observableCryptoBalance.value, _viewModel.observableTokenPrice.value)
+                              cryptoBalance: cryptoAmountToDecimal(tokens[widget.token]!, _viewModel.observableCryptoBalance.value),
+                              fiatBalance: cryptoAmountToFiat(tokens[widget.token]!, _viewModel.observableCryptoBalance.value, _viewModel.observableTokenPrice.value),
                             )
                         )),
                         SizedBox(
@@ -171,7 +167,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                                 InkWell(
                                   onTap: () {
                                     if (mounted) {
-                                      context.push('/send', extra: Pair(widget.token, widget.blockchain));
+                                      checkAuthAndPush(context, '/wallet/${widget.token.name}/${widget.blockchain.name}/send');
                                     }
                                   },
                                   child: Container(
@@ -194,7 +190,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                                 InkWell(
                                   onTap: () {
                                     if (mounted) {
-                                      context.push('/receive', extra: Pair(widget.token, widget.blockchain));
+                                      checkAuthAndPush(context, '/wallet/${widget.token.name}/${widget.blockchain.name}/receive');
                                     }
                                   },
                                   child: Container(

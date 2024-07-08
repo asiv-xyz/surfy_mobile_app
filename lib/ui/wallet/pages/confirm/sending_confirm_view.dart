@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
-import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -13,6 +10,7 @@ import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/viewmodel/sending_confirm_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
@@ -88,8 +86,6 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
   static const updateThreshold = 300000;
 
   final SendingConfirmViewModel _viewModel = SendingConfirmViewModel();
-
-  final Calculator _calculator = Get.find();
 
   final RxBool _isLoading = false.obs;
   final RxBool _isSending = false.obs;
@@ -233,8 +229,10 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Crypto', style: Theme.of(context).textTheme.bodyMedium),
-                            Text(formatCrypto(widget.token, _calculator.cryptoToDouble(widget.token, widget.amount)), style: Theme.of(context).textTheme.bodySmall),
-                            //Text('${amount.toStringAsFixed(tokens[token]?.fixedDecimal ?? 2)} ${tokens[token]?.symbol}', style: Theme.of(context).textTheme.bodySmall),
+                            Text(formatCrypto(
+                                widget.token,
+                                cryptoAmountToDecimal(tokens[widget.token]!, widget.amount)),
+                                style: Theme.of(context).textTheme.bodySmall),
                           ],
                         )
                     ),
@@ -259,9 +257,11 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Obx(() => Text(formatFiat(_calculator.cryptoToFiatV2(_viewModel.observableGasToken.value, _viewModel.observableGas.value, _viewModel.observableGasTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall)),
+                                Obx(() => Text(formatFiat(cryptoAmountToFiat(tokens[_viewModel.observableGasToken.value]!, _viewModel.observableGas.value, _viewModel.observableGasTokenPrice.value), _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodySmall)),
                                 const SizedBox(height: 2),
-                                Obx(() => Text(formatCrypto(_viewModel.observableGasToken.value, _calculator.cryptoToDouble(_viewModel.observableGasToken.value, _viewModel.observableGas.value)), style: Theme.of(context).textTheme.labelSmall))
+                                Obx(() => Text(formatCrypto(_viewModel.observableGasToken.value,
+                                    cryptoAmountToDecimal(tokens[_viewModel.observableGasToken.value]!, _viewModel.observableGas.value)),
+                                    style: Theme.of(context).textTheme.labelSmall))
                               ],
                             )
                           ],
@@ -300,7 +300,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                 return;
                               }
                               checkAuthAndPush(
-                                  context, '/check', extra: CheckViewProps(
+                                  context, '/wallet/${widget.token.name}/${widget.blockchain.name}/send/check', extra: CheckViewProps(
                                   token: widget.token,
                                   blockchain: widget.blockchain,
                                   transactionHash: response,

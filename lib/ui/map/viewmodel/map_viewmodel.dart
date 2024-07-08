@@ -1,6 +1,5 @@
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
-import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
 import 'package:surfy_mobile_app/ui/map/map_view.dart';
@@ -39,5 +38,29 @@ class MapViewModel {
     }
 
     return Pair(merchant.longitude, merchant.latitude);
+  }
+
+  dynamic toMapboxFeatureType() {
+    return {
+      "\"type\"": "\"geojson\"",
+      "\"cluster\"": true,
+      "\"clusterMaxZoom\"": 14,
+      "\"clusterRadius\"": 50,
+      "\"data\"": {
+        "\"type\"": "\"FeatureCollection\"",
+        "\"features\"": observableMerchantList.value.map((merchant) => {
+          "\"type\"": "\"Feature\"",
+          "\"properties\"": {
+            "\"id\"": "\"${merchant.id}\"",
+            "\"category\"": "\"${merchant.category}\"",
+            "\"description\"": "\"test_description\""
+          },
+          "\"geometry\"": {
+            "\"type\"": "\"Point\"",
+            "\"coordinates\"": [merchant.longitude, merchant.latitude]
+          }
+        }).toList()
+      }
+    }.toString();
   }
 }

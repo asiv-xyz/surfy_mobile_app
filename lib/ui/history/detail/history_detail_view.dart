@@ -1,12 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:surfy_mobile_app/domain/fiat_and_crypto/calculator.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/utils/address.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,7 +14,6 @@ class HistoryDetailPage extends StatelessWidget {
   HistoryDetailPage({super.key, required this.tx});
 
   final Transaction tx;
-  final Calculator _calculator = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +57,10 @@ class HistoryDetailPage extends StatelessWidget {
               child: Center(
                 child: Column(
                   children: [
-                    Text(formatCrypto(tx.token, _calculator.cryptoToDouble(tx.token, tx.amount)), style: Theme.of(context).textTheme.displayMedium,),
+                    Text(formatCrypto(
+                        tx.token,
+                        cryptoAmountToDecimal(tokens[tx.token]!, tx.amount)),
+                      style: Theme.of(context).textTheme.displayMedium,),
                     if (tx.fiat != null && tx.currencyType != null) Text(formatFiat(tx.fiat!, tx.currencyType!), style: Theme.of(context).textTheme.labelMedium)
                   ],
                 )
