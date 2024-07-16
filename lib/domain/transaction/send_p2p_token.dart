@@ -11,19 +11,15 @@ class SendP2pToken {
   final BlockchainService blockchainService;
   final EventBus bus = Get.find();
 
-  Future<SendTokenResponse> send(Token token, Blockchain blockchain, String from, String to, BigInt amount) async {
-    final result = await blockchainService.sendToken(token, blockchain, to, amount);
-    bus.emit(ForceUpdateTokenBalanceEvent(
-      token: token,
-      blockchain: blockchain,
-      address: from,
-      amount: amount,
-    ));
-    bus.emit(ReloadHistoryEvent());
-    return result;
+  Future<SendTokenResponse> send(Token token, Blockchain blockchain, String from, String to, BigInt amount, String? memo) async {
+    return await blockchainService.sendToken(token, blockchain, to, amount, memo);
   }
 
   Future<BigInt> estimateGas(Token token, Blockchain blockchain, String to, BigInt amount) async {
     return await blockchainService.estimateGas(token, blockchain, to, amount);
+  }
+
+  Stream subscribeTransaction(Token token, Blockchain blockchain, String transactionHash) {
+    return blockchainService.subscribeTransaction(token, blockchain, transactionHash);
   }
 }

@@ -24,6 +24,7 @@ final List<Token> supportedToken = [
   Token.XRP,
   Token.FRAX,
   Token.TRON,
+  Token.DOGE,
 ];
 
 Token findTokenByName(String name) {
@@ -41,6 +42,18 @@ Token findTokenByName(String name) {
   }
 
   return list.first.key;
+}
+
+Token findTokenByContractAddress(String contractAddress) {
+  for (var tokenData in tokens.values) {
+    for (var address in tokenData.tokenContractAddress.values) {
+      if (address == contractAddress) {
+        return tokenData.token;
+      }
+    }
+  }
+
+  throw Exception('No contact address: $contractAddress');
 }
 
 class TokenData {
@@ -124,11 +137,11 @@ const Map<Token, TokenData> tokens = {
   Token.USDT: TokenData(
     token: Token.USDT,
     name: "Tether",
-    symbol: "Tether",
+    symbol: "USDT",
     supportedBlockchain: [
       Blockchain.ethereum,
       Blockchain.solana,
-      // Blockchain.tron,
+      Blockchain.tron,
     ],
     iconAsset: "assets/images/tokens/ic_tether.png",
     isToken: true,

@@ -32,12 +32,7 @@ class WalletBalancesRepository implements EventListener {
   @override
   Future<void> onEventReceived(GlobalEvent event) async {
     if (event is ForceUpdateTokenBalanceEvent) {
-      if (!await walletCache.needToUpdate(event.token, event.blockchain, event.address)) {
-        final existedItem = await walletCache.getBalance(event.token, event.blockchain, event.address);
-        await walletCache.saveBalanceOnly(event.token, event.blockchain, event.address, existedItem - event.amount);
-      } else {
-        await getBalance(event.token, event.blockchain, event.address, fromRemote: true);
-      }
+      await getBalance(event.token, event.blockchain, event.address, fromRemote: true);
       final EventBus bus = Get.find();
       bus.emit(UpdateTokenBalanceCompleteEvent());
     }

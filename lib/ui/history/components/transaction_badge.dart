@@ -20,6 +20,10 @@ class TransactionBadge extends StatelessWidget {
         typeText = "Transfer";
         color = Colors.green;
         break;
+      case TransactionType.receive:
+        typeText = "Receive";
+        color = Colors.red;
+        break;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5),

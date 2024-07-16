@@ -96,6 +96,10 @@ class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> impleme
           );
         } else if (_isLoading.isTrue) {
           return const LoadingWidget(opacity: 0.4);
+        } else if (_viewModel.observableBalanceList.value.isEmpty) {
+          return Center(
+            child: Text('No crypto in wallet', style: Theme.of(context).textTheme.displayMedium)
+          );
         } else {
           return Container(
             width: double.infinity,

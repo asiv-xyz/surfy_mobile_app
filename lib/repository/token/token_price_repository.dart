@@ -13,7 +13,7 @@ class TokenPriceRepository {
   final TokenPriceService service;
 
   Future<Map<Token, Map<CurrencyType, TokenPrice>>> getTokenPriceList(List<Token> tokenList, CurrencyType currencyType) async {
-
+    logger.i('getTokenPriceList');
     final List<String> cgIdentifierList = [];
     final getBalanceFromCache = tokenList.map((token) async {
       final needToUpdate = await tokenPriceCache.needToUpdate(token, currencyType);
@@ -29,12 +29,15 @@ class TokenPriceRepository {
     });
     final result1 = await Future.wait(getBalanceFromCache);
 
-    final balances = await service.getTokenBalance(cgIdentifierList, currencyType);
-    final job = balances.entries.map((item) async {
-      await tokenPriceCache.saveTokenPrice(item.key, item.value.price, currencyType);
-      return item.value;
-    }).toList();
-    final result2 = await Future.wait(job);
+    List<TokenPrice> result2 = [];
+    if (cgIdentifierList.isNotEmpty) {
+      final balances = await service.getTokenPrice(cgIdentifierList, currencyType);
+      final job = balances.entries.map((item) async {
+        await tokenPriceCache.saveTokenPrice(item.key, item.value.price, currencyType);
+        return item.value;
+      }).toList();
+      result2 = await Future.wait(job);
+    }
 
     final ret = <Token, Map<CurrencyType, TokenPrice>>{};
     for (var item in result1) {

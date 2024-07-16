@@ -1,14 +1,14 @@
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
-import 'package:surfy_mobile_app/service/router/deeplink_service.dart';
+import 'package:surfy_mobile_app/platform/deeplink.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:vibration/vibration.dart';
 
@@ -34,6 +34,7 @@ class _QRPageState extends State<QRPage> {
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         _result = scanData;
+        print('found barcode!! $scanData');
         if (_result?.code.isNotNullOrEmpty == true && _result?.code != _scannedUrl.value) {
           _scannedUrl.value = _result?.code ?? "";
           Vibration.vibrate(duration: 100);
@@ -88,10 +89,9 @@ class _QRPageState extends State<QRPage> {
             _scannedUrl.value = "";
             _result = null;
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            final RouterService routerService = Get.find();
             _getQRController.qrViewController.value?.pauseCamera();
             dispose();
-            routerService.checkLoginAndGoByUrl(context, qrUrl);
+            DeepLink.routingByDeeplink(Uri.parse(qrUrl), GoRouter.of(context));
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,7 +108,7 @@ class _QRPageState extends State<QRPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SizedBox(
           width: double.infinity,
           height: double.infinity,
           child: QRView(

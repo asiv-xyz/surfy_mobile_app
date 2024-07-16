@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
@@ -72,7 +73,6 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                   return SingleChildScrollView(
                     child: Column(
                       children: _viewModel.observableTransactionList.value.map((tx) {
-                        print('tx: $tx');
                         return ElevatedButton(
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: SurfyColor.black,
@@ -100,7 +100,9 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                                       // Text(tx.type.name, style: Theme.of(context).textTheme.displaySmall),
                                       TransactionBadge(type: tx.type),
                                       const SizedBox(height: 5),
-                                      Text('to: ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.bodyMedium),
+                                      if (tx.type == TransactionType.transfer)Text('To ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.bodyMedium),
+                                      if (tx.type == TransactionType.payment)Text('To ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.bodyMedium),
+                                      if (tx.type == TransactionType.receive)Text('From ${shortAddress(tx.receiverAddress)}', style: Theme.of(context).textTheme.bodyMedium),
                                       const SizedBox(height: 5),
                                       Text(_formatDateTime(tx.createdAt), style: Theme.of(context).textTheme.labelSmall)
                                     ],

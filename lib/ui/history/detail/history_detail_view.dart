@@ -77,7 +77,9 @@ class HistoryDetailPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('To', style: Theme.of(context).textTheme.titleSmall),
+                    if (tx.type == TransactionType.receive)Text('From', style: Theme.of(context).textTheme.titleSmall),
+                    if (tx.type == TransactionType.transfer)Text('To', style: Theme.of(context).textTheme.titleSmall),
+                    if (tx.type == TransactionType.payment)Text('To', style: Theme.of(context).textTheme.titleSmall),
                     Text(tx.receiverAddress, style: Theme.of(context).textTheme.bodySmall)
                   ],
                 )

@@ -1,5 +1,6 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
@@ -55,7 +56,9 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
   void initState() {
     super.initState();
     _viewModel.setView(this);
-    _viewModel.init(widget.storeId);
+    _viewModel.init(widget.storeId).then((_) {
+      Fluttertoast.showToast(msg: "This store want to receive ${_viewModel.observableMerchant.value?.currency}");
+    });
   }
 
   @override
@@ -82,13 +85,24 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                 } else {
                   return KeyboardView(
                     buttonText: 'Send',
+                    enable: true,
                     isFiatInputMode: _viewModel.observableIsFiatInputMode.value,
                     onClickSend: () {
-                      checkAuthAndPush(context, '/pos/payment', extra: PaymentConfirmPageProps(
-                          storeId: widget.storeId,
-                          receiveCurrency: findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? "usd"),
-                          wantToReceiveAmount: _viewModel.getFiat())
-                      );
+                      var amount = 0.0;
+                      if (_viewModel.observableIsFiatInputMode.isTrue) {
+                        amount = _viewModel.observableInputAmount.value.toDouble();
+                      } else {
+                        amount = cryptoToFiat(_viewModel.observableSelectedToken.value!,
+                            cryptoDecimalToBigInt(tokens[_viewModel.observableSelectedToken.value]!, _viewModel.observableInputAmount.value.toDouble()),
+                            _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0,
+                            findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? "usd"));
+                      }
+
+                      final extra = <String, dynamic>{};
+                      extra["defaultToken"] = _viewModel.observableSelectedToken.value;
+                      extra["defaultBlockchain"] = _viewModel.observableSelectedBlockchain.value;
+                      checkAuthAndPush(context,
+                          '/payment/store/${widget.storeId}/amount/$amount/currency/${_viewModel.observableMerchant.value?.currency}', extra: extra);
                     },
                     inputAmount: _viewModel.observableInputAmount,
                     child: Column(
@@ -103,10 +117,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('To ${_viewModel.observableMerchant.value?.storeName}',
-                                        style: GoogleFonts.sora(
-                                            color: SurfyColor.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20)),
+                                        style: Theme.of(context).textTheme.bodyLarge),
                                     const SizedBox(
                                       height: 5,
                                     ),
@@ -116,18 +127,14 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text('${_viewModel.observableInputAmount.value} ${_viewModel.observableMerchant.value?.currency}',
-                                                style: GoogleFonts.sora(
-                                                    color: SurfyColor.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 40)),
+                                                style: Theme.of(context).textTheme.displayLarge?.merge(const TextStyle(color: SurfyColor.blue))),
                                             const SizedBox(
                                               height: 5,
                                             ),
                                             Text(formatCrypto(
                                                 _viewModel.observableSelectedToken.value!,
                                                 fiatToVisibleCryptoAmount(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0)),
-                                                style: GoogleFonts.sora(
-                                                    color: SurfyColor.lightGrey, fontSize: 16)),
+                                                style: Theme.of(context).textTheme.displayMedium),
                                           ],
                                         );
                                       } else {
@@ -135,14 +142,11 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text('${_viewModel.observableInputAmount.value} ${tokens[_viewModel.observableSelectedToken.value]?.symbol}',
-                                                style: GoogleFonts.sora(
-                                                    color: SurfyColor.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 40)),
+                                                style:Theme.of(context).textTheme.displayLarge?.merge(const TextStyle(color: SurfyColor.blue))),
                                             const SizedBox(
                                               height: 5,
                                             ),
-                                            Text(formatFiat(decimalCryptoAmountToFiat(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0), findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? ""),), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 16)),
+                                            Text(formatFiat(decimalCryptoAmountToFiat(_viewModel.observableInputAmount.value.toDouble(), _viewModel.observableTokenPriceByMerchantCurrency.value?.price ?? 0), findCurrencyTypeByName(_viewModel.observableMerchant.value?.currency ?? ""),), style: Theme.of(context).textTheme.displayMedium),
                                           ],
                                         );
                                       }
@@ -178,7 +182,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                         receiveCurrency: _preference.userCurrencyType.value,
                                         wantToReceiveAmount: _viewModel.getMayPaidAmount(),
                                     );
-                                    checkAuthAndPush(context, '/pos/select');
+                                    checkAuthAndPush(context, '/select', extra: props);
                                   }
                                 },
                                 child: Container(

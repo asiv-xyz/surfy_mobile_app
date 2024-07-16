@@ -1,4 +1,5 @@
 import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
+import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
@@ -86,13 +87,11 @@ class ForceUpdateTokenBalanceEvent extends GlobalEvent {
     required this.token,
     required this.blockchain,
     required this.address,
-    required this.amount,
   });
 
   final Token token;
   final Blockchain blockchain;
   final String address;
-  final BigInt amount;
 
   @override
   GlobalEventType getType() {
@@ -105,7 +104,6 @@ class ForceUpdateTokenBalanceEvent extends GlobalEvent {
       "token": token,
       "blockchain": blockchain,
       "address": address,
-      "amount": amount,
     }.toString();
   }
 }
@@ -122,6 +120,7 @@ class EventBus {
   }
 
   Future<void> emit(GlobalEvent event) async {
+    logger.i('Event emit: $event');
     final job = _eventListeners.map((listener) async => await listener.onEventReceived(event));
     await Future.wait(job);
   }

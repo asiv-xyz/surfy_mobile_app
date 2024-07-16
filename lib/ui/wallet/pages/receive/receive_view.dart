@@ -57,7 +57,7 @@ class _ReceivePageState extends State<ReceivePage> implements ReceiveView {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Text('Receive'),
+        title: const Text('Receive'),
       ),
       body: Container(
         width: double.infinity,
@@ -132,7 +132,7 @@ class _ReceivePageState extends State<ReceivePage> implements ReceiveView {
                     ],
                   ),
                   const SizedBox(height: 10,),
-                  Container(
+                  SizedBox(
                     width: double.infinity,
                     height: 60,
                     child: Material(

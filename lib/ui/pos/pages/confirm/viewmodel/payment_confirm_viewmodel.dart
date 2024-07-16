@@ -51,18 +51,28 @@ class PaymentConfirmViewModel {
     this.view = view;
   }
 
-  Future<void> init(String storeId, double fiatAmount, CurrencyType currencyType) async {
+  Future<void> init(String storeId,
+    double fiatAmount,
+    CurrencyType currencyType, {
+    Token? defaultToken,
+    Blockchain? defaultBlockchain,
+  }) async {
     try {
       view.onLoading();
 
       observableUserCurrencyType.value = _settingsPreference.userCurrencyType.value;
-
       final merchant = await _getMerchantsUseCase.getSingle(storeId);
       observableMerchant.value = merchant;
-
       final arg = getSupportedTokenAndNetworkList();
       final userBalances = await _getWalletBalancesUseCase.getBalancesByDesc(arg.toList(), _settingsPreference.userCurrencyType.value);
-      await changePaymentMethod(userBalances[0].token, userBalances[0].blockchain, fiatAmount, currencyType);
+
+      if (defaultToken != null && defaultBlockchain != null) {
+        observableSelectedToken.value = defaultToken;
+        observableSelectedBlockchain.value = defaultBlockchain;
+        await changePaymentMethod(defaultToken, defaultBlockchain, fiatAmount, currencyType);
+      } else {
+        await changePaymentMethod(userBalances[0].token, userBalances[0].blockchain, fiatAmount, currencyType);
+      }
     } catch (e) {
       view.onError("$e");
     } finally {
@@ -112,44 +122,51 @@ class PaymentConfirmViewModel {
   Future<void> canPay(double targetFiat, CurrencyType merchantCurrencyType) async {
     final tokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(observableSelectedToken.value, merchantCurrencyType);
     final userBalance = await _getWalletBalancesUseCase.getBalance(observableSelectedToken.value, observableSelectedBlockchain.value, observableSenderWallet.value);
-    final fiat = cryptoToFiat(observableSelectedToken.value,
-        userBalance, tokenPrice?.price ?? 0, merchantCurrencyType);
-    observableCanPay.value = fiat > targetFiat;
+    final fiat = cryptoToFiat(observableSelectedToken.value, userBalance, tokenPrice?.price ?? 0, merchantCurrencyType);
+
+    final chainData = blockchains[observableSelectedBlockchain.value]!;
+    final gasToken = chainData.feeCoin;
+    final gasTokenPrice = await _getTokenPriceUseCase.getSingleTokenPrice(gasToken, merchantCurrencyType);
+    final gasFiat = cryptoToFiat(gasToken, observableGas.value, gasTokenPrice?.price ?? 0.0, merchantCurrencyType);
+
+    if (gasToken == observableSelectedToken.value) {
+      observableCanPay.value = fiat >= targetFiat + gasFiat;
+    } else {
+      final gasTokenBalance = await _getWalletBalancesUseCase.getBalance(gasToken, chainData.blockchain, observableSenderWallet.value);
+      if (fiat >= targetFiat && gasTokenBalance >= observableGas.value) {
+        observableCanPay.value = true;
+      } else {
+        observableCanPay.value = false;
+      }
+    }
   }
 
-  Future<void> processPayment(
-      String storeId,
-      double fiat,
-      CurrencyType paymentCurrencyType,
-      Token token,
+  Future<String> generateTransferJob(Token token,
       Blockchain blockchain,
       String sender,
       String receiver,
-      BigInt cryptoAmount) async {
-    try {
-      Vibration.vibrate(duration: 100);
-      view.onStartPayment();
-      final response = await _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, cryptoAmount);
-      await _saveTransactionUseCase.run(
-          type: TransactionType.payment,
-          transactionHash: response.transactionHash,
-          senderUserId: await _keyService.getKeyHash(),
-          senderAddress: sender,
-          receiverAddress: receiver,
-          amount: cryptoAmount,
-          token: token,
-          blockchain: blockchain,
-          storeId: storeId,
-          fiat: fiat,
-          currencyType: paymentCurrencyType,
-          tokenPrice: observableTokenPrice.value[_settingsPreference.userCurrencyType.value],
-          tokenPriceCurrencyType: _settingsPreference.userCurrencyType.value,
+      BigInt amount, {
+        double? fiat,
+        CurrencyType? currencyType,
+        String? memo,
+      }) {
+    return _sendP2pTokenUseCase.send(token, blockchain, sender, receiver, amount, memo).then((response) async {
+      _saveTransactionUseCase.run(
+        type: TransactionType.transfer,
+        transactionHash: response.transactionHash,
+        senderUserId: await _keyService.getKeyHash(),
+        senderAddress: sender,
+        receiverAddress: receiver,
+        amount: amount,
+        token: token,
+        blockchain: blockchain,
+        fiat: fiat,
+        currencyType: currencyType,
+        tokenPrice: observableTokenPrice.value[_settingsPreference.userCurrencyType.value],
+        tokenPriceCurrencyType: _settingsPreference.userCurrencyType.value,
       );
-      observableTransactionHash.value = response.transactionHash;
-    } catch (e) {
-      rethrow;
-    } finally {
-      view.onFinishPayment();
-    }
+
+      return response.transactionHash;
+    });
   }
 }

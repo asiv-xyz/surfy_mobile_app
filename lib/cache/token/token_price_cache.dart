@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 
@@ -55,6 +56,7 @@ class TokenPriceCache {
   Future<bool> needToUpdate(Token token, CurrencyType currencyType) async {
     final lastUpdatedTime = await _getUpdatedTime(token, currencyType);
     if (lastUpdatedTime == 0) {
+      logger.i('needToUpdate!');
       return true;
     }
 

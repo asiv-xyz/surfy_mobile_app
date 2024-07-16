@@ -9,4 +9,8 @@ class GetTransactionHistory {
   Future<List<Transaction>> get(String userId) async {
     return await _service.getTransactionsByUserId(userId);
   }
+
+  Future<List<Transaction>> getByReceiverAddresses(List<String> addressList) async {
+    return await _service.getTransactionByWalletAddress(addressList.join(','));
+  }
 }

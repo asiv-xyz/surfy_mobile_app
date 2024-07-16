@@ -54,6 +54,8 @@ class PaymentViewModel {
 
       final tokenPriceByMerchant = await _getTokenPriceUseCase.getSingleTokenPrice(userBalances[0].token, findCurrencyTypeByName(merchant?.currency ?? ""));
       observableTokenPriceByMerchantCurrency.value = tokenPriceByMerchant;
+
+      print('tokenPriceByMerchant: $tokenPriceByMerchant');
     } catch (e) {
       _view.onError("$e");
     } finally {

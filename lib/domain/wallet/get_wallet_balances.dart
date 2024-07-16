@@ -43,7 +43,7 @@ class GetWalletBalances {
     );
   }
 
-  Future<List<FiatBalance>> getBalancesByDesc(List<Pair<Token, Blockchain>> args, CurrencyType currency) async {
+  Future<List<FiatBalance>> getBalancesByDesc(List<Pair<Token, Blockchain>> args, CurrencyType currency, { bool containZeroBalance = false }) async {
     final job = args.map((pair) async {
       final address = await getWalletAddressUseCase.getAddress(pair.second);
       final balance = await getBalance(pair.first, pair.second, address);
@@ -64,6 +64,10 @@ class GetWalletBalances {
       }
     });
 
-    return balances;
+    if (containZeroBalance == false) {
+      return balances.where((b) => b.cryptoBalance != BigInt.zero).toList();
+    } else {
+      return balances;
+    }
   }
 }

@@ -114,12 +114,9 @@ class SettingsPage extends StatelessWidget {
                         child: InkWell(
                             onTap: () async {
                               final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
-                              print('canAuthenticateWithBiometrics: $canAuthenticateWithBiometrics');
                               final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
-                              print('canAuthenticate: $canAuthenticate');
                               if (canAuthenticate) {
                                 final List<BiometricType> availableBiometrics = await auth.getAvailableBiometrics();
-                                print('availableBiometrics: $availableBiometrics');
                                 if (availableBiometrics.contains(BiometricType.strong) || availableBiometrics.contains(BiometricType.face) || availableBiometrics.contains(BiometricType.fingerprint)) {
                                   try {
                                     final bool didAuthenticate = await auth.authenticate(
@@ -148,7 +145,6 @@ class SettingsPage extends StatelessWidget {
                                   }
                                 }
                               }
-
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,

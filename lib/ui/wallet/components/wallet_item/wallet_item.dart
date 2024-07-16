@@ -68,9 +68,10 @@ class _WalletItemState extends State<WalletItem> implements WalletItemView {
         onTap: () {
           final token = tokens[widget.token];
           if (token != null) {
-            checkAuthAndGo(context, "/wallet/${token.name}");
+            checkAuthAndGo(context, "/wallet/token/${token.name}");
           }
         },
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),

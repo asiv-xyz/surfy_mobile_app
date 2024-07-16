@@ -1,9 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:surfy_mobile_app/domain/token/model/user_token_data.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -19,21 +19,25 @@ import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
-
-class PaymentConfirmPageProps {
-  PaymentConfirmPageProps({required this.storeId, required this.receiveCurrency, required this.wantToReceiveAmount});
-
-  final CurrencyType receiveCurrency;
-  final double wantToReceiveAmount;
-  final String storeId;
-}
+import 'package:vibration/vibration.dart';
+import 'package:local_auth/error_codes.dart' as auth_error;
 
 class PaymentConfirmPage extends StatefulWidget {
-  const PaymentConfirmPage({super.key, required this.storeId, required this.receiveCurrency, required this.wantToReceiveAmount});
+  const PaymentConfirmPage({
+    super.key,
+    required this.storeId,
+    required this.receiveCurrency,
+    required this.wantToReceiveAmount,
+    this.defaultSelectedToken,
+    this.defaultSelectedBlockchain,
+  });
 
   final String storeId;
   final CurrencyType receiveCurrency;
   final double wantToReceiveAmount;
+
+  final Token? defaultSelectedToken;
+  final Blockchain? defaultSelectedBlockchain;
 
   @override
   State<StatefulWidget> createState() {
@@ -59,6 +63,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
   final RxBool _isLoading = false.obs;
   final RxBool _isSendProcessing = false.obs;
   final RxBool _isChangePaymentMethodLoading = false.obs;
+  final LocalAuthentication _auth = LocalAuthentication();
 
   @override
   void onCreate() {
@@ -109,7 +114,13 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
   void initState() {
     super.initState();
     _viewModel.setView(this);
-    _viewModel.init(widget.storeId, widget.wantToReceiveAmount, widget.receiveCurrency);
+    _viewModel.init(
+        widget.storeId,
+        widget.wantToReceiveAmount,
+        widget.receiveCurrency,
+        defaultToken: widget.defaultSelectedToken,
+        defaultBlockchain: widget.defaultSelectedBlockchain,
+    );
   }
 
   @override
@@ -180,12 +191,12 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                       onTap: () {
                                         if (mounted) {
                                           final props = SelectPaymentTokenPageProps(
-                                              onSelect: (Token token, Blockchain blockchain) async {
-                                                await _viewModel.changePaymentMethod(token, blockchain, widget.wantToReceiveAmount, widget.receiveCurrency);
-                                              },
-                                              receiveCurrency: _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd,
-                                              wantToReceiveAmount: widget.wantToReceiveAmount);
-                                          checkAuthAndPush(context, '/pos/select', extra: props);
+                                            onSelect: (Token token, Blockchain blockchain) async {
+                                              await _viewModel.changePaymentMethod(token, blockchain, widget.wantToReceiveAmount, widget.receiveCurrency);
+                                            },
+                                            receiveCurrency: _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd,
+                                            wantToReceiveAmount: widget.wantToReceiveAmount);
+                                          checkAuthAndPush(context, '/select', extra: props);
                                         }
                                       },
                                       child: Container(
@@ -353,27 +364,75 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                           if (_isSendProcessing.isFalse) {
                             return SwipeButton.expand(
                                 height: 60,
-                                onSwipe: () {
-                                  _viewModel.processPayment(
-                                      widget.storeId,
-                                      widget.wantToReceiveAmount,
-                                      widget.receiveCurrency,
-                                      _viewModel.observableSelectedToken.value,
-                                      _viewModel.observableSelectedBlockchain.value,
-                                      _viewModel.observableSenderWallet.value,
-                                      _viewModel.observableReceiverWallet.value,
-                                      _viewModel.observablePayCrypto.value
-                                  ).then((_) {
-                                    checkAuthAndGo(context, "/pos/check", extra: PaymentCompletePageProps(
-                                        storeName: widget.storeId,
-                                        fiatAmount: widget.wantToReceiveAmount,
-                                        currencyType: widget.receiveCurrency,
-                                        blockchain: _viewModel.observableSelectedBlockchain.value,
-                                        txHash: _viewModel.observableTransactionHash.value
-                                    ));
-                                  }).catchError((e) {
-                                    onError("$e");
-                                  });
+                                onSwipe: () async {
+                                  _isSendProcessing.value = true;
+                                  Vibration.vibrate(duration: 100);
+                                  final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
+                                  final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+                                  if (canAuthenticate) {
+                                    final List<BiometricType> availableBiometrics = await _auth.getAvailableBiometrics();
+                                    if (availableBiometrics.contains(BiometricType.strong) || availableBiometrics.contains(BiometricType.face) || availableBiometrics.contains(BiometricType.fingerprint)) {
+                                      try {
+                                        final bool didAuthenticate = await _auth.authenticate(
+                                            localizedReason: 'Please authenticate to pay',
+                                            options: const AuthenticationOptions(useErrorDialogs: false));
+                                        if (didAuthenticate) {
+                                          final job = _viewModel.generateTransferJob(
+                                            _viewModel.observableSelectedToken.value,
+                                            _viewModel.observableSelectedBlockchain.value,
+                                            _viewModel.observableSenderWallet.value,
+                                            _viewModel.observableReceiverWallet.value,
+                                            _viewModel.observablePayCrypto.value,
+                                            fiat: widget.wantToReceiveAmount,
+                                            currencyType: widget.receiveCurrency,
+                                            memo: 'SURFY Payment!'
+                                          );
+                                          checkAuthAndPush(context, "/check", extra: PaymentCompletePageProps(
+                                              storeName: _viewModel.observableMerchant.value?.storeName ?? "",
+                                              fiatAmount: widget.wantToReceiveAmount,
+                                              currencyType: widget.receiveCurrency,
+                                              token: _viewModel.observableSelectedToken.value,
+                                              blockchain: _viewModel.observableSelectedBlockchain.value,
+                                              senderAddress: _viewModel.observableSenderWallet.value,
+                                              sendingJob: job));
+                                          _isSendProcessing.value = false;
+                                        } else {
+                                          _isSendProcessing.value = false;
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text("You cancelled authorization", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                              backgroundColor: Colors.black,
+                                            ),
+                                          );
+                                        }
+
+                                      } on PlatformException catch (e) {
+                                        _isSendProcessing.value = false;
+                                        print("error: $e");
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                            backgroundColor: Colors.black,
+                                          ),
+                                        );
+                                        if (e.code == auth_error.notAvailable) {
+                                          // Add handling of no hardware here.
+                                        } else if (e.code == auth_error.notEnrolled) {
+                                          // ...
+                                        } else {
+                                          // ...
+                                        }
+                                      } catch (e) {
+                                        _isSendProcessing.value = false;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                            backgroundColor: Colors.black,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
                                 },
                                 enabled: _viewModel.observableCanPay.value,
                                 borderRadius: BorderRadius.circular(0),

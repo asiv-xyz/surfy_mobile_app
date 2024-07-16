@@ -60,12 +60,12 @@ class _PosQrPageState extends State<PosQrPage> implements PosQrView {
   @override
   void initState() {
     super.initState();
-    _viewModel.setView(this);
-    _viewModel.init(widget.storeId, widget.wantToReceiveAmount, widget.receivedCurrencyType);
-  }
+    _viewModel.setView(this);}
 
   @override
   Widget build(BuildContext context) {
+    _viewModel.init(widget.storeId, widget.wantToReceiveAmount, widget.receivedCurrencyType);
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
@@ -73,9 +73,9 @@ class _PosQrPageState extends State<PosQrPage> implements PosQrView {
       ),
       body: Obx(() {
         if (_isLoading.isTrue) {
-          return LoadingWidget(opacity: 0);
+          return const LoadingWidget(opacity: 0);
         } else {
-          return Container(
+          return SizedBox(
               width: double.infinity,
               height: double.infinity,
               child: Column(

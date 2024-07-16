@@ -15,7 +15,7 @@ class PosQrViewModel {
 
   Future<void> init(String storeId, double wantToReceiveAmount, CurrencyType receivedCurrencyType) async {
     _view.startLoading();
-    final result = await _qrService.getQRcode("https://store.surfy.network/pos/payment/$storeId/$wantToReceiveAmount/${receivedCurrencyType.name}");
+    final result = await _qrService.getQRcode("https://store.surfy.network/payment/store/$storeId/amount/$wantToReceiveAmount/currency/${receivedCurrencyType.name}");
     observableQrData.value = result;
     _view.finishLoading();
   }

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
+import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/common/error/error_page.dart';
@@ -23,6 +24,7 @@ import 'package:surfy_mobile_app/ui/settings/private_key_view.dart';
 import 'package:surfy_mobile_app/ui/settings/settings_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/direct_send_view.dart';
+import 'package:surfy_mobile_app/ui/wallet/pages/memo/memo_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/receive/receive_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/sending_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/detail/wallet_detail_view.dart';
@@ -47,11 +49,19 @@ void checkAuthAndNavigate(BuildContext context, StatefulNavigationShell navigati
 void checkAuthAndGo(BuildContext context, String path, {Object? extra}) {
   final router = GoRouter.of(context);
   Web3AuthFlutter.getUserInfo().then((userInfo) {
-    router.go(path);
+    router.go(path, extra: extra);
   }).catchError((e) {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('Session out. Please login again!')));
     router.go('/login');
+  });
+}
+
+void checkAuthAndGoWithGoRouter(GoRouter goRouter, String path, {Object? extra}) {
+  Web3AuthFlutter.getUserInfo().then((userInfo) {
+    goRouter.go(path, extra: extra);
+  }).catchError((e) {
+    goRouter.go('/login');
   });
 }
 
@@ -154,105 +164,204 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, String initialLoca
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                  path: '/wallet',
+                  path: '/',
                   builder: (context, state) => const WalletPage(),
                   routes: [
                     GoRoute(
-                        path: ':token',
-                        builder: (context, state) {
-                          final token = state.pathParameters["token"];
-                          if (token == null) {
-                            return Container();
-                          }
-                          return WalletDetailPage(
-                              token: findTokenByName(token)
-                          );
-                        },
-                        routes: [
-                          GoRoute(
-                              path: ':blockchain',
-                              builder: (context, state) {
-                                final token = state.pathParameters['token'];
-                                final blockchain = state.pathParameters['blockchain'];
-                                return SingleBalancePage(
-                                    token: findTokenByName(token ?? ""),
-                                    blockchain: findBlockchainByName(blockchain ?? "")
-                                );
-                              },
-                              routes: [
-                                GoRoute(
-                                    path: 'receive',
-                                    builder: (context, state) {
-                                      final token = state.pathParameters['token'];
-                                      final blockchain = state.pathParameters['blockchain'];
-                                      return ReceivePage(
-                                          token: findTokenByName(token ?? ""),
-                                          blockchain: findBlockchainByName(blockchain ?? "")
-                                      );
-                                    }
-                                ),
-                                GoRoute(
-                                  path: 'send',
+                      path: 'wallet',
+                      builder: (context, state) => const WalletPage(),
+                      routes: [
+                        GoRoute(
+                            path: 'token/:token',
+                            builder: (context, state) {
+                              final token = state.pathParameters["token"];
+                              if (token == null) {
+                                return Container();
+                              }
+                              return WalletDetailPage(
+                                  token: findTokenByName(token)
+                              );
+                            },
+                            routes: [
+                              GoRoute(
+                                  path: 'blockchain/:blockchain',
                                   builder: (context, state) {
                                     final token = state.pathParameters['token'];
                                     final blockchain = state.pathParameters['blockchain'];
-                                    return SendPage(
+                                    return SingleBalancePage(
                                         token: findTokenByName(token ?? ""),
                                         blockchain: findBlockchainByName(blockchain ?? "")
                                     );
                                   },
                                   routes: [
                                     GoRoute(
-                                        path: ':address/:amount',
+                                        path: 'receive',
                                         builder: (context, state) {
                                           final token = state.pathParameters['token'];
                                           final blockchain = state.pathParameters['blockchain'];
-                                          final address = state.pathParameters['address'] ?? "";
-                                          final amount = state.pathParameters['amount']?.toDouble() ?? 0.0;
-                                          print('go to the send page!, $token, $blockchain, $address, $amount');
-                                          return SendPage(
+                                          return ReceivePage(
                                               token: findTokenByName(token ?? ""),
-                                              blockchain: findBlockchainByName(blockchain ?? ""),
-                                              defaultReceiverAddress: address,
-                                              defaultAmount: amount
+                                              blockchain: findBlockchainByName(blockchain ?? "")
                                           );
                                         }
                                     ),
                                     GoRoute(
-                                        path: 'sendConfirm',
+                                        path: 'send',
                                         builder: (context, state) {
-                                          final SendingConfirmViewProps extra = state.extra as SendingConfirmViewProps;
-                                          return SendingConfirmPage(
-                                            token: extra.token,
-                                            blockchain: extra.blockchain,
-                                            sender: extra.sender,
-                                            receiver: extra.receiver,
-                                            amount: extra.amount,
-                                            fiat: extra.fiat,
-                                            currencyType: extra.currencyType,
+                                          final token = state.pathParameters['token'];
+                                          final blockchain = state.pathParameters['blockchain'];
+                                          String? defaultReceiverAddress;
+                                          if (state.extra != null && state.extra is String) {
+                                            defaultReceiverAddress = state.extra as String;
+                                          }
+                                          return SendPage(
+                                            token: findTokenByName(token ?? ""),
+                                            blockchain: findBlockchainByName(blockchain ?? ""),
+                                            defaultReceiverAddress: defaultReceiverAddress,
                                           );
                                         },
-                                    ),
-                                    GoRoute(
-                                        path: 'check',
-                                        builder: (context, state) {
-                                          final CheckViewProps extra = state.extra as CheckViewProps;
-                                          return CheckView(
-                                              token: extra.token,
-                                              blockchain: extra.blockchain,
-                                              transactionHash: extra.transactionHash,
-                                              receiver: extra.receiver,
-                                              crypto: extra.crypto,
-                                              fiat: extra.fiat,
-                                              currency: extra.currency
-                                          );
-                                        }
-                                    ),
+                                        routes: [
+                                          GoRoute(
+                                              path: 'amount/:amount',
+                                              builder: (context, state) {
+                                                final token = state.pathParameters['token'];
+                                                final blockchain = state.pathParameters['blockchain'];
+                                                final amount = state.pathParameters['amount'];
+                                                String? defaultReceiverAddress;
+                                                if (state.extra != null && state.extra is String) {
+                                                  defaultReceiverAddress = state.extra as String;
+                                                }
+                                                return MemoPage(
+                                                  token: findTokenByName(token ?? ""),
+                                                  blockchain: findBlockchainByName(blockchain ?? ""),
+                                                  amount: BigInt.parse(amount ?? "0"),
+                                                  defaultReceiverAddress: defaultReceiverAddress,
+                                                );
+                                              },
+                                              routes: [
+                                                GoRoute(
+                                                    path: 'address/:address',
+                                                    builder: (context, state) {
+                                                      final token = state.pathParameters['token'];
+                                                      final blockchain = state.pathParameters['blockchain'];
+                                                      final amount  = state.pathParameters['amount'];
+                                                      final address = state.pathParameters['address'];
+                                                      return SendingConfirmPage(
+                                                        token: findTokenByName(token ?? ""),
+                                                        blockchain: findBlockchainByName(blockchain ?? ""),
+                                                        receiver: address ?? "",
+                                                        amount: BigInt.parse(amount ?? '0'),
+                                                      );
+                                                    }
+                                                ),
+                                                GoRoute(
+                                                    path: 'address/:address/memo/:memo',
+                                                    builder: (context, state) {
+                                                      final token = state.pathParameters['token'];
+                                                      final blockchain = state.pathParameters['blockchain'];
+                                                      final amount  = state.pathParameters['amount'];
+                                                      final address = state.pathParameters['address'];
+                                                      final memo = state.pathParameters['memo'];
+                                                      return SendingConfirmPage(
+                                                        token: findTokenByName(token ?? ""),
+                                                        blockchain: findBlockchainByName(blockchain ?? ""),
+                                                        receiver: address ?? "",
+                                                        amount: BigInt.parse(amount ?? '0'),
+                                                        memo: memo,
+                                                      );
+                                                    }
+                                                )
+                                              ]
+                                          ),
+                                          GoRoute(
+                                              path: 'check',
+                                              builder: (context, state) {
+                                                final CheckViewProps extra = state.extra as CheckViewProps;
+                                                return CheckView(
+                                                  token: extra.token,
+                                                  blockchain: extra.blockchain,
+                                                  sender: extra.sender,
+                                                  receiver: extra.receiver,
+                                                  crypto: extra.crypto,
+                                                  fiat: extra.fiat,
+                                                  currency: extra.currency,
+                                                  sendingJob: extra.sendingJob,
+                                                );
+                                              }
+                                          ),
+                                        ]
+                                    )
                                   ]
-                                )
-                              ]
-                          ),
+                              ),
+                            ]
+                        ),
+                      ]
+                    ),
+                    GoRoute(
+                        path: 'payment/store/:storeId',
+                        builder: (context, state) {
+                          final storeId = state.pathParameters['storeId'];
+                          if (storeId == null) {
+                            throw Exception('No storeId');
+                          }
+                          return PaymentPage(
+                              storeId: storeId
+                          );
+                        },
+                        routes: [
+                          GoRoute(
+                            path: 'amount/:amount/currency/:currency',
+                            builder: (context, state) {
+                              final storeId = state.pathParameters['storeId'];
+                              final amount = state.pathParameters['amount'];
+                              final currency = state.pathParameters['currency'];
+                              if (storeId == null || amount == null || currency == null) {
+                                throw Exception('Path parameters are not set');
+                              }
+
+                              final extraMap = state.extra as Map<String, dynamic>?;
+                              Token? token;
+                              Blockchain? blockchain;
+                              if (extraMap != null) {
+                                token = extraMap['defaultToken'] as Token;
+                                blockchain = extraMap['defaultBlockchain'] as Blockchain;
+                              }
+                              return PaymentConfirmPage(
+                                storeId: storeId,
+                                receiveCurrency: findCurrencyTypeByName(currency),
+                                wantToReceiveAmount: amount.toDouble(),
+                                defaultSelectedToken: token,
+                                defaultSelectedBlockchain: blockchain,
+                              );
+                            }
+                          )
                         ]
+                    ),
+                    GoRoute(
+                        path: 'select',
+                        builder: (context, state) {
+                          final props = state.extra as SelectPaymentTokenPageProps;
+                          return SelectPaymentTokenPage(
+                            onSelect: props.onSelect,
+                            receiveCurrency: props.receiveCurrency,
+                            wantToReceiveAmount: props.wantToReceiveAmount,
+                          );
+                        }
+                    ),
+                    GoRoute(
+                        path: 'check',
+                        builder: (context, state) {
+                          final extra = state.extra as PaymentCompletePageProps;
+                          return PaymentCompletePage(
+                            storeName: extra.storeName,
+                            fiatAmount: extra.fiatAmount,
+                            currencyType: extra.currencyType,
+                            token: extra.token,
+                            blockchain: extra.blockchain,
+                            sendingJob: extra.sendingJob,
+                            senderAddress: extra.senderAddress,
+                          );
+                        }
                     ),
                     GoRoute(
                         path: 'send',
@@ -325,57 +434,6 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, String initialLoca
                         );
                       }
                   ),
-                  GoRoute(
-                      path: 'payment',
-                      builder: (context, state) {
-                        final extra = state.extra as PaymentConfirmPageProps;
-                        return PaymentConfirmPage(
-                            storeId: extra.storeId,
-                            receiveCurrency: extra.receiveCurrency,
-                            wantToReceiveAmount: extra.wantToReceiveAmount);
-                      },
-                      routes: [
-                        GoRoute(
-                          path: ':storeId/:amount/:currency',
-                          builder: (context, state) {
-                            final storeId = state.pathParameters['storeId'];
-                            final amount = state.pathParameters['amount'];
-                            final currency = state.pathParameters['currency'];
-                            if (storeId == null || amount == null || currency == null) {
-                              throw Exception('Path parameters are not set');
-                            }
-                            return PaymentConfirmPage(
-                                storeId: storeId,
-                                receiveCurrency: findCurrencyTypeByName(currency),
-                                wantToReceiveAmount: amount.toDouble());
-                          }
-                        ),
-                      ]
-                  ),
-                  GoRoute(
-                      path: 'select',
-                      builder: (context, state) {
-                        final props = state.extra as SelectPaymentTokenPageProps;
-                        return SelectPaymentTokenPage(
-                          onSelect: props.onSelect,
-                          receiveCurrency: props.receiveCurrency,
-                          wantToReceiveAmount: props.wantToReceiveAmount,
-                        );
-                      }
-                  ),
-                  GoRoute(
-                    path: 'check',
-                    builder: (context, state) {
-                      final extra = state.extra as PaymentCompletePageProps;
-                      return PaymentCompletePage(
-                          storeName: extra.storeName,
-                          fiatAmount: extra.fiatAmount,
-                          currencyType: extra.currencyType,
-                          blockchain: extra.blockchain,
-                          txHash: extra.txHash,
-                      );
-                    }
-                  )
                 ]
             ),
           ]),
@@ -389,22 +447,8 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, String initialLoca
               builder: (context, state) => const PrivateKeyPage(),
             )
           ]),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(path: '/payment', builder: (context, state) {
-              return PaymentPage(storeId: 'none');
-            }, routes: [
-              GoRoute(
-                  path: ':storeId',
-                  builder: (context, state) {
-                    final storeId = state.pathParameters['storeId'];
-                    return PaymentPage(storeId: storeId ?? 'none');
-                  }
-              ),
-            ]),
-          ]),
           StatefulShellBranch(
               routes: <RouteBase>[
-
                 GoRoute(
                   path: '/error',
                   builder: (context, state) {

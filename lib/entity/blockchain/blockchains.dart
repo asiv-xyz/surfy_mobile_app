@@ -1,3 +1,4 @@
+import 'package:dartx/dartx.dart';
 import 'package:surfy_mobile_app/utils/rpc.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
@@ -42,8 +43,18 @@ Blockchain findBlockchainByName(String name) {
   return list.first;
 }
 
+BlockchainData findBlockchainByChainId(int chainId) {
+  final list = blockchains.filter((b) => b.value.chainId == chainId);
+  if (list.isEmpty) {
+    throw Exception('No blockchain for id: $chainId');
+  }
+
+  return list.values.first;
+}
+
 class BlockchainData {
   const BlockchainData({
+    required this.blockchain,
     required this.name,
     required this.category,
     required this.isTestnet,
@@ -56,6 +67,7 @@ class BlockchainData {
     required this.chainId,
   });
 
+  final Blockchain blockchain;
   final int? chainId;
   final String name;
   final String icon;
@@ -71,25 +83,27 @@ class BlockchainData {
 final Map<Blockchain, BlockchainData> blockchains = {
   // ETHEREUM
   Blockchain.ethereum: BlockchainData(
+      blockchain: Blockchain.ethereum,
       chainId: 1,
       name: 'Ethereum',
       category: 'evm',
       icon: "assets/images/tokens/ic_ethereum.png",
       isTestnet: false,
       rpc: RPC.ethereumMainnet,
-      websocket: null,
+      websocket: WebSocket.ethereumMainnet,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://etherscan.io/tx/$tx",
   ),
   Blockchain.ethereum_sepolia: BlockchainData(
+      blockchain: Blockchain.ethereum_sepolia,
       chainId: 11155111,
       name: 'Ethereum Sepolia',
       category: 'evm',
       icon: "assets/images/tokens/ic_ethereum.png",
       isTestnet: true,
       rpc: RPC.ethereumSepolia,
-      websocket: null,
+      websocket: WebSocket.ethereumSepolia,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://sepolia.etherscan.io/tx/$tx",
@@ -97,25 +111,27 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // OPTIMISM
   Blockchain.optimism: BlockchainData(
+      blockchain: Blockchain.optimism,
       chainId: 10,
       name: 'Optimism',
       category: 'evm',
       icon: "assets/images/tokens/ic_optimism.png",
       isTestnet: false,
       rpc: RPC.optimismMainnet,
-      websocket: null,
+      websocket: WebSocket.optimismMainnet,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://optimistic.etherscan.io/tx/$tx",
   ),
   Blockchain.optimism_sepolia: BlockchainData(
+      blockchain: Blockchain.optimism_sepolia,
       chainId: 11155420,
       name: 'Optimism Sepolia',
       category: 'evm',
       isTestnet: true,
       icon: "assets/images/tokens/ic_optimism.png",
       rpc: RPC.optimismSepolia,
-      websocket: null,
+      websocket: WebSocket.optimismSepolia,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://sepolia-optimistic.etherscan.io/tx/$tx"
@@ -123,25 +139,27 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // ARBITRUM
   Blockchain.arbitrum: BlockchainData(
+      blockchain: Blockchain.arbitrum,
       chainId: 42161,
       name: 'Arbitrum Sepolia',
       category: 'evm',
       icon: "assets/images/tokens/ic_arbitrum.png",
       isTestnet: false,
       rpc: RPC.arbitrumMainnet,
-      websocket: null,
+      websocket: WebSocket.arbitrumMainnet,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://arbiscan.io/tx/$tx"
   ),
   Blockchain.arbitrum_sepolia: BlockchainData(
+      blockchain: Blockchain.arbitrum_sepolia,
       chainId: 421614,
       name: 'Arbitrum',
       category: 'evm',
       icon: "assets/images/tokens/ic_arbitrum.png",
       isTestnet: false,
       rpc: RPC.arbitrumSepolia,
-      websocket: null,
+      websocket: WebSocket.arbitrumSepolia,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://sepolia.arbiscan.io/tx/$tx"
@@ -149,25 +167,27 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // BASE
   Blockchain.base: BlockchainData(
+      blockchain: Blockchain.base,
       chainId: 8453,
       name: 'Base',
       category: 'evm',
       icon: "assets/images/tokens/ic_base.png",
       isTestnet: false,
       rpc: RPC.baseMainnet,
-      websocket: null,
+      websocket: WebSocket.baseMainnet,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://basescan.org/tx/$tx"
   ),
   Blockchain.base_sepolia: BlockchainData(
+      blockchain: Blockchain.base_sepolia,
       chainId: 84532,
       name: 'Base Sepolia',
       category: 'evm',
       icon: "assets/images/tokens/ic_base.png",
       isTestnet: true,
       rpc: RPC.baseSepolia,
-      websocket: null,
+      websocket: WebSocket.baseSepolia,
       curve: EllipticCurve.SECP256K1,
       feeCoin: Token.ETHEREUM,
       getScanUrl: (String tx) => "https://sepolia.basescan.org/tx/$tx"
@@ -175,6 +195,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // SOLANA
   Blockchain.solana: BlockchainData(
+      blockchain: Blockchain.solana,
       chainId: null,
       name: 'Solana',
       category: 'solana',
@@ -187,6 +208,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
       getScanUrl: (String tx) => "https://solscan.io/tx/$tx"
   ),
   Blockchain.solana_devnet: BlockchainData(
+      blockchain: Blockchain.solana_devnet,
       chainId: null,
       name: 'Solana Devnet',
       category: 'solana',
@@ -201,6 +223,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // BSC
   Blockchain.bsc: BlockchainData(
+      blockchain: Blockchain.bsc,
       chainId: 56,
       name: 'Binance Smart Chain',
       category: 'evm',
@@ -216,6 +239,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // OP_BNB
   Blockchain.opbnb: BlockchainData(
+    blockchain: Blockchain.opbnb,
     chainId: 204,
     name: 'opBNB',
     category: 'evm',
@@ -231,6 +255,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // TRON
   Blockchain.tron: BlockchainData(
+      blockchain: Blockchain.tron,
       chainId: null,
       name: 'Tron',
       category: 'tron',
@@ -245,6 +270,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // XRPL
   Blockchain.xrpl: BlockchainData(
+    blockchain: Blockchain.xrpl,
     chainId: null,
     name: 'XRPL',
     category: 'xrpl',
@@ -259,6 +285,7 @@ final Map<Blockchain, BlockchainData> blockchains = {
 
   // DOGECHAIN
   Blockchain.dogechain: BlockchainData(
+    blockchain: Blockchain.dogechain,
     chainId: null,
     name: 'DogeChain',
     category: 'dogechain',

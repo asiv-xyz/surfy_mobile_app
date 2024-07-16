@@ -1,10 +1,12 @@
 
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/cache/contact/contact_cache.dart';
 import 'package:surfy_mobile_app/cache/token/token_price_cache.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/common/blockchain_provider.dart';
 import 'package:surfy_mobile_app/common/token_provider.dart';
+import 'package:surfy_mobile_app/domain/contact/recent_sent_contacts.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
@@ -17,6 +19,7 @@ import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_balances.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
+import 'package:surfy_mobile_app/repository/contact/contact_repository.dart';
 import 'package:surfy_mobile_app/repository/merchant/merchant_repository.dart';
 import 'package:surfy_mobile_app/repository/token/token_price_repository.dart';
 import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.dart';
@@ -95,4 +98,9 @@ void buildDependencies() {
 
   // Onboarding
   final Onboarding onboardingUseCase = Get.put(Onboarding());
+
+  // Contact
+  final ContactCache contactCache = Get.put(ContactCache());
+  final ContactRepository contactRepository = Get.put(ContactRepository(cache: contactCache));
+  final RecentSentContacts getRecentSentContacts = Get.put(RecentSentContacts(repository: contactRepository));
 }

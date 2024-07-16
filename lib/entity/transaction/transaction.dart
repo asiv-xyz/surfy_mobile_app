@@ -5,6 +5,7 @@ import 'package:surfy_mobile_app/entity/token/token.dart';
 
 enum TransactionType {
   transfer,
+  receive,
   payment,
 }
 
@@ -14,6 +15,8 @@ TransactionType _getType(String type) {
       return TransactionType.transfer;
     case "payment":
       return TransactionType.payment;
+    case "receive":
+      return TransactionType.receive;
     default:
       throw Exception();
   }
@@ -60,6 +63,27 @@ class Transaction {
     return Transaction(
         id: json["id"],
         type: _getType(json["type"]),
+        transactionHash: json["transactionHash"],
+        sender: json["sender"],
+        receiver: json["receiver"],
+        amount: BigInt.parse(json["amount"]),
+        senderAddress: json["senderAddress"],
+        receiverAddress: json["receiverAddress"],
+        token: findTokenByName(json["token"]),
+        blockchain: findBlockchainByName(json["blockchain"]),
+        createdAt: DateTime.parse(json["createdAt"]),
+        storeId: json["storeId"],
+        fiat: json["fiat"]?.toDouble(),
+        currencyType: json["currencyType"] == null ? null : findCurrencyTypeByName(json["currencyType"]),
+        tokenPrice: json["tokenPrice"]?.toDouble(),
+        tokenPriceCurrencyType: json["tokenPriceCurrencyType"] == null ? null : findCurrencyTypeByName(json["tokenPriceCurrencyType"])
+    );
+  }
+
+  factory Transaction.fromJsonByReceiver(Map<String, dynamic> json) {
+    return Transaction(
+        id: json["id"],
+        type: TransactionType.receive,
         transactionHash: json["transactionHash"],
         sender: json["sender"],
         receiver: json["receiver"],

@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/receive/receive_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
+import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
+import 'package:surfy_mobile_app/platform/deeplink.dart';
 
 class ReceiveViewModel {
 
@@ -24,24 +28,23 @@ class ReceiveViewModel {
 
   Future<void> init(Token token, Blockchain blockchain) async {
     _view.onQRLoading();
-
     observableSelectedToken.value = token;
     observableSelectedBlockchain.value = blockchain;
     observableUserAddress.value = await _getWalletAddressUseCase.getAddress(blockchain);
-
-    // TODO : fix it!!!
-    final qr = await _qrService.getQRcode("surfy://com.riverbank.surfy/wallet/${observableSelectedToken.value?.name.toLowerCase()}/${observableSelectedBlockchain.value?.name.toLowerCase()}/send/${observableUserAddress.value}/${observableAmount.value}");
-    observableQrData.value = qr;
-
+    observableQrData.value = await _qrService.getQRcode(DeepLink.createDeepLink(blockchain, token, observableUserAddress.value));
+    print("qr: ${observableQrData.value}");
     _view.finishQRLoading();
   }
 
   Future<void> refreshQR() async {
     _view.onQRLoading();
-
-    // TODO : fix it!!!
-    final qr = await _qrService.getQRcode("surfy://com.riverbank.surfy/wallet/${observableSelectedToken.value?.name.toLowerCase()}/${observableSelectedBlockchain.value?.name.toLowerCase()}/send/${observableUserAddress.value}/${observableAmount.value}");
-    observableQrData.value = qr;
+    final amount = cryptoDecimalToBigInt(tokens[observableSelectedToken.value]!, observableAmount.value);
+    observableQrData.value = await _qrService.getQRcode(DeepLink.createDeepLink(
+        observableSelectedBlockchain.value!,
+        observableSelectedToken.value!,
+        observableUserAddress.value,
+        amount: amount));
+    print("qr: ${observableQrData.value}");
     _view.finishQRLoading();
   }
 }

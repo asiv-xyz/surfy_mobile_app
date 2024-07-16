@@ -7,7 +7,6 @@ import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
-import 'package:surfy_mobile_app/ui/wallet/pages/confirm/sending_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/send/viewmodel/send_viewmodel.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
@@ -110,19 +109,15 @@ class _SendPageState extends State<SendPage> implements SendView {
                   fiat = _viewModel.observableInputData.value.toDouble();
                 } else {
                   amount = cryptoDecimalToBigInt(tokens[widget.token]!, _viewModel.observableInputData.value.toDouble());
-                  // fiat = _calculator.cryptoAmountToFiatV2(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
                   fiat = decimalCryptoAmountToFiat(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value);
                 }
-
-                checkAuthAndPush(context, '/wallet/${widget.token.name}/${widget.blockchain.name}/send/sendConfirm', extra: SendingConfirmViewProps(
-                  token: widget.token,
-                  blockchain: widget.blockchain,
-                  sender: _viewModel.observableAddress.value,
-                  receiver: _viewModel.observableReceiverAddress.value,
-                  amount: amount,
-                  fiat: fiat,
-                  currencyType: _preference.userCurrencyType.value,
-                ));
+                if (widget.defaultReceiverAddress != null) {
+                  checkAuthAndPush(context,
+                      "/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send/amount/$amount",
+                      extra: widget.defaultReceiverAddress);
+                } else {
+                  checkAuthAndPush(context, "/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send/amount/$amount");
+                }
               }
             },
             inputAmount: _viewModel.observableInputData,
@@ -204,43 +199,6 @@ class _SendPageState extends State<SendPage> implements SendView {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     margin: const EdgeInsets.symmetric(vertical: 5),
                     child: NetworkBadge(blockchain: widget.blockchain)
-                ),
-                Container(
-                    margin: const EdgeInsets.symmetric(vertical: 5),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(child: TextField(
-                          cursorColor: SurfyColor.darkGrey,
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                              label: Text('Wallet Address', style: Theme.of(context).textTheme.labelLarge),
-                              focusColor: SurfyColor.blue,
-                              hoverColor: SurfyColor.blue,
-                              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: SurfyColor.blue), borderRadius: BorderRadius.all(Radius.circular(10)))
-                          ),
-                          style: Theme.of(context).textTheme.labelLarge,
-                          controller: _textController,
-                        )),
-                        const SizedBox(width: 10),
-                        Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                                child: IconButton(
-                                  onPressed: () {
-
-                                  },
-                                  icon: Icon(Icons.qr_code_2_outlined, size: 30),
-                                )
-                            )
-                        )
-                      ],
-                    )
                 ),
                 Divider(color: Theme.of(context).dividerColor),
               ],

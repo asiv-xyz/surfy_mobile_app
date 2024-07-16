@@ -13,6 +13,7 @@ class Onboarding {
     } on NoUserException catch (e) {
       await _userService.postUser(userHash, userName, sso);
     } catch (e) {
+      print('login error: $e');
       rethrow;
     }
   }

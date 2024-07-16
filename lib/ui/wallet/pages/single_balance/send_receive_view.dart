@@ -1,6 +1,7 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -141,6 +142,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                             ),
                             onPressed: () {
                               Clipboard.setData(ClipboardData(text: _viewModel.observableAddress.value));
+                              Fluttertoast.showToast(msg: 'Copied address!', gravity: ToastGravity.CENTER);
                             },
                             child: Center(
                                 child: Text('Copy', style: Theme.of(context).textTheme.labelMedium,)
@@ -167,7 +169,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                                 InkWell(
                                   onTap: () {
                                     if (mounted) {
-                                      checkAuthAndPush(context, '/wallet/${widget.token.name}/${widget.blockchain.name}/send');
+                                      checkAuthAndPush(context, '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send');
                                     }
                                   },
                                   child: Container(
@@ -190,7 +192,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                                 InkWell(
                                   onTap: () {
                                     if (mounted) {
-                                      checkAuthAndPush(context, '/wallet/${widget.token.name}/${widget.blockchain.name}/receive');
+                                      checkAuthAndPush(context, '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/receive');
                                     }
                                   },
                                   child: Container(

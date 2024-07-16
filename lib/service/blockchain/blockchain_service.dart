@@ -14,6 +14,7 @@ class BlockchainService {
         Blockchain.base: SendEthereumHandler(keyService: keyService),
         Blockchain.base_sepolia: SendEthereumHandler(keyService: keyService),
       },
+
       Token.USDC: {
         Blockchain.ethereum: SendUsdcHandler(
           erc20Handler: SendErc20Handler(keyService: keyService, token: Token.USDC),
@@ -40,13 +41,16 @@ class BlockchainService {
           splHandler: SendSplHandler(token: Token.USDC, keyService: keyService),
         )
       },
+
       Token.DEGEN: {
         Blockchain.base: SendErc20Handler(keyService: keyService, token: Token.DEGEN)
       },
+
       Token.USDT: {
         Blockchain.ethereum: SendErc20Handler(keyService: keyService, token: Token.USDT),
         Blockchain.tron: SendTrcHandler(keyService: keyService, token: Token.USDT)
       },
+
       Token.SOLANA: {
         Blockchain.solana: SendSolanaHandler(keyService: keyService),
         Blockchain.solana_devnet: SendSolanaHandler(keyService: keyService)
@@ -78,14 +82,14 @@ class BlockchainService {
   final KeyService keyService;
   late final Map<Token, Map<Blockchain, SendTokenHandler>> sendHandlers;
 
-  Future<SendTokenResponse> sendToken(Token token, Blockchain blockchain, String to, BigInt amount) async {
+  Future<SendTokenResponse> sendToken(Token token, Blockchain blockchain, String to, BigInt amount, String? memo) async {
     try {
       final handler = sendHandlers[token]?[blockchain];
       if (handler == null) {
         throw Exception('No valid handler for blockchain=$blockchain, token=$token');
       }
 
-      return await handler.send(blockchain, to, amount);
+      return await handler.send(blockchain, to, amount, memo);
     } catch (e) {
       logger.e("send error: $e");
       rethrow;
@@ -100,8 +104,15 @@ class BlockchainService {
       }
       return await handler.estimateFee(blockchain, to, amount);
     } catch (e) {
-      logger.e("estimateGas error: $e");
       rethrow;
     }
+  }
+
+  Stream subscribeTransaction(Token token, Blockchain blockchain, String transactionHash) {
+    final SendTokenHandler? handler = sendHandlers[token]?[blockchain];
+    if (handler == null) {
+      throw Exception('No valid handler for blockchain=$blockchain, token=$token');
+    }
+    return handler.subscribeTransaction(blockchain, transactionHash);
   }
 }

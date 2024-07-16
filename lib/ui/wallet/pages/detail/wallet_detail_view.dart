@@ -124,7 +124,7 @@ class _WalletDetailPageState extends State<WalletDetailPage> implements WalletDe
                     final address = _viewModel.addresses.value[item.blockchain] ?? "";
                     return InkWell(
                         onTap: () {
-                          checkAuthAndPush(context, '/wallet/${item.token.name}/${item.blockchain.name}');
+                          checkAuthAndPush(context, '/wallet/token/${item.token.name}/blockchain/${item.blockchain.name}');
                         },
                         child: Container(
                             width: double.infinity,

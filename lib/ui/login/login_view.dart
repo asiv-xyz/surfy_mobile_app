@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/login/viewmodel/login_viewmodel.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
-import 'package:web3auth_flutter/output.dart';
-import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
@@ -114,13 +110,19 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                           MaterialButton(
                               padding: EdgeInsets.zero,
                               onPressed: () async {
-                                _viewModel.processLogin(LoginParams(
-                                  loginProvider: Provider.google,
-                                ), () {
-                                  if (mounted) {
-                                    checkAuthAndGo(context, "/wallet");
-                                  }
-                                });
+                                try {
+                                  _viewModel.processLogin(LoginParams(
+                                    loginProvider: Provider.google,
+                                  ), () {
+                                    if (mounted) {
+                                      checkAuthAndGo(context, "/wallet");
+                                    }
+                                  });
+                                } catch (e) {
+                                  onError('$e');
+                                }
+
+                                print('???');
                               },
                               child: Container(
                                   width: double.infinity,
@@ -148,47 +150,51 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                                         ],
                                       )))),
                           const SizedBox(height: 20,),
+                          // MaterialButton(
+                          //     padding: EdgeInsets.zero,
+                          //     onPressed: () async {
+                          //       await _viewModel.processLogin(LoginParams(loginProvider: Provider.twitter), () {
+                          //         if (mounted) {
+                          //           context.go('/wallet');
+                          //         }
+                          //       });
+                          //     },
+                          //     child: Container(
+                          //         width: double.infinity,
+                          //         padding: const EdgeInsets.symmetric(vertical: 15),
+                          //         decoration: BoxDecoration(
+                          //           borderRadius: BorderRadius.circular(10.0),
+                          //           color: Colors.black,
+                          //         ),
+                          //         child: Center(
+                          //             child: Row(
+                          //               mainAxisAlignment: MainAxisAlignment.center,
+                          //               children: [
+                          //                 const Icon(Icons.discord_outlined, size: 20, color: SurfyColor.white,),
+                          //                 const SizedBox(width: 10),
+                          //                 Text('Sign In with Discord',
+                          //                     style: GoogleFonts.sora(
+                          //                         textStyle: const TextStyle(
+                          //                             color: Colors.white,
+                          //                             fontSize: 20,
+                          //                             fontWeight: FontWeight.bold)))
+                          //               ],
+                          //             )))),
+                          // const SizedBox(height: 20,),
                           MaterialButton(
                               padding: EdgeInsets.zero,
                               onPressed: () async {
-                                await _viewModel.processLogin(LoginParams(loginProvider: Provider.discord), () {
-                                  if (mounted) {
-                                    context.go('/wallet');
-                                  }
-                                });
-                              },
-                              child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 15),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    color: Colors.black,
-                                  ),
-                                  child: Center(
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.discord_outlined, size: 20, color: SurfyColor.white,),
-                                          const SizedBox(width: 10),
-                                          Text('Sign In with Discord',
-                                              style: GoogleFonts.sora(
-                                                  textStyle: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 20,
-                                                      fontWeight: FontWeight.bold)))
-                                        ],
-                                      )))),
-                          const SizedBox(height: 20,),
-                          MaterialButton(
-                              padding: EdgeInsets.zero,
-                              onPressed: () async {
-                                _viewModel.processLogin(LoginParams(
-                                    loginProvider: Provider.farcaster
-                                ), () {
-                                  if (mounted) {
-                                    context.go('/wallet');
-                                  }
-                                });
+                                try {
+                                  _viewModel.processLogin(LoginParams(
+                                      loginProvider: Provider.farcaster
+                                  ), () {
+                                    if (mounted) {
+                                      context.go('/wallet');
+                                    }
+                                  });
+                                } catch (e) {
+                                  onError('$e');
+                                }
                               },
                               child: Container(
                                   width: double.infinity,

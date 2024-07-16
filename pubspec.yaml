@@ -55,6 +55,9 @@ dependencies:
   bitcoin_base: ^4.5.0
   decimal: ^2.3.3
   beamer: ^1.6.1
+  web_socket_channel: ^2.4.5
+  back_button_interceptor: ^7.0.3
+  fluttertoast: ^8.2.6
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +72,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   min_sdk_android: 21
+  remove_alpha_ios: true
   ios: true
   image_path: "assets/images/app_ic.png"
 

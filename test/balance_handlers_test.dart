@@ -17,17 +17,10 @@ import 'package:surfy_mobile_app/utils/electrum_ssl_service.dart';
 void main() {
 
   test('doge test', () async {
-    final blockchainData = blockchains[Blockchain.solana];
-    final client = SolanaClient(rpcUrl: Uri.parse(blockchainData?.rpc ?? ""), websocketUrl: Uri.parse(blockchainData?.websocket ?? ""));
-
-    // 5sJqTZUyby79qehzah26GjLJMRg1jYQjG2c9nHX2kW1p9WhR8U4Zg4NxAkW28rMmtkEFXj1wV4H7W4Ltn9M4QPrD
-    // final tx = await client.findSolanaPayTransaction(
-    //   reference: Ed25519HDPublicKey.fromBase58("3gCcy66kYE9AdcFT7H42HSduozdiqAfxHMNLegVB8uKm")
-    // );
-
-    final acc = await client.rpcClient.getAccountInfo("3gCcy66kYE9AdcFT7H42HSduozdiqAfxHMNLegVB8uKm");
-
-    print(acc.value);
+    var n = "2e18";
+    var a = num.parse(n);
+    // var r = BigInt.parse(n);
+    print(a);
   });
 
   //test('isolate test', () async {
