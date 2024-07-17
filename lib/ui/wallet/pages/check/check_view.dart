@@ -128,7 +128,7 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                   address: widget.sender,
                 ));
                 _bus.emit(ReloadHistoryEvent());
-                return Container(
+                return SizedBox(
                     width: 500,
                     height: 500,
                     child: Column(
@@ -142,7 +142,7 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                     )
                 );
               } else if (snapshot.hasError) {
-                return Container(
+                return SizedBox(
                     width: 500,
                     height: 500,
                     child: Column(
@@ -152,12 +152,12 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                           "assets/images/animation_error.json",
                           width: 100,
                         ),
-                        Text('Something was wrong!', style: Theme.of(context).textTheme.displaySmall,)
+                        Text('Something was wrong!', style: Theme.of(context).textTheme.displaySmall)
                       ],
                     ));
               }
 
-              return Container(
+              return SizedBox(
                   width: 500,
                   height: 500,
                   child: Column(
@@ -204,78 +204,82 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildScaffold() {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(0),
-        child: AppBar()
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
+        appBar: AppBar(
+          titleSpacing: 0,
+          title: const Text('Check!'),
+        ),
+        body: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildLoadingWidget(),
-                Obx(() {
-                  if (_viewModel.observableTransactionHash.value.isNullOrEmpty) {
-                    return const SizedBox();
-                  }
+                Column(
+                  children: [
+                    _buildLoadingWidget(),
+                    Obx(() {
+                      if (_viewModel.observableTransactionHash.value.isNullOrEmpty) {
+                        return const SizedBox();
+                      }
 
-                  return Column(
-                    children: [
-                      Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Tx Hash', style: Theme.of(context).textTheme.displaySmall),
-                              Row(
+                      return Column(
+                        children: [
+                          Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(shortAddress(_viewModel.observableTransactionHash.value), style: Theme.of(context).textTheme.bodyMedium),
-                                  IconButton(
-                                      onPressed: () {
-                                        final scanUrl = blockchains[widget.blockchain]?.getScanUrl(_viewModel.observableTransactionHash.value);
-                                        final Uri url = Uri.parse(scanUrl);
-                                        launchUrl(url);
-                                      },
-                                      icon: const Icon(Icons.open_in_browser_outlined)
+                                  Text('Tx Hash', style: Theme.of(context).textTheme.displaySmall),
+                                  Row(
+                                    children: [
+                                      Text(shortAddress(_viewModel.observableTransactionHash.value), style: Theme.of(context).textTheme.bodyMedium),
+                                      IconButton(
+                                          onPressed: () {
+                                            final scanUrl = blockchains[widget.blockchain]?.getScanUrl(_viewModel.observableTransactionHash.value);
+                                            final Uri url = Uri.parse(scanUrl);
+                                            launchUrl(url);
+                                          },
+                                          icon: const Icon(Icons.open_in_browser_outlined)
+                                      )
+                                    ],
                                   )
                                 ],
                               )
-                            ],
-                          )
-                      ),
-                    ],
-                  );
-                }),
-              ],
-            ),
-            Container(
-              width: double.infinity,
-              height: 60,
-              child: Material(
-                color: SurfyColor.blue,
-                child: InkWell(
-                  onTap: () {
-                    if (mounted) {
-                      checkAuthAndGo(context, "/wallet");
-                    }
-                  },
-                  child: Center(
-                    child: Text('Click to home', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 18))
-                  )
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+                Container(
+                    width: double.infinity,
+                    height: 60,
+                    child: Material(
+                        color: SurfyColor.blue,
+                        child: InkWell(
+                            onTap: () {
+                              if (mounted) {
+                                checkAuthAndGo(context, "/wallet");
+                              }
+                            },
+                            child: Center(
+                                child: Text('Click to home', style: Theme.of(context).textTheme.headlineLarge?.apply(color: Theme.of(context).primaryColorLight))
+                            )
+                        )
+                    )
                 )
-              )
+              ],
             )
-          ],
         )
-      )
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildScaffold();
   }
 
 }

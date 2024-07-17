@@ -60,147 +60,170 @@ class _MemoPageState extends State<MemoPage> implements MemoView {
     });
   }
 
+  Widget _buildHistoryView() {
+    if (_viewModel.observableRecentSentContacts.value.isEmpty) {
+      return Center(
+        child: Text('No history', style: Theme.of(context).textTheme.displaySmall),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: _viewModel.observableRecentSentContacts.value.map((contact) {
+              return TextButton(
+                  style: TextButton.styleFrom(
+                      textStyle: const TextStyle(color: SurfyColor.white),
+                      padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      )
+                  ),
+                  onPressed: () {
+                    _walletAddressTextController.text = contact.address;
+                    if (contact.memo != null) {
+                      _memoTextController.text = contact.memo!;
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.wallet, color: Color(0xFF8895A6), size: 16),
+                          const SizedBox(width: 5,),
+                          Text(contactAddress(contact.address), style: Theme.of(context).textTheme.bodySmall)
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.article, color: Color(0xFF8895A6), size: 16),
+                          const SizedBox(width: 5,),
+                          Text(contact.memo ?? "", style: Theme.of(context).textTheme.bodySmall)
+                        ],
+                      ),
+                      const SizedBox(height: 16,),
+                      const Divider(height: 1, color: Color(0xFF222222),)
+                    ],
+                  )
+              );
+            }).toList(),
+          )
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _viewModel.init(widget.blockchain);
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: const Text('Enter the address')
-      ),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                children: [
-                  Center(
-                    child: Text("You are sending ${formatCrypto(widget.token, cryptoAmountToDecimal(tokens[widget.token]!, widget.amount))}"),
-                  ),
-                  const SizedBox(height: 20,),
-                  Row(
-                    children: [
-                      Expanded(child: TextField(
-                        cursorColor: SurfyColor.darkGrey,
-                        decoration: InputDecoration(
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            label: Text('Wallet Address', style: Theme.of(context).textTheme.labelLarge),
-                            focusColor: SurfyColor.blue,
-                            hoverColor: SurfyColor.blue,
-                            focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: SurfyColor.blue), borderRadius: BorderRadius.all(Radius.circular(10)))
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+            titleSpacing: 0,
+            title: const Text('Enter the address')
+        ),
+        body: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Column(
+                      children: [
+                        Center(
+                          child: Text("You are sending ${formatCrypto(widget.token, cryptoAmountToDecimal(tokens[widget.token]!, widget.amount))}"),
                         ),
-                        style: Theme.of(context).textTheme.labelLarge,
-                        controller: _walletAddressTextController,
-                      )),
-                      IconButton(
-                          onPressed: () async {
-                            final data = await Clipboard.getData('text/plain');
-                            _walletAddressTextController.text = data?.text ?? "";
-                            Fluttertoast.showToast(msg: "Pasted from clipboard", gravity: ToastGravity.CENTER);
-                          },
-                          icon: const Icon(Icons.content_paste_outlined)
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 20,),
-                  TextField(
-                    cursorColor: SurfyColor.darkGrey,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        label: Text('Memo', style: Theme.of(context).textTheme.labelLarge),
-                        focusColor: SurfyColor.blue,
-                        hoverColor: SurfyColor.blue,
-                        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: SurfyColor.blue), borderRadius: BorderRadius.all(Radius.circular(10)))
-                    ),
-                    style: Theme.of(context).textTheme.labelLarge,
-                    controller: _memoTextController,
-                  ),
-                ],
-              )
-            ),
-            const Divider(color: SurfyColor.greyBg),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-              child: Text("History", style: Theme.of(context).textTheme.bodySmall)
-            ),
-            Obx(() => Expanded(
-                child: SingleChildScrollView(
-                  child: Padding(
-                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.center,
-                       children: _viewModel.observableRecentSentContacts.value.map((contact) {
-                         return TextButton(
-                             style: TextButton.styleFrom(
-                               textStyle: const TextStyle(color: SurfyColor.white),
-                               padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
-                               shape: const RoundedRectangleBorder(
-                                 borderRadius: BorderRadius.zero,
-                               )
-                             ),
-                             onPressed: () {
-                               _walletAddressTextController.text = contact.address;
-                               if (contact.memo != null) {
-                                 _memoTextController.text = contact.memo!;
-                               }
-                             },
-                             child: Column(
-                               children: [
-                                 Row(
-                                   children: [
-                                     const Icon(Icons.wallet, color: Color(0xFF8895A6), size: 16),
-                                     const SizedBox(width: 5,),
-                                     Text(contactAddress(contact.address), style: Theme.of(context).textTheme.bodySmall)
-                                   ],
-                                 ),
-                                 Row(
-                                   children: [
-                                     const Icon(Icons.article, color: Color(0xFF8895A6), size: 16),
-                                     const SizedBox(width: 5,),
-                                     Text(contact.memo ?? "", style: Theme.of(context).textTheme.bodySmall)
-                                   ],
-                                 ),
-                                 const SizedBox(height: 16,),
-                                 const Divider(height: 1, color: Color(0xFF222222),)
-                               ],
-                             )
-                         );
-                       }).toList(),
-                     )
-                  ),
-                ))),
-            TextButton(
-              onPressed: () {
-                if (_memoTextController.text.isNotEmpty) {
-                  checkAuthAndPush(context,
-                      '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send/amount/${widget.amount}/address/${_walletAddressTextController.text}/memo/${_memoTextController.text}');
-                } else {
-                  checkAuthAndPush(context,
-                      '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send/amount/${widget.amount}/address/${_walletAddressTextController.text}');
-                }
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: SurfyColor.blue,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero,
-                )
-              ),
-              child: Container(
-                width: double.infinity,
-                height: 50,
-                child: Center(
-                  child: Text('Send', style: Theme.of(context).textTheme.displaySmall),
+                        const SizedBox(height: 20,),
+                        Row(
+                          children: [
+                            Expanded(child: TextField(
+                              cursorColor: SurfyColor.darkGrey,
+                              decoration: InputDecoration(
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  label: Text('Wallet Address', style: Theme.of(context).textTheme.labelLarge),
+                                  focusColor: SurfyColor.blue,
+                                  hoverColor: SurfyColor.blue,
+                                  focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: SurfyColor.blue), borderRadius: BorderRadius.all(Radius.circular(10)))
+                              ),
+                              style: Theme.of(context).textTheme.labelLarge,
+                              controller: _walletAddressTextController,
+                            )),
+                            IconButton(
+                                onPressed: () async {
+                                  final data = await Clipboard.getData('text/plain');
+                                  _walletAddressTextController.text = data?.text ?? "";
+                                  Fluttertoast.showToast(msg: "Pasted from clipboard", gravity: ToastGravity.CENTER);
+                                },
+                                icon: const Icon(Icons.content_paste_outlined)
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 20,),
+                        TextField(
+                          cursorColor: SurfyColor.darkGrey,
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              label: Text('Memo', style: Theme.of(context).textTheme.labelLarge),
+                              focusColor: SurfyColor.blue,
+                              hoverColor: SurfyColor.blue,
+                              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: SurfyColor.blue), borderRadius: BorderRadius.all(Radius.circular(10)))
+                          ),
+                          style: Theme.of(context).textTheme.labelLarge,
+                          controller: _memoTextController,
+                        ),
+                      ],
+                    )
                 ),
-              )
+                const Divider(color: SurfyColor.greyBg),
+                Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    child: Text("History", style: Theme.of(context).textTheme.bodySmall)
+                ),
+                Obx(() => Expanded(
+                    child: _buildHistoryView())),
+                TextButton(
+                    onPressed: () {
+                      if (_walletAddressTextController.text.isEmpty) {
+                        Fluttertoast.showToast(msg: "Please enter wallet address");
+                        return;
+                      }
+                      if (_memoTextController.text.isNotEmpty) {
+                        checkAuthAndPush(context,
+                            '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send/amount/${widget.amount}/address/${_walletAddressTextController.text}/memo/${_memoTextController.text}');
+                      } else {
+                        checkAuthAndPush(context,
+                            '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send/amount/${widget.amount}/address/${_walletAddressTextController.text}');
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                        backgroundColor: SurfyColor.blue,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                        )
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: Center(
+                        child: Text('Send', style: Theme.of(context).textTheme.displaySmall?.apply(color: Theme.of(context).primaryColorLight)),
+                      ),
+                    )
+                )
+              ],
             )
-          ],
-        )
-      ),
+        ),
+      )
     );
   }
 }

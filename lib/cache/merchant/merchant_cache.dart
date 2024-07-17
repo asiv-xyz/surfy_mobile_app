@@ -14,6 +14,7 @@ class MerchantCache {
     final box = Hive.box(merchantBoxName);
     box.put(storeId, merchant);
     await _setUpdatedTime(storeId, DateTime.now().millisecondsSinceEpoch);
+    await box.close();
   }
 
   Future<Merchant?> getMerchant(String storeId) async {
@@ -22,16 +23,9 @@ class MerchantCache {
     }
 
     final box = Hive.box(merchantBoxName);
-    return (await box.get(storeId)) as Merchant?;
-  }
-
-  Future<int> _getUpdatedTime(String storeId) async {
-    if (!Hive.isBoxOpen(merchantUpdatedTimeBoxName)) {
-      await Hive.openBox(merchantUpdatedTimeBoxName);
-    }
-
-    final box = Hive.box(merchantUpdatedTimeBoxName);
-    return box.get(storeId);
+    final item = (await box.get(storeId)) as Merchant?;
+    await box.close();
+    return item;
   }
 
   Future<void> _setUpdatedTime(String storeId, int timestamp) async {
@@ -40,6 +34,7 @@ class MerchantCache {
     }
 
     final box = Hive.box(merchantUpdatedTimeBoxName);
-    box.put(storeId, timestamp);
+    await box.put(storeId, timestamp);
+    await box.close();
   }
 }

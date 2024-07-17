@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
@@ -49,12 +48,12 @@ class SettingsPage extends StatelessWidget {
                           ).toList(),
                           child: Obx(() => Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              color: SurfyColor.black,
+                              color: Theme.of(context).scaffoldBackgroundColor,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Change currency type: ${_preference.userCurrencyType.value.name}', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold)),
-                                  Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                                  Text('Change currency type: ${_preference.userCurrencyType.value.name}', style: Theme.of(context).textTheme.bodyMedium),
+                                  const Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
                                 ],
                               )
                           ))
@@ -88,14 +87,14 @@ class SettingsPage extends StatelessWidget {
                         width: double.infinity,
                         height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        color: SurfyColor.black,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         child: InkWell(
                             onTap: () {
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Show testnet', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                Text('Show testnet', style: Theme.of(context).textTheme.bodyMedium),
                                 Obx(() => Checkbox(
                                     value: _preference.isShowTestnet.value,
                                     onChanged: (value) async {
@@ -110,7 +109,7 @@ class SettingsPage extends StatelessWidget {
                         width: double.infinity,
                         height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        color: SurfyColor.black,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         child: InkWell(
                             onTap: () async {
                               final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
@@ -128,10 +127,9 @@ class SettingsPage extends StatelessWidget {
                                     }
 
                                   } on PlatformException catch (e) {
-                                    print("error: $e");
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                        content: Text("$e", style: Theme.of(context).textTheme.headlineMedium?.apply(color: SurfyColor.deepRed)),
                                         backgroundColor: Colors.black,
                                       ),
                                     );
@@ -149,8 +147,8 @@ class SettingsPage extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Export private key', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
-                                Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
+                                Text('Export private key', style: Theme.of(context).textTheme.bodyMedium),
+                                const Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
                               ],
                             )
                         )
@@ -159,7 +157,7 @@ class SettingsPage extends StatelessWidget {
                         width: double.infinity,
                         height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        color: SurfyColor.black,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         child: InkWell(
                             onTap: () {
                               _processLogout.value = true;
@@ -167,7 +165,7 @@ class SettingsPage extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Logout', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                Text('Logout', style: Theme.of(context).textTheme.bodyMedium),
                                 const Icon(Icons.navigate_next_outlined, color: SurfyColor.white,)
                               ],
                             )
@@ -192,7 +190,7 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Do you want to logout?', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: SurfyColor.black),),
+                      Text('Do you want to logout?', style: Theme.of(context).textTheme.headlineLarge?.apply(color: SurfyColor.black)),
                       SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -208,7 +206,7 @@ class SettingsPage extends StatelessWidget {
                                 },
                                 color: SurfyColor.blue,
                                 child: Center(
-                                    child: Text('OK', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold))
+                                    child: Text('OK', style: Theme.of(context).textTheme.titleLarge)
                                 )
                             )
                           ),
@@ -220,7 +218,7 @@ class SettingsPage extends StatelessWidget {
                                 },
                                 color: SurfyColor.lightGrey,
                                 child: Center(
-                                    child: Text('Cancel', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold))
+                                    child: Text('Cancel', style: Theme.of(context).textTheme.titleLarge)
                                 )
                             )
                           )

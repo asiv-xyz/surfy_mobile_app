@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
     _isLoading.value = false;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+        content: Text(error, style: Theme.of(context).textTheme.displaySmall),
         backgroundColor: Colors.black,
       ),
     );
@@ -58,7 +58,8 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
+        appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(0), child: AppBar()),
         body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -85,11 +86,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                         const Image(
                             image: AssetImage('assets/images/surfy_logo.png')),
                         const SizedBox(height: 10),
-                        Text('Nice to see you!',
-                            style: GoogleFonts.sora(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold))
+                        Text('Nice to see you!', style: Theme.of(context).textTheme.displaySmall)
                       ],
                     )),
                 Positioned(
@@ -101,11 +98,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Login',
-                              style: GoogleFonts.sora(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold)),
+                          Text('Login', style: Theme.of(context).textTheme.displaySmall),
                           const SizedBox(height: 20,),
                           MaterialButton(
                               padding: EdgeInsets.zero,
@@ -141,12 +134,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                                               width: 20,
                                               height: 20),
                                           const SizedBox(width: 10),
-                                          Text('Sign In with Google',
-                                              style: GoogleFonts.sora(
-                                                  textStyle: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 20,
-                                                      fontWeight: FontWeight.bold)))
+                                          Text('Sign In with Google', style: Theme.of(context).textTheme.displaySmall?.apply(color: SurfyColor.black),)
                                         ],
                                       )))),
                           const SizedBox(height: 20,),
@@ -214,12 +202,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                                               width: 20,
                                               height: 20),
                                           const SizedBox(width: 10),
-                                          Text('Sign In with Farcaster',
-                                              style: GoogleFonts.sora(
-                                                  textStyle: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 20,
-                                                      fontWeight: FontWeight.bold)))
+                                          Text('Sign In with Farcaster', style: Theme.of(context).textTheme.displaySmall)
                                         ],
                                       ))))
                         ],

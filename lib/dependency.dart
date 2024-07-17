@@ -2,6 +2,8 @@
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/cache/contact/contact_cache.dart';
+import 'package:surfy_mobile_app/cache/payment/payment_cache.dart';
+import 'package:surfy_mobile_app/cache/qr/qr_cache.dart';
 import 'package:surfy_mobile_app/cache/token/token_price_cache.dart';
 import 'package:surfy_mobile_app/cache/wallet/wallet_cache.dart';
 import 'package:surfy_mobile_app/common/blockchain_provider.dart';
@@ -9,6 +11,8 @@ import 'package:surfy_mobile_app/common/token_provider.dart';
 import 'package:surfy_mobile_app/domain/contact/recent_sent_contacts.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
+import 'package:surfy_mobile_app/domain/payment/get_latest_payment_method.dart';
+import 'package:surfy_mobile_app/domain/qr/get_cached_qr.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/transaction/get_transaction_history.dart';
@@ -26,6 +30,7 @@ import 'package:surfy_mobile_app/repository/wallet/wallet_balances_repository.da
 import 'package:surfy_mobile_app/service/blockchain/blockchain_service.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/service/merchant/merchant_service.dart';
+import 'package:surfy_mobile_app/service/payment/payment_service.dart';
 import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/service/token/token_price_service.dart';
 import 'package:surfy_mobile_app/service/transaction/transaction_service.dart';
@@ -81,9 +86,11 @@ void buildDependencies() {
   final SendP2pToken sendP2pTokenUseCase = Get.put(SendP2pToken(blockchainService: blockchainService));
 
   // QR
-  final QRService qrService = Get.put(QRService());
+  final QrCache qrCache = Get.put(QrCache());
+  final QRService qrService = Get.put(QRService(cache: qrCache));
   final GetQRController getQRController = Get.put(GetQRController());
   final GetMerchants getMerchantsUseCase = Get.put(GetMerchants(service: merchantService));
+  final GetCachedQr getCachedQr = Get.put(GetCachedQr(service: qrService));
 
   // Merchant
   final IsMerchant isMerchantUseCase = Get.put(IsMerchant(service: merchantService));
@@ -103,4 +110,9 @@ void buildDependencies() {
   final ContactCache contactCache = Get.put(ContactCache());
   final ContactRepository contactRepository = Get.put(ContactRepository(cache: contactCache));
   final RecentSentContacts getRecentSentContacts = Get.put(RecentSentContacts(repository: contactRepository));
+
+  // Recent Payment Method
+  final PaymentCache paymentCache = Get.put(PaymentCache());
+  final PaymentService paymentService = Get.put(PaymentService(cache: paymentCache));
+  final GetLatestPaymentMethod getLatestPaymentMethod = Get.put(GetLatestPaymentMethod(service: paymentService));
 }

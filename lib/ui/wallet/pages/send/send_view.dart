@@ -1,7 +1,6 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/badge.dart';
@@ -138,7 +137,7 @@ class _SendPageState extends State<SendPage> implements SendView {
                             if (_viewModel.observableIsFiatInputMode.isTrue) {
                               return Row(
                                 children: [
-                                  Obx(() => Text(_viewModel.observableInputData.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36, fontWeight: FontWeight.bold),)),
+                                  Obx(() => Text(_viewModel.observableInputData.value, style: Theme.of(context).textTheme.displayLarge?.apply(color: SurfyColor.blue))),
                                   const SizedBox(width: 10,),
                                   Obx(() => Text(_preference.userCurrencyType.value.name.toUpperCase(), style: Theme.of(context).textTheme.headlineLarge)),
                                 ],
@@ -146,7 +145,7 @@ class _SendPageState extends State<SendPage> implements SendView {
                             } else {
                               return Row(
                                 children: [
-                                  Obx(() => Text(_viewModel.observableInputData.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36, fontWeight: FontWeight.bold),)),
+                                  Obx(() => Text(_viewModel.observableInputData.value, style: Theme.of(context).textTheme.displayLarge?.apply(color: SurfyColor.blue))),
                                   const SizedBox(width: 10,),
                                   Text(tokens[widget.token]?.symbol ?? "", style: Theme.of(context).textTheme.headlineLarge),
                                 ],
@@ -158,12 +157,12 @@ class _SendPageState extends State<SendPage> implements SendView {
                             if (_viewModel.observableIsFiatInputMode.isTrue) {
                               return Text(formatCrypto(widget.token,
                                   fiatToVisibleCryptoAmount(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value)),
-                                  style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                                  style: Theme.of(context).textTheme.labelLarge);
                             } else {
                               return Text(formatFiat(
                                 decimalCryptoAmountToFiat(_viewModel.observableInputData.value.toDouble(), _viewModel.observableTokenPrice.value),
                                   _preference.userCurrencyType.value),
-                                  style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
+                                  style: Theme.of(context).textTheme.labelLarge);
                             }
                           }),
                           Container(

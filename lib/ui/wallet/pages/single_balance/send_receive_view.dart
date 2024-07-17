@@ -133,13 +133,13 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                             Obx(() => Text(shortAddress(_viewModel.observableAddress.value), style: Theme.of(context).textTheme.labelSmall))
                           ],
                         ),
-                        TextButton(
-                            style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(SurfyColor.greyBg),
-                                shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15)
-                                ))
-                            ),
+                        OutlinedButton(
+                            // style: ButtonStyle(
+                            //     // backgroundColor: WidgetStateProperty.all(SurfyColor.greyBg),
+                            //     shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                            //         borderRadius: BorderRadius.circular(15)
+                            //     ))
+                            // ),
                             onPressed: () {
                               Clipboard.setData(ClipboardData(text: _viewModel.observableAddress.value));
                               Fluttertoast.showToast(msg: 'Copied address!', gravity: ToastGravity.CENTER);
@@ -153,7 +153,7 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                 ),
                 Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
-                    child: const Divider(color: SurfyColor.greyBg, thickness: 6)
+                    child: const Divider(thickness: 2)
                 ),
                 Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
@@ -166,22 +166,16 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                InkWell(
-                                  onTap: () {
+                                IconButton(
+                                  onPressed: () {
                                     if (mounted) {
                                       checkAuthAndPush(context, '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/send');
                                     }
                                   },
-                                  child: Container(
-                                      width: 50,
-                                      height: 50,
-                                      margin: const EdgeInsets.only(bottom: 5),
-                                      decoration: BoxDecoration(
-                                          color: SurfyColor.blue,
-                                          borderRadius: BorderRadius.circular(100)
-                                      ),
-                                      child: const Icon(Icons.arrow_upward_outlined, size: 30, color: SurfyColor.black,)
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: SurfyColor.blue,
                                   ),
+                                  icon: Icon(Icons.arrow_upward_outlined, size: 30, color: Theme.of(context).primaryColorLight)
                                 ),
                                 Text('Send', style: Theme.of(context).textTheme.bodyLarge)
                               ],
@@ -189,22 +183,16 @@ class _SingleBalancePageState extends State<SingleBalancePage> implements Single
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                InkWell(
-                                  onTap: () {
-                                    if (mounted) {
-                                      checkAuthAndPush(context, '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/receive');
-                                    }
-                                  },
-                                  child: Container(
-                                      width: 50,
-                                      height: 50,
-                                      margin: const EdgeInsets.only(bottom: 5),
-                                      decoration: BoxDecoration(
-                                          color: SurfyColor.blue,
-                                          borderRadius: BorderRadius.circular(100)
-                                      ),
-                                      child: const Icon(Icons.arrow_downward_outlined, size: 30, color: SurfyColor.black)
-                                  ),
+                                IconButton(
+                                    onPressed: () {
+                                      if (mounted) {
+                                        checkAuthAndPush(context, '/wallet/token/${widget.token.name}/blockchain/${widget.blockchain.name}/receive');
+                                      }
+                                    },
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: SurfyColor.blue,
+                                    ),
+                                    icon: Icon(Icons.arrow_downward_outlined, size: 30, color: Theme.of(context).primaryColorLight)
                                 ),
                                 Text('Receive', style: Theme.of(context).textTheme.bodyLarge)
                               ],

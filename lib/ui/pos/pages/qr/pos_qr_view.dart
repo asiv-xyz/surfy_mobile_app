@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/qr/viewmodel/pos_qr_viewmodel.dart';
@@ -113,14 +112,15 @@ class _PosQrPageState extends State<PosQrPage> implements PosQrView {
                           Container(
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(15),
-                                color: SurfyColor.darkGrey
+                                color: Theme.of(context).primaryColorDark
+                                // color: SurfyColor.darkGrey
                             ),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Pay', style: GoogleFonts.sora(fontSize: 16, color: SurfyColor.white),),
-                                Text(formatFiat(widget.wantToReceiveAmount, widget.receivedCurrencyType), style: GoogleFonts.sora(fontSize: 24, color: SurfyColor.blue))
+                                Text('Pay', style: Theme.of(context).textTheme.bodyLarge),
+                                Text(formatFiat(widget.wantToReceiveAmount, widget.receivedCurrencyType), style: Theme.of(context).textTheme.displayMedium)
                               ],
                             ),
                           )

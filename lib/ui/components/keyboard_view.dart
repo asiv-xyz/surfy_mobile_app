@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 
 class KeyboardView extends StatefulWidget {
@@ -78,7 +77,7 @@ class _KeyboardViewState extends State<KeyboardView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
       child: Column(
@@ -95,6 +94,7 @@ class _KeyboardViewState extends State<KeyboardView> {
                               width: double.infinity,
                               child: Column(
                                 children: [
+                                  Divider(color: Theme.of(context).dividerColor),
                                   Expanded(
                                       child: Row(
                                         children: [
@@ -154,7 +154,7 @@ class _KeyboardViewState extends State<KeyboardView> {
                                                   onPressed: () {
                                                     _onClickKeyboard(item);
                                                   },
-                                                  child: Center(
+                                                   child: Center(
                                                       child: Text(item, style: Theme.of(context).textTheme.displayMedium)
                                                   )
                                               )
@@ -162,12 +162,11 @@ class _KeyboardViewState extends State<KeyboardView> {
                                         ],
                                       )
                                   ),
-                                  Divider(color: Theme.of(context).dividerColor),
                                 ],
                               )
                           )
                       ),
-                      Container(
+                      SizedBox(
                           height: 60,
                           child: widget.enable == true ? Material(
                               color: SurfyColor.blue,
@@ -176,7 +175,7 @@ class _KeyboardViewState extends State<KeyboardView> {
                                     widget.onClickSend.call();
                                   },
                                   child: Center(
-                                      child: Text(widget.buttonText, style: GoogleFonts.sora(fontWeight: FontWeight.bold, color: SurfyColor.white, fontSize: 16))
+                                      child: Text(widget.buttonText, style: Theme.of(context).textTheme.titleLarge?.apply(color: Theme.of(context).primaryColorLight))
                                   )
                               )
                           ) : Container(
@@ -184,7 +183,7 @@ class _KeyboardViewState extends State<KeyboardView> {
                             height: 60,
                             color: widget.disabledColor,
                             child: Center(
-                              child: Text(widget.disabledText ?? "", style: GoogleFonts.sora(fontWeight: FontWeight.bold, color: SurfyColor.white, fontSize: 16))
+                              child: Text(widget.disabledText ?? "", style: Theme.of(context).textTheme.titleLarge)
                             )
                           )
                       )

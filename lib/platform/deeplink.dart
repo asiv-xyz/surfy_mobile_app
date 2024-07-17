@@ -22,66 +22,73 @@ class DeepLink {
     var scheme = "";
     var chainId = 1;
 
-    switch (blockchain) {
-      case Blockchain.ethereum_sepolia:
-      case Blockchain.ethereum:
-      case Blockchain.arbitrum_sepolia:
-      case Blockchain.arbitrum:
-      case Blockchain.optimism_sepolia:
-      case Blockchain.optimism:
-      case Blockchain.base_sepolia:
-      case Blockchain.base:
-      case Blockchain.bsc:
-      case Blockchain.opbnb:
-        scheme = "ethereum";
-        chainId = chainData.chainId!;
-        if (tokenData.isToken) {
-          if (amount != null) {
-            deeplink = "$scheme:${tokenData.tokenContractAddress[blockchain]}@$chainId/transfer?address=$receiver&uint256=${amount.toString()}";
-          } else {
-            deeplink = "$scheme:${tokenData.tokenContractAddress[blockchain]}@$chainId/transfer?amount=$receiver";
-          }
-        } else {
-          // ether
-          if (amount != null) {
-            final e = amount.toDouble().toStringAsExponential().replaceAll("+", "");
-            deeplink = "$scheme:$receiver@$chainId?value=$e";
-          } else {
-            deeplink = "$scheme:$receiver@$chainId";
-          }
-        }
-        break;
-
-      case Blockchain.solana_devnet:
-      case Blockchain.solana:
-        scheme = "solana";
-        if (tokenData.isToken) {
-          if (amount != null) {
-            final amountDecimal = cryptoAmountToDecimal(tokenData, amount);
-            deeplink = "$scheme:$receiver?amount=$amountDecimal&spl-token=${tokenData.tokenContractAddress[blockchain]}";
-          } else {
-            deeplink = "$scheme:$receiver";
-          }
-        } else {
-          // sol
-          if (amount != null) {
-            final amountDecimal = cryptoAmountToDecimal(tokenData, amount);
-            deeplink = "$scheme:$receiver?amount=$amountDecimal";
-          } else {
-            deeplink = "$scheme:$receiver";
-          }
-        }
-        break;
-
-      default:
-        scheme = "surfy";
-        if (amount != null) {
-          deeplink = "$scheme:com.riverbank.surfy/wallet/token/${token.name.toLowerCase()}/blockchain/${blockchain.name.toLowerCase()}/send/amount/${amount.toString()}/address/$receiver";
-        } else {
-          deeplink = "$scheme:com.riverbank.surfy/wallet/token/${token.name.toLowerCase()}/blockchain/${blockchain.name.toLowerCase()}/send";
-        }
-        break;
+    scheme = "surfy";
+    if (amount != null) {
+      deeplink = "$scheme:com.riverbank.surfy/wallet/token/${token.name.toLowerCase()}/blockchain/${blockchain.name.toLowerCase()}/send/amount/${amount.toString()}/address/$receiver";
+    } else {
+      deeplink = "$scheme:com.riverbank.surfy/wallet/token/${token.name.toLowerCase()}/blockchain/${blockchain.name.toLowerCase()}/send";
     }
+
+    // switch (blockchain) {
+    //   case Blockchain.ethereum_sepolia:
+    //   case Blockchain.ethereum:
+    //   case Blockchain.arbitrum_sepolia:
+    //   case Blockchain.arbitrum:
+    //   case Blockchain.optimism_sepolia:
+    //   case Blockchain.optimism:
+    //   case Blockchain.base_sepolia:
+    //   case Blockchain.base:
+    //   case Blockchain.bsc:
+    //   case Blockchain.opbnb:
+    //     scheme = "ethereum";
+    //     chainId = chainData.chainId!;
+    //     if (tokenData.isToken) {
+    //       if (amount != null) {
+    //         deeplink = "$scheme:${tokenData.tokenContractAddress[blockchain]}@$chainId/transfer?address=$receiver&uint256=${amount.toString()}";
+    //       } else {
+    //         deeplink = "$scheme:${tokenData.tokenContractAddress[blockchain]}@$chainId/transfer?amount=$receiver";
+    //       }
+    //     } else {
+    //       // ether
+    //       if (amount != null) {
+    //         final e = amount.toDouble().toStringAsExponential().replaceAll("+", "");
+    //         deeplink = "$scheme:$receiver@$chainId?value=$e";
+    //       } else {
+    //         deeplink = "$scheme:$receiver@$chainId";
+    //       }
+    //     }
+    //     break;
+    //
+    //   case Blockchain.solana_devnet:
+    //   case Blockchain.solana:
+    //     scheme = "solana";
+    //     if (tokenData.isToken) {
+    //       if (amount != null) {
+    //         final amountDecimal = cryptoAmountToDecimal(tokenData, amount);
+    //         deeplink = "$scheme:$receiver?amount=$amountDecimal&spl-token=${tokenData.tokenContractAddress[blockchain]}";
+    //       } else {
+    //         deeplink = "$scheme:$receiver";
+    //       }
+    //     } else {
+    //       // sol
+    //       if (amount != null) {
+    //         final amountDecimal = cryptoAmountToDecimal(tokenData, amount);
+    //         deeplink = "$scheme:$receiver?amount=$amountDecimal";
+    //       } else {
+    //         deeplink = "$scheme:$receiver";
+    //       }
+    //     }
+    //     break;
+    //
+    //   default:
+    //     scheme = "surfy";
+    //     if (amount != null) {
+    //       deeplink = "$scheme:com.riverbank.surfy/wallet/token/${token.name.toLowerCase()}/blockchain/${blockchain.name.toLowerCase()}/send/amount/${amount.toString()}/address/$receiver";
+    //     } else {
+    //       deeplink = "$scheme:com.riverbank.surfy/wallet/token/${token.name.toLowerCase()}/blockchain/${blockchain.name.toLowerCase()}/send";
+    //     }
+    //     break;
+    // }
 
     return deeplink;
   }

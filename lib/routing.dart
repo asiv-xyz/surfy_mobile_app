@@ -1,11 +1,9 @@
-import 'package:camera/camera.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:surfy_mobile_app/domain/merchant/is_merchant.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
-import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
 import 'package:surfy_mobile_app/ui/common/error/error_page.dart';
@@ -13,9 +11,9 @@ import 'package:surfy_mobile_app/ui/history/detail/history_detail_view.dart';
 import 'package:surfy_mobile_app/ui/history/history_view.dart';
 import 'package:surfy_mobile_app/ui/login/login_view.dart';
 import 'package:surfy_mobile_app/ui/map/map_view.dart';
+import 'package:surfy_mobile_app/ui/payment/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/payment/payment_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/check/payment_complete_view.dart';
-import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/pos/pos_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/qr/pos_qr_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
@@ -165,7 +163,7 @@ Future<GoRouter> generateRouter(IsMerchant isMerchantUseCase, String initialLoca
             routes: <RouteBase>[
               GoRoute(
                   path: '/',
-                  builder: (context, state) => const WalletPage(),
+                  builder: (context, state) => const LoginPage(),
                   routes: [
                     GoRoute(
                       path: 'wallet',

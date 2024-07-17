@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:get/get.dart';
+import 'package:surfy_mobile_app/domain/qr/get_cached_qr.dart';
 import 'package:surfy_mobile_app/domain/wallet/get_wallet_address.dart';
 import 'package:surfy_mobile_app/service/qr/qr_service.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/receive/receive_view.dart';
@@ -21,6 +22,7 @@ class ReceiveViewModel {
 
   final QRService _qrService = Get.find();
   final GetWalletAddress _getWalletAddressUseCase = Get.find();
+  final GetCachedQr _getCachedQrUseCase = Get.find();
 
   void setView(ReceiveView view) {
     _view = view;
@@ -31,8 +33,13 @@ class ReceiveViewModel {
     observableSelectedToken.value = token;
     observableSelectedBlockchain.value = blockchain;
     observableUserAddress.value = await _getWalletAddressUseCase.getAddress(blockchain);
-    observableQrData.value = await _qrService.getQRcode(DeepLink.createDeepLink(blockchain, token, observableUserAddress.value));
-    print("qr: ${observableQrData.value}");
+    final cachedQr = await _getCachedQrUseCase.getWalletQR(token, blockchain, observableUserAddress.value);
+    if (cachedQr == null) {
+      observableQrData.value = await _qrService.getQRcode(DeepLink.createDeepLink(blockchain, token, observableUserAddress.value));
+      await _qrService.setWalletQR(token, blockchain, observableUserAddress.value, observableQrData.value);
+    } else {
+      observableQrData.value = cachedQr;
+    }
     _view.finishQRLoading();
   }
 
@@ -44,7 +51,6 @@ class ReceiveViewModel {
         observableSelectedToken.value!,
         observableUserAddress.value,
         amount: amount));
-    print("qr: ${observableQrData.value}");
     _view.finishQRLoading();
   }
 }

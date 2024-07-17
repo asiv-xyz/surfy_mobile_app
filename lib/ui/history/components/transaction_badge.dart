@@ -32,7 +32,7 @@ class TransactionBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(14)
       ),
       child: Center(
-        child: Text(typeText, style: Theme.of(context).textTheme.labelSmall)
+        child: Text(typeText, style: Theme.of(context).textTheme.labelSmall?.apply(color: SurfyColor.white))
       ),
     );
   }

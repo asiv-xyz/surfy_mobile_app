@@ -11,7 +11,7 @@ import 'package:surfy_mobile_app/utils/surfy_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HistoryDetailPage extends StatelessWidget {
-  HistoryDetailPage({super.key, required this.tx});
+  const HistoryDetailPage({super.key, required this.tx});
 
   final Transaction tx;
 
@@ -22,7 +22,7 @@ class HistoryDetailPage extends StatelessWidget {
         titleSpacing: 0,
         title: const Text('Transaction Detail')
       ),
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
         height: double.infinity,
         child: Column(
@@ -49,7 +49,7 @@ class HistoryDetailPage extends StatelessWidget {
             ),
             Container(
               decoration: BoxDecoration(
-                color: SurfyColor.greyBg,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(14)
               ),
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

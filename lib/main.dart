@@ -12,6 +12,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/dependency.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/user/onboarding.dart';
+import 'package:surfy_mobile_app/entity/contact/contact.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -58,6 +59,7 @@ Future<void> loadDefaultData() async {
 void main() async {
   await dotenv.load(fileName: ".env");
   await Hive.initFlutter();
+  Hive.registerAdapter(ContactAdapter());
   dioObject.transformer = BackgroundTransformer()
     ..jsonDecodeCallback = parseJson;
   dioObject.interceptors.add(
@@ -112,123 +114,130 @@ class _SurfyAppState extends State<SurfyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
 
-        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-          FocusManager.instance.primaryFocus?.unfocus();
-        }
+    return MaterialApp.router(
+      onNavigationNotification: (value) {
+        return true;
       },
-      child: MaterialApp.router(
-        onNavigationNotification: (value) {
-          return true;
-        },
-        darkTheme: ThemeData(
-            appBarTheme: AppBarTheme(
-                iconTheme: const IconThemeData(color: SurfyColor.white),
-                backgroundColor: SurfyColor.black,
-                titleTextStyle: GoogleFonts.sora(
-                    color: SurfyColor.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-            bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: SurfyColor.black,
-              unselectedIconTheme: IconThemeData(color: SurfyColor.white, size: 24),
-              selectedIconTheme: IconThemeData(color: SurfyColor.blue, size: 24),
-              unselectedLabelStyle: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600),
-              selectedLabelStyle: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.w600),
-              selectedItemColor: SurfyColor.blue,
-              unselectedItemColor: SurfyColor.white,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-            ),
-            scaffoldBackgroundColor: SurfyColor.black,
-            textTheme: TextTheme(
-              // headlineLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 36),
-              // headlineMedium: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 24),
-              // bodyLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 24),
-              // bodyMedium: GoogleFonts.sora(color: SurfyColor.white, fontSize: 20),
-              // displayLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),
-              // displayMedium: GoogleFonts.sora(color: SurfyColor.white, fontSize: 12),
-              // displaySmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 8),
-              // labelLarge: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 12, fontWeight: FontWeight.bold),
-              // labelMedium: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 10),
-              // labelSmall: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 8),
-
-              displayLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 36),
-              displayMedium: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 24),
-              displaySmall: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 16),
-
-              titleLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 16),
-              titleMedium: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 14),
-              titleSmall: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 12),
-
-              headlineLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 18),
-              headlineMedium: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16),
-              headlineSmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14),
-
-              bodyLarge: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16),
-              bodyMedium: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14),
-              bodySmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 12),
-
-              labelLarge: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14, fontWeight: FontWeight.w600),
-              labelMedium: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 12),
-              labelSmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 10),
-            ),
+      darkTheme: ThemeData(
+        appBarTheme: AppBarTheme(
             iconTheme: const IconThemeData(color: SurfyColor.white),
-            cardColor: SurfyColor.darkThemeCardBackground,
-            dividerColor: SurfyColor.greyBg
+            backgroundColor: SurfyColor.black,
+            titleTextStyle: GoogleFonts.sora(
+                color: SurfyColor.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: SurfyColor.black,
+          unselectedIconTheme: IconThemeData(color: SurfyColor.white, size: 24),
+          selectedIconTheme: IconThemeData(color: SurfyColor.blue, size: 24),
+          unselectedLabelStyle: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600),
+          selectedLabelStyle: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.w600),
+          selectedItemColor: SurfyColor.blue,
+          unselectedItemColor: SurfyColor.white,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
         ),
-        theme: ThemeData(
-            appBarTheme: AppBarTheme(
-                iconTheme: const IconThemeData(color: SurfyColor.black),
-                backgroundColor: SurfyColor.lightThemeBackground,
-                titleTextStyle: GoogleFonts.sora(
-                    color: SurfyColor.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-            bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: SurfyColor.lightThemeBackground,
-              unselectedIconTheme: IconThemeData(color: SurfyColor.black, size: 24),
-              selectedIconTheme: IconThemeData(color: SurfyColor.blue, size: 24),
-              unselectedLabelStyle: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600),
-              selectedLabelStyle: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.w600),
-              selectedItemColor: SurfyColor.blue,
-              unselectedItemColor: SurfyColor.black,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-            ),
-            scaffoldBackgroundColor: SurfyColor.lightThemeBackground,
-            textTheme: TextTheme(
-              displayLarge: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 36),
-              displayMedium: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 24),
-              displaySmall: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 16),
+        scaffoldBackgroundColor: SurfyColor.black,
+        textTheme: TextTheme(
+          displayLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 36),
+          displayMedium: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 24),
+          displaySmall: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 16),
 
-              titleLarge: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 16),
-              titleMedium: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 14),
-              titleSmall: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 12),
+          titleLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 16),
+          titleMedium: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 14),
+          titleSmall: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 12),
 
-              headlineLarge: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 18),
-              headlineMedium: GoogleFonts.sora(color: SurfyColor.black, fontSize: 16),
-              headlineSmall: GoogleFonts.sora(color: SurfyColor.black, fontSize: 14),
+          headlineLarge: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.w600, fontSize: 18),
+          headlineMedium: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16),
+          headlineSmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14),
 
-              bodyLarge: GoogleFonts.sora(color: SurfyColor.black, fontSize: 16),
-              bodyMedium: GoogleFonts.sora(color: SurfyColor.black, fontSize: 14),
-              bodySmall: GoogleFonts.sora(color: SurfyColor.black, fontSize: 12),
+          bodyLarge: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16),
+          bodyMedium: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14),
+          bodySmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 12),
 
-              labelLarge: GoogleFonts.sora(color: SurfyColor.darkGrey, fontSize: 14, fontWeight: FontWeight.w600),
-              labelMedium: GoogleFonts.sora(color: SurfyColor.darkGrey, fontSize: 12),
-              labelSmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 10),
-            ),
+          labelLarge: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14, fontWeight: FontWeight.w600),
+          labelMedium: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 12),
+          labelSmall: GoogleFonts.sora(color: SurfyColor.white, fontSize: 10),
+        ),
+        iconTheme: const IconThemeData(color: SurfyColor.white),
+        cardColor: SurfyColor.darkThemeCardBackground,
+        textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+                backgroundColor: SurfyColor.lightGrey
+            )
+        ),
+        dividerColor: SurfyColor.greyBg,
+        primaryColor: SurfyColor.white,
+        primaryColorLight: SurfyColor.black,
+        primaryColorDark: SurfyColor.darkGrey,
+        focusColor: SurfyColor.blue,
+      ),
+      theme: ThemeData(
+        appBarTheme: AppBarTheme(
             iconTheme: const IconThemeData(color: SurfyColor.black),
-            cardColor: SurfyColor.white,
-            dividerColor: SurfyColor.lightGrey
+            backgroundColor: SurfyColor.lightThemeBackground,
+            titleTextStyle: GoogleFonts.sora(
+                color: SurfyColor.black,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: SurfyColor.lightThemeBackground,
+          unselectedIconTheme: IconThemeData(color: SurfyColor.black, size: 24),
+          selectedIconTheme: IconThemeData(color: SurfyColor.blue, size: 24),
+          unselectedLabelStyle: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600),
+          selectedLabelStyle: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.w600),
+          selectedItemColor: SurfyColor.blue,
+          unselectedItemColor: SurfyColor.black,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
         ),
-        themeMode: ThemeMode.dark,
-        routerConfig: widget.goRouter,
-      )
+        scaffoldBackgroundColor: SurfyColor.lightThemeBackground,
+        textTheme: TextTheme(
+          displayLarge: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 36),
+          displayMedium: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 24),
+          displaySmall: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 16),
+
+          titleLarge: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 16),
+          titleMedium: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 14),
+          titleSmall: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 12),
+
+          headlineLarge: GoogleFonts.sora(color: SurfyColor.black, fontWeight: FontWeight.w600, fontSize: 18),
+          headlineMedium: GoogleFonts.sora(color: SurfyColor.black, fontSize: 16),
+          headlineSmall: GoogleFonts.sora(color: SurfyColor.black, fontSize: 14),
+
+          bodyLarge: GoogleFonts.sora(color: SurfyColor.black, fontSize: 16),
+          bodyMedium: GoogleFonts.sora(color: SurfyColor.black, fontSize: 14),
+          bodySmall: GoogleFonts.sora(color: SurfyColor.black, fontSize: 12),
+
+          labelLarge: GoogleFonts.sora(color: SurfyColor.darkGrey, fontSize: 14, fontWeight: FontWeight.w600),
+          labelMedium: GoogleFonts.sora(color: SurfyColor.darkGrey, fontSize: 12),
+          labelSmall: GoogleFonts.sora(color: SurfyColor.mainGrey, fontSize: 10),
+        ),
+        iconTheme: const IconThemeData(color: SurfyColor.black),
+        cardColor: SurfyColor.white,
+        textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              backgroundColor: SurfyColor.lightThemeBackground,
+            )
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+                backgroundColor: SurfyColor.lightGrey,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15)
+                )
+            )
+        ),
+        dividerColor: SurfyColor.lightGrey,
+        primaryColor: SurfyColor.black,
+        primaryColorLight: SurfyColor.lightThemeBackground,
+        primaryColorDark: SurfyColor.lightGrey,
+        focusColor: SurfyColor.blue,
+      ),
+      // themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
+      routerConfig: widget.goRouter,
     );
   }
 }

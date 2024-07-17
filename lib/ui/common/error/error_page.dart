@@ -44,7 +44,7 @@ class _ErrorPageState extends State<ErrorPage> {
               ),
               child: Container(
                 child: Center(
-                  child: Text('Back to Home', style: Theme.of(context).textTheme.displaySmall)
+                  child: Text('Back to Home', style: Theme.of(context).textTheme.displaySmall?.apply(color: Theme.of(context).primaryColorLight))
                 ),
               ))
           ],

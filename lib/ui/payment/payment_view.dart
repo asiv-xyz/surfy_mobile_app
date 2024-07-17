@@ -2,7 +2,6 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
@@ -10,7 +9,6 @@ import 'package:surfy_mobile_app/ui/components/keyboard_view.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
 import 'package:surfy_mobile_app/ui/payment/viewmodel/payment_viewmodel.dart';
-import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
@@ -74,9 +72,8 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
         titleSpacing: 0,
         title: const Text('Payment'),
       ),
-      body: Container(
+      body: SizedBox(
           height: MediaQuery.of(context).size.height,
-          color: SurfyColor.black,
           child: Stack(
             children: [
               Obx(() {
@@ -167,7 +164,7 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(30),
-                              color: SurfyColor.greyBg,
+                              color: Theme.of(context).cardColor,
                             ),
                             child: MaterialButton(
                                 onPressed: () {
@@ -185,61 +182,59 @@ class _PaymentPageState extends State<PaymentPage> implements PaymentView {
                                     checkAuthAndPush(context, '/select', extra: props);
                                   }
                                 },
-                                child: Container(
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
                                       children: [
-                                        Row(
+                                        TokenIconWithNetwork(blockchain: _viewModel.observableSelectedBlockchain.value, token: _viewModel.observableSelectedToken.value, width: 40, height: 40),
+                                        const SizedBox(width: 10),
+                                        Text(tokens[_viewModel.observableSelectedToken.value]?.name ?? "", style: Theme.of(context).textTheme.headlineLarge)
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Column(
                                           children: [
-                                            TokenIconWithNetwork(blockchain: _viewModel.observableSelectedBlockchain.value, token: _viewModel.observableSelectedToken.value, width: 40, height: 40),
-                                            const SizedBox(width: 10),
-                                            Text(tokens[_viewModel.observableSelectedToken.value]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 18),)
+                                            Obx(() {
+                                              if (_isLoading.isTrue) {
+                                                return Container(
+                                                  width: 50,
+                                                  height: 14,
+                                                  decoration: BoxDecoration(
+                                                      color: SurfyColor.black,
+                                                      borderRadius: BorderRadius.circular(8)
+                                                  ),
+                                                  margin: const EdgeInsets.only(bottom: 2),
+                                                );
+                                              }
+
+                                              return Text(formatFiat(_viewModel.getSelectedTokenBalance().balance, _preference.userCurrencyType.value), style: Theme.of(context).textTheme.bodyMedium);
+                                            }),
+                                            Obx(() {
+                                              if (_isLoading.isTrue) {
+                                                return Container(
+                                                  width: 50,
+                                                  height: 14,
+                                                  decoration: BoxDecoration(
+                                                      color: SurfyColor.black,
+                                                      borderRadius: BorderRadius.circular(8)
+                                                  ),
+                                                  margin: const EdgeInsets.only(top: 2),
+                                                );
+                                              }
+
+                                              return Text(formatCrypto(_viewModel.observableSelectedToken.value,
+                                                  cryptoAmountToDecimal(tokens[_viewModel.observableSelectedToken.value!]!, _viewModel.getSelectedTokenBalance().cryptoBalance)),
+                                                  style: Theme.of(context).textTheme.labelLarge);
+                                            })
                                           ],
                                         ),
-                                        Row(
-                                          children: [
-                                            Column(
-                                              children: [
-                                                Obx(() {
-                                                  if (_isLoading.isTrue) {
-                                                    return Container(
-                                                      width: 50,
-                                                      height: 14,
-                                                      decoration: BoxDecoration(
-                                                          color: SurfyColor.black,
-                                                          borderRadius: BorderRadius.circular(8)
-                                                      ),
-                                                      margin: const EdgeInsets.only(bottom: 2),
-                                                    );
-                                                  }
-
-                                                  return Text(formatFiat(_viewModel.getSelectedTokenBalance().balance, _preference.userCurrencyType.value), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14));
-                                                }),
-                                                Obx(() {
-                                                  if (_isLoading.isTrue) {
-                                                    return Container(
-                                                      width: 50,
-                                                      height: 14,
-                                                      decoration: BoxDecoration(
-                                                          color: SurfyColor.black,
-                                                          borderRadius: BorderRadius.circular(8)
-                                                      ),
-                                                      margin: const EdgeInsets.only(top: 2),
-                                                    );
-                                                  }
-
-                                                  return Text(formatCrypto(_viewModel.observableSelectedToken.value,
-                                                      cryptoAmountToDecimal(tokens[_viewModel.observableSelectedToken.value!]!, _viewModel.getSelectedTokenBalance().cryptoBalance)),
-                                                      style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14));
-                                                })
-                                              ],
-                                            ),
-                                            const SizedBox(width: 10,),
-                                            const Icon(Icons.navigate_next, color: SurfyColor.white,)
-                                          ],
-                                        )
+                                        const SizedBox(width: 10,),
+                                        const Icon(Icons.navigate_next, color: SurfyColor.white,)
                                       ],
                                     )
+                                  ],
                                 )
                             )
                         ))

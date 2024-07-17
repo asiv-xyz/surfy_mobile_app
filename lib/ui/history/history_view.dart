@@ -62,7 +62,7 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
               color: SurfyColor.blue,
               child: Obx(() {
                 if (_isLoading.isFalse && _viewModel.observableTransactionList.value.isEmpty) {
-                  return Container(
+                  return SizedBox(
                     width: double.infinity,
                     height: double.infinity,
                     child: Center(
@@ -75,8 +75,11 @@ class _HistoryPageState extends State<HistoryPage> implements HistoryView {
                       children: _viewModel.observableTransactionList.value.map((tx) {
                         return ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: SurfyColor.black,
-                                padding: const EdgeInsets.all(0)
+                              backgroundColor: Theme.of(context).primaryColorLight,
+                              padding: const EdgeInsets.all(0),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.zero,
+                              )
                             ),
                             onPressed: () {
                               checkAuthAndPush(context, '/history/detail', extra: tx);

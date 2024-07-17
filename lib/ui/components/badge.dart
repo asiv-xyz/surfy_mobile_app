@@ -12,7 +12,7 @@ class TokenBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: BoxDecoration(
-            color: SurfyColor.greyBg,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(15)
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -37,7 +37,7 @@ class NetworkBadge extends StatelessWidget {
     return Container(
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-          color: SurfyColor.greyBg
+          color: Theme.of(context).cardColor
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         child : Row(

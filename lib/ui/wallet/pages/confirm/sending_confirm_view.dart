@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:surfy_mobile_app/routing.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
+import 'package:surfy_mobile_app/ui/components/badge.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/check/check_view.dart';
 import 'package:surfy_mobile_app/ui/wallet/pages/confirm/viewmodel/sending_confirm_viewmodel.dart';
@@ -92,7 +93,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
     _isError.value = true;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+        content: Text(error, style: Theme.of(context).textTheme.titleMedium),
         backgroundColor: Colors.black,
       ),
     );
@@ -134,20 +135,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Token', style: Theme.of(context).textTheme.bodyMedium),
-                              Container(
-                                  decoration: BoxDecoration(
-                                      color: SurfyColor.greyBg,
-                                      borderRadius: BorderRadius.circular(15)
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                                  child : Row(
-                                    children: [
-                                      Image.asset(tokens[widget.token]?.iconAsset ?? "", width: 24, height: 24,),
-                                      const SizedBox(width: 5),
-                                      Text(tokens[widget.token]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16)),
-                                    ],
-                                  )
-                              )
+                              TokenBadge(token: widget.token)
                             ],
                           )
                       ),
@@ -158,20 +146,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Network', style: Theme.of(context).textTheme.bodyMedium),
-                              Container(
-                                  decoration: BoxDecoration(
-                                      color: SurfyColor.greyBg,
-                                      borderRadius: BorderRadius.circular(15)
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                                  child : Row(
-                                    children: [
-                                      Image.asset(blockchains[widget.blockchain]?.icon ?? "", width: 24, height: 24,),
-                                      const SizedBox(width: 5),
-                                      Text(blockchains[widget.blockchain]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 16)),
-                                    ],
-                                  )
-                              )
+                              NetworkBadge(blockchain: widget.blockchain)
                             ],
                           )
                       ),
@@ -256,7 +231,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                             if (now - _viewModel.sessionTime > updateThreshold) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text("Session Timeout", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                  content: Text("Session Timeout", style: Theme.of(context).textTheme.titleMedium),
                                   backgroundColor: Colors.black,
                                 ),
                               );
@@ -303,7 +278,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                     _isSending.value = false;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text("You cancelled authorization", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                        content: Text("You cancelled authorization", style: Theme.of(context).textTheme.titleMedium),
                                         backgroundColor: Colors.black,
                                       ),
                                     );
@@ -314,7 +289,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                   _isSending.value = false;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                      content: Text("$e", style: Theme.of(context).textTheme.titleMedium),
                                       backgroundColor: Colors.black,
                                     ),
                                   );
@@ -330,7 +305,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                                   _isSending.value = false;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                      content: Text("$e", style: Theme.of(context).textTheme.titleMedium),
                                       backgroundColor: Colors.black,
                                     ),
                                   );
@@ -341,7 +316,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                           borderRadius: BorderRadius.circular(0),
                           activeTrackColor: SurfyColor.white,
                           activeThumbColor: SurfyColor.blue,
-                          child: Text('Swipe to confirm', style: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.bold, fontSize: 16),)
+                          child: Text('Swipe to confirm', style: Theme.of(context).textTheme.titleLarge?.apply(color: SurfyColor.blue))
                       );
                     } else if (_isError.isTrue) {
                       return Container(
@@ -349,7 +324,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                           height: 60,
                           color: SurfyColor.deepRed,
                           child: Center(
-                              child: Text('Error!', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),)
+                              child: Text('Error!', style: Theme.of(context).textTheme.titleLarge?.apply(color: Theme.of(context).primaryColorLight))
                           ));
                     } else {
                       return Container(
@@ -357,7 +332,7 @@ class _SendingConfirmPage extends State<SendingConfirmPage> implements SendingCo
                           height: 60,
                           color: SurfyColor.blue,
                           child: Center(
-                              child: Text('Sending...', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),)
+                              child: Text('Sending...', style: Theme.of(context).textTheme.titleLarge?.apply(color: Theme.of(context).primaryColorLight))
                           ));
                     }
                   })

@@ -11,8 +11,8 @@ import 'package:surfy_mobile_app/ui/components/loadable_widget.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
 import 'package:surfy_mobile_app/ui/components/shimmer_loading.dart';
 import 'package:surfy_mobile_app/ui/components/token_icon_with_network.dart';
+import 'package:surfy_mobile_app/ui/payment/confirm/viewmodel/payment_confirm_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/check/payment_complete_view.dart';
-import 'package:surfy_mobile_app/ui/pos/pages/confirm/viewmodel/payment_confirm_viewmodel.dart';
 import 'package:surfy_mobile_app/ui/pos/pages/select/select_payment_token_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/utils/crypto_and_fiat.dart';
@@ -104,7 +104,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
   void onError(String error) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(error, style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+        content: Text(error, style: Theme.of(context).textTheme.headlineLarge),
         backgroundColor: Colors.black,
       ),
     );
@@ -115,11 +115,11 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
     super.initState();
     _viewModel.setView(this);
     _viewModel.init(
-        widget.storeId,
-        widget.wantToReceiveAmount,
-        widget.receiveCurrency,
-        defaultToken: widget.defaultSelectedToken,
-        defaultBlockchain: widget.defaultSelectedBlockchain,
+      widget.storeId,
+      widget.wantToReceiveAmount,
+      widget.receiveCurrency,
+      defaultToken: widget.defaultSelectedToken,
+      defaultBlockchain: widget.defaultSelectedBlockchain,
     );
   }
 
@@ -151,9 +151,9 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Obx(() => Text('You pay to ${_viewModel.observableMerchant.value?.storeName}', style: Theme.of(context).textTheme.displayMedium)),
-                                    const SizedBox(height: 5,),
-                                    Text(formatFiat(widget.wantToReceiveAmount, widget.receiveCurrency), style: GoogleFonts.sora(fontSize: 48, color: SurfyColor.blue),),
-                                    const SizedBox(height: 5,),
+                                    const SizedBox(height: 10,),
+                                    Text(formatFiat(widget.wantToReceiveAmount, widget.receiveCurrency), style: Theme.of(context).textTheme.displayLarge?.apply(color: SurfyColor.blue)),
+                                    const SizedBox(height: 10,),
                                     Obx(() {
                                       return ShimmerLoading(
                                           isLoading: _isChangePaymentMethodLoading.value,
@@ -181,10 +181,10 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(30),
-                                color: SurfyColor.greyBg,
+                                color: Theme.of(context).primaryColorLight,
                               ),
                               child: Material(
-                                  color: SurfyColor.greyBg,
+                                  color: Theme.of(context).cardColor,
                                   borderRadius: BorderRadius.circular(30),
                                   child: InkWell(
                                       borderRadius: BorderRadius.circular(30),
@@ -208,7 +208,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                 children: [
                                                   TokenIconWithNetwork(blockchain: _viewModel.observableSelectedBlockchain.value, token: _viewModel.observableSelectedToken.value, width: 40, height: 40),
                                                   const SizedBox(width: 10),
-                                                  Text(tokens[_viewModel.observableSelectedToken.value]?.name ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 18),)
+                                                  Text(tokens[_viewModel.observableSelectedToken.value]?.name ?? "", style: Theme.of(context).textTheme.headlineLarge)
                                                 ],
                                               ),
                                               Row(
@@ -235,7 +235,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                                             tokens[_viewModel.observableSelectedToken.value]!,
                                                                             _viewModel.observableUserBalance.value,
                                                                             _viewModel.observableTokenPrice.value[_preference.userCurrencyType.value] ?? 0.0),
-                                                                        _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd), style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14)
+                                                                        _viewModel.observableUserCurrencyType.value ?? CurrencyType.usd), style: Theme.of(context).textTheme.headlineSmall
                                                             )
                                                         ));
                                                       }),
@@ -255,13 +255,13 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                                                 ),
                                                                 child: Text(formatCrypto(_viewModel.observableSelectedToken.value,
                                                                     cryptoAmountToDecimal(tokens[_viewModel.observableSelectedToken.value]!, _viewModel.observableUserBalance.value)),
-                                                                    style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14))
+                                                                    style: Theme.of(context).textTheme.headlineSmall?.apply(color: SurfyColor.mainGrey))
                                                             ));
                                                       }),
                                                     ],
                                                   ),
                                                   const SizedBox(width: 10,),
-                                                  const Icon(Icons.navigate_next, color: SurfyColor.white,)
+                                                  Icon(Icons.navigate_next, color: Theme.of(context).primaryColor)
                                                 ],
                                               )
                                             ],
@@ -284,7 +284,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                 margin: const EdgeInsets.symmetric(horizontal: 20),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 decoration: BoxDecoration(
-                                    color: SurfyColor.greyBg,
+                                    color: Theme.of(context).cardColor,
                                     borderRadius: BorderRadius.circular(15)
                                 ),
                                 child: Column(
@@ -342,7 +342,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                             Obx(() {
                               if (_viewModel.observableCanPay.isFalse) {
                                 return Container(
-                                    child: Text('Insufficient balance, check your wallet!', style: GoogleFonts.sora(color: SurfyColor.deepRed, fontSize: 14),)
+                                    child: Text('Insufficient balance, check your wallet!', style: Theme.of(context).textTheme.headlineSmall?.apply(color: SurfyColor.deepRed))
                                 );
                               }
 
@@ -357,7 +357,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                 height: 60,
                                 color: SurfyColor.lightGrey,
                                 child: Center(
-                                    child: Text('Loading...', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),)
+                                    child: Text('Loading...', style: Theme.of(context).textTheme.titleLarge)
                                 )
                             );
                           }
@@ -400,7 +400,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                           _isSendProcessing.value = false;
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
-                                              content: Text("You cancelled authorization", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                              content: Text("You cancelled authorization", style: Theme.of(context).textTheme.titleMedium),
                                               backgroundColor: Colors.black,
                                             ),
                                           );
@@ -411,7 +411,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                         print("error: $e");
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                            content: Text("$e", style: Theme.of(context).textTheme.titleMedium),
                                             backgroundColor: Colors.black,
                                           ),
                                         );
@@ -426,7 +426,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                         _isSendProcessing.value = false;
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text("$e", style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold),),
+                                            content: Text("$e", style: Theme.of(context).textTheme.titleMedium),
                                             backgroundColor: Colors.black,
                                           ),
                                         );
@@ -439,7 +439,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                 activeTrackColor: SurfyColor.white,
                                 activeThumbColor: SurfyColor.blue,
                                 inactiveTrackColor: SurfyColor.lightGrey,
-                                child: Text('Swipe to confirm', style: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.bold, fontSize: 16),)
+                                child: Text('Swipe to confirm', style: Theme.of(context).textTheme.titleLarge?.apply(color: SurfyColor.blue))
                             );
                           } else {
                             return Container(
@@ -447,7 +447,7 @@ class _PaymentConfirmPageState extends State<PaymentConfirmPage> implements Paym
                                 height: 60,
                                 color: SurfyColor.blue,
                                 child: Center(
-                                    child: Text('Sending...', style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 16),)
+                                    child: Text('Sending...', style: Theme.of(context).textTheme.titleLarge?.apply(color: Theme.of(context).primaryColorLight))
                                 )
                             );
                           }

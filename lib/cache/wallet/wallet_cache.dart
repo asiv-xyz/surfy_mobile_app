@@ -20,6 +20,7 @@ class WalletCache {
 
     final box = Hive.box(walletAddress);
     final address = await box.get(blockchain.name, defaultValue: "");
+    await box.close();
     return address;
   }
 
@@ -30,7 +31,8 @@ class WalletCache {
 
     final box = Hive.box(walletAddress);
     final key = blockchain.name;
-    box.put(key, address);
+    await box.put(key, address);
+    await box.close();
   }
 
   Future<void> saveBalanceOnly(Token token, Blockchain blockchain, String address, BigInt amount) async {
@@ -40,7 +42,8 @@ class WalletCache {
 
     final box = Hive.box(walletBoxName);
     final key = _generateKey(token, blockchain, address);
-    box.put(key, amount);
+    await box.put(key, amount);
+    await box.close();
   }
 
   Future<void> saveBalance(Token token, Blockchain blockchain, String address, BigInt amount) async {
@@ -50,7 +53,8 @@ class WalletCache {
 
     final box = Hive.box(walletBoxName);
     final key = _generateKey(token, blockchain, address);
-    box.put(key, amount);
+    await box.put(key, amount);
+    await box.close();
     _setUpdatedTime(token, blockchain, address, DateTime.now().millisecondsSinceEpoch);
   }
 
@@ -61,7 +65,9 @@ class WalletCache {
 
     final box = Hive.box(walletBoxName);
     final key = _generateKey(token, blockchain, address);
-    return box.get(key);
+    final item = await box.get(key);
+    await box.close();
+    return item;
   }
 
   Future<int> _getUpdatedTime(Token token, Blockchain blockchain, String address) async {
@@ -71,7 +77,9 @@ class WalletCache {
 
     final box = Hive.box(walletUpdatedTimeBoxName);
     final key = _generateKey(token, blockchain, address);
-    return box.get(key) ?? 0;
+    final item = await box.get(key, defaultValue: 0);
+    await box.close();
+    return item;
   }
 
   Future<void> _setUpdatedTime(Token token, Blockchain blockchain, String address, int timestamp) async {
@@ -81,7 +89,8 @@ class WalletCache {
 
     final box = Hive.box(walletUpdatedTimeBoxName);
     final key = _generateKey(token, blockchain, address);
-    box.put(key, timestamp);
+    await box.put(key, timestamp);
+    await box.close();
   }
 
   Future<bool> needToUpdate(Token token, Blockchain blockchain, String address) async {
@@ -96,26 +105,35 @@ class WalletCache {
 
   Future<void> clearCache() async {
     logger.i('clearCache()');
-    if (!Hive.isBoxOpen(walletBoxName)) {
-      await Hive.openBox(walletBoxName);
+    if (await Hive.boxExists(walletBoxName)) {
+      if (!Hive.isBoxOpen(walletBoxName)) {
+        await Hive.openBox(walletBoxName);
+      }
+
+      final box = Hive.box(walletBoxName);
+      await box.clear();
+      await box.close();
     }
 
-    var box = Hive.box(walletBoxName);
-    await box.clear();
+    if (await Hive.boxExists(walletUpdatedTimeBoxName)) {
+      if (!Hive.isBoxOpen(walletUpdatedTimeBoxName)) {
+        await Hive.openBox(walletUpdatedTimeBoxName);
+      }
 
-    if (!Hive.isBoxOpen(walletUpdatedTimeBoxName)) {
-      await Hive.openBox(walletUpdatedTimeBoxName);
+      final box = Hive.box(walletUpdatedTimeBoxName);
+      await box.clear();
+      await box.close();
     }
 
-    box = Hive.box(walletUpdatedTimeBoxName);
-    await box.clear();
+    if (await Hive.boxExists(walletAddress)) {
+      if (!Hive.isBoxOpen(walletAddress)) {
+        await Hive.openBox(walletAddress);
+      }
 
-    if (!Hive.isBoxOpen(walletAddress)) {
-      await Hive.openBox(walletAddress);
+      final box = Hive.box(walletAddress);
+      await box.clear();
+      await box.close();
     }
-
-    box = Hive.box(walletAddress);
-    await box.clear();
 
     logger.i('finish clearCache()');
   }

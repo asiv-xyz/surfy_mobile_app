@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:get/get.dart';
 import 'package:surfy_mobile_app/domain/merchant/get_merchants.dart';
+import 'package:surfy_mobile_app/domain/payment/get_latest_payment_method.dart';
 import 'package:surfy_mobile_app/domain/token/get_token_price.dart';
 import 'package:surfy_mobile_app/domain/transaction/save_transaction.dart';
 import 'package:surfy_mobile_app/domain/transaction/send_p2p_token.dart';
@@ -11,11 +12,10 @@ import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/entity/transaction/transaction.dart';
 import 'package:surfy_mobile_app/service/key/key_service.dart';
 import 'package:surfy_mobile_app/settings/settings_preference.dart';
-import 'package:surfy_mobile_app/ui/pos/pages/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:surfy_mobile_app/ui/payment/confirm/payment_confirm_view.dart';
 import 'package:surfy_mobile_app/utils/formatter.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
-import 'package:vibration/vibration.dart';
 
 class PaymentConfirmViewModel {
   late PaymentConfirmView view;
@@ -27,6 +27,7 @@ class PaymentConfirmViewModel {
   final GetWalletBalances _getWalletBalancesUseCase = Get.find();
   final SettingsPreference _settingsPreference = Get.find();
   final SaveTransaction _saveTransactionUseCase = Get.find();
+  final GetLatestPaymentMethod _getLatestPaymentMethod = Get.find();
   final KeyService _keyService = Get.find();
 
   final Rx<Token> observableSelectedToken = Rx(Token.ETHEREUM);
@@ -65,11 +66,16 @@ class PaymentConfirmViewModel {
       observableMerchant.value = merchant;
       final arg = getSupportedTokenAndNetworkList();
       final userBalances = await _getWalletBalancesUseCase.getBalancesByDesc(arg.toList(), _settingsPreference.userCurrencyType.value);
+      final latestPaymentMethod = await _getLatestPaymentMethod.get();
 
       if (defaultToken != null && defaultBlockchain != null) {
         observableSelectedToken.value = defaultToken;
         observableSelectedBlockchain.value = defaultBlockchain;
         await changePaymentMethod(defaultToken, defaultBlockchain, fiatAmount, currencyType);
+      } else if (latestPaymentMethod != null) {
+        observableSelectedToken.value = latestPaymentMethod.first;
+        observableSelectedBlockchain.value = latestPaymentMethod.second;
+        await changePaymentMethod(observableSelectedToken.value, observableSelectedBlockchain.value, fiatAmount, currencyType);
       } else {
         await changePaymentMethod(userBalances[0].token, userBalances[0].blockchain, fiatAmount, currencyType);
       }
@@ -165,6 +171,8 @@ class PaymentConfirmViewModel {
         tokenPrice: observableTokenPrice.value[_settingsPreference.userCurrencyType.value],
         tokenPriceCurrencyType: _settingsPreference.userCurrencyType.value,
       );
+
+      _getLatestPaymentMethod.set(token, blockchain);
 
       return response.transactionHash;
     });

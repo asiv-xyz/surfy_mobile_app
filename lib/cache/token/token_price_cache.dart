@@ -19,8 +19,9 @@ class TokenPriceCache {
 
     final box = Hive.box(tokenPriceBoxName);
     final key = _generateKey(token, currencyType);
-    box.put(key, price);
-    _setUpdatedTime(token, currencyType, DateTime.now().millisecondsSinceEpoch);
+    await box.put(key, price);
+    await box.close();
+    await _setUpdatedTime(token, currencyType, DateTime.now().millisecondsSinceEpoch);
   }
 
   Future<double> getTokenPrice(Token token, CurrencyType currencyType) async {
@@ -30,7 +31,10 @@ class TokenPriceCache {
 
     final box = Hive.box(tokenPriceBoxName);
     final key = _generateKey(token, currencyType);
-    return box.get(key);
+    final item = await box.get(key);
+    await box.close();
+
+    return item;
   }
 
   Future<int> _getUpdatedTime(Token token, CurrencyType currencyType) async {
@@ -40,7 +44,9 @@ class TokenPriceCache {
 
     final box = Hive.box(tokenPriceUpdatedTimeBoxName);
     final key = _generateKey(token, currencyType);
-    return box.get(key, defaultValue: 0);
+    final item = await box.get(key, defaultValue: 0);
+    await box.close();
+    return item;
   }
 
   Future<void> _setUpdatedTime(Token token, CurrencyType currencyType, int timestamp) async {
@@ -50,7 +56,8 @@ class TokenPriceCache {
 
     final box = Hive.box(tokenPriceUpdatedTimeBoxName);
     final key = _generateKey(token, currencyType);
-    box.put(key, timestamp);
+    await box.put(key, timestamp);
+    await box.close();
   }
 
   Future<bool> needToUpdate(Token token, CurrencyType currencyType) async {

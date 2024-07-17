@@ -16,17 +16,18 @@ class PrivateKeyPage extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: SurfyColor.black,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Your key (secp256k1)', style: Theme.of(context).textTheme.displaySmall,),
+                Text('Your key (secp256k1)', style: Theme.of(context).textTheme.displaySmall),
+                Text('Supported blockchain: EVM', style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 10,),
                 Container(
                   decoration: BoxDecoration(
-                    color: SurfyColor.greyBg,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(14)
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -40,6 +41,7 @@ class PrivateKeyPage extends StatelessWidget {
                             Center(
                                 child: Text(snapshot.data ?? "", style: Theme.of(context).textTheme.labelMedium,)
                             ),
+                            const SizedBox(height: 20,),
                             TextButton(
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: snapshot.data ?? ""));
@@ -53,7 +55,7 @@ class PrivateKeyPage extends StatelessWidget {
                         );
                       }
 
-                      return SizedBox();
+                      return const SizedBox();
                     },
                   )
                 )
@@ -66,9 +68,11 @@ class PrivateKeyPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Your key (ed25519)', style: Theme.of(context).textTheme.displaySmall,),
+                Text('Supported blockchain: Solana, Tron, XRPL, Bitcoin', style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 10,),
                 Container(
                     decoration: BoxDecoration(
-                        color: SurfyColor.greyBg,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(14)
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -82,6 +86,7 @@ class PrivateKeyPage extends StatelessWidget {
                               Center(
                                   child: Text(snapshot.data ?? "", style: Theme.of(context).textTheme.labelMedium,)
                               ),
+                              const SizedBox(height: 20,),
                               TextButton(
                                   onPressed: () {
                                     Clipboard.setData(ClipboardData(text: snapshot.data ?? ""));
@@ -95,7 +100,7 @@ class PrivateKeyPage extends StatelessWidget {
                           );
                         }
 
-                        return SizedBox();
+                        return const SizedBox();
                       },
                     )
                 )

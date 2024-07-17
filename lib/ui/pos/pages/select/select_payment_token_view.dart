@@ -146,7 +146,7 @@ class _SelectPaymentTokenPageState extends State<SelectPaymentTokenPage> impleme
                                     Text(formatFiat(balance.balance, widget.receiveCurrency), style: Theme.of(context).textTheme.titleLarge),
                                     Text(formatCrypto(balance.token,
                                           cryptoAmountToDecimal(tokens[balance.token]!, balance.cryptoBalance)),
-                                          style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 14)),
+                                          style: Theme.of(context).textTheme.headlineSmall?.apply(color: SurfyColor.mainGrey)),
                                   ],
                                 )
                               ],

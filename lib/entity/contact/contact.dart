@@ -1,16 +1,23 @@
-import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
+import 'package:hive/hive.dart';
+part 'contact.g.dart';
 
-class Contact {
-  Contact({required this.blockchain, required this.address, this.memo});
+@HiveType(typeId: 1)
+class Contact extends HiveObject {
+  Contact(this.blockchain, this.address, this.memo);
 
-  final Blockchain blockchain;
-  final String address;
-  final String? memo;
+  @HiveField(0)
+  String blockchain;
+
+  @HiveField(1)
+  String address;
+
+  @HiveField(2)
+  String? memo;
 
   @override
   String toString() {
     return {
-      "blockchain": blockchain.name,
+      "blockchain": blockchain,
       "address": address,
       "memo": memo,
     }.toString();

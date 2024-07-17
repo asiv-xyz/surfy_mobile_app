@@ -4,7 +4,6 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:surfy_mobile_app/domain/qr/get_qr_controller.dart';
 import 'package:surfy_mobile_app/logger/logger.dart';
@@ -96,8 +95,8 @@ class _QRPageState extends State<QRPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Tap to pay!", style: GoogleFonts.sora(fontWeight: FontWeight.bold, color: SurfyColor.black, fontSize: 16),),
-              Text(qrUrl, style: GoogleFonts.sora(color: SurfyColor.black, fontSize: 12))
+              Text("Tap to pay!", style: Theme.of(context).textTheme.titleLarge?.apply(color: SurfyColor.black)),
+              Text(qrUrl, style: Theme.of(context).textTheme.bodySmall?.apply(color: SurfyColor.black))
             ],
           )
         )

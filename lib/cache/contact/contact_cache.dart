@@ -17,12 +17,14 @@ class ContactCache {
     final box = Hive.box(recentSentContactBoxName);
     final key = _generateKey(blockchain);
     if (!box.containsKey(key)) {
-      box.put(key, [Contact(blockchain: blockchain, address: address, memo: memo)]);
+      await box.put(key, [Contact(blockchain.name, address, memo)]);
     } else {
       final item = box.get(key);
 
-      box.put(key, {...item, Contact(blockchain: blockchain, address: address, memo: memo)}.toList());
+      await box.put(key, {...item, Contact(blockchain.name, address, memo)}.toList());
     }
+
+    await box.close();
   }
 
   Future<List<Contact>> getRecentSentContacts(Blockchain blockchain) async {
@@ -36,6 +38,8 @@ class ContactCache {
       return [];
     }
 
-    return box.get(key);
+    final item = await box.get(key);
+    await box.close();
+    return item;
   }
 }

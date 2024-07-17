@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:surfy_mobile_app/entity/merchant/merchant.dart';
 import 'package:surfy_mobile_app/ui/components/loading_widget.dart';
@@ -205,12 +204,17 @@ class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapbox
         if (!_isAnnotationHided) {
           _isAnnotationHided = true;
           _pointAnnotationManager.deleteAll();
+
+          var unclusterCountLayer = await rootBundle.loadString('assets/cluster/unclustered_count_layer.json');
+          mapboxMap.style.addStyleLayer(unclusterCountLayer, null);
         }
       } else {
         // show
         if (_isAnnotationHided) {
           _isAnnotationHided = false;
           setAnnotations(_pointAnnotationManager);
+
+          mapboxMap.style.removeStyleLayer('unclustered-point');
         }
       }
     });
@@ -241,7 +245,7 @@ class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapbox
     if (distance > 1000) {
       return "${(distance / 1000).toStringAsFixed(1)}km";
     } else {
-      return "${distance}m";
+      return "${distance.toStringAsFixed(0)} m";
     }
   }
 
@@ -249,12 +253,11 @@ class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapbox
     final place = _viewModel.observableAnnotationMap.value[_viewModel.observableSelectedAnnotationId.value];
     return Container(
         width: double.infinity,
-        height: 200,
         margin: const EdgeInsets.all(10),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: SurfyColor.black,
+          color: Theme.of(context).cardColor,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -268,7 +271,7 @@ class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapbox
                       Container(
                         width: 150,
                         height: 150,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.grey
                         ),
                         child: Center(
@@ -284,17 +287,17 @@ class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapbox
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(place?.storeName ?? "", style: GoogleFonts.sora(color: SurfyColor.blue, fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text(place?.storeName ?? "", style: Theme.of(context).textTheme.headlineLarge?.apply(color: SurfyColor.blue)),
                     const SizedBox(height: 5,),
-                    Text(place?.address ?? "", style: GoogleFonts.sora(color: SurfyColor.white, fontSize: 14)),
+                    Text(place?.address ?? "", style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 10,),
-                    Text(place?.phone ?? "", style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 14)),
+                    Text(place?.phone ?? "", style: Theme.of(context).textTheme.headlineSmall?.apply(color: SurfyColor.blue)),
                     const SizedBox(height: 5,),
                     Row(
                       children: [
                         const Icon(Icons.location_on_sharp, color: SurfyColor.blue, size: 16,),
                         const SizedBox(width: 5),
-                        Text(_calculateDistance(_userLongitude.value, _userLatitude.value, place?.longitude ?? 0.0, place?.latitude ?? 0.0), style: GoogleFonts.sora(color: SurfyColor.white, fontWeight: FontWeight.bold, fontSize: 14),)
+                        Text(_calculateDistance(_userLongitude.value, _userLatitude.value, place?.longitude ?? 0.0, place?.latitude ?? 0.0), style: Theme.of(context).textTheme.labelLarge)
                       ],
                     )
                   ],
@@ -335,9 +338,9 @@ class _MapPageState extends State<MapPage> implements MapView {MapboxMap? mapbox
                               }
                             },
                             style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(SurfyColor.black),
+                              backgroundColor: WidgetStateProperty.all(Theme.of(context).scaffoldBackgroundColor),
                             ),
-                            icon: const Icon(Icons.my_location_rounded, color: SurfyColor.blue,)),
+                            icon: const Icon(Icons.my_location_rounded, color: SurfyColor.blue)),
                         _viewModel.observableIsAnnotationClicked.isFalse ? const SizedBox(height: 20,) : Container(),
                         _viewModel.observableIsAnnotationClicked.isTrue ? _buildPlaceInfo() : Container()
                       ],

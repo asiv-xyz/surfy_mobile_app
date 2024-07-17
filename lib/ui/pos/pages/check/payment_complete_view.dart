@@ -2,7 +2,6 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:surfy_mobile_app/event_bus/event_bus.dart';
@@ -269,10 +268,7 @@ class _PaymentCompletePageState extends State<PaymentCompletePage>
                             },
                             child: Center(
                                 child: Text('Click to home',
-                                    style: GoogleFonts.sora(
-                                        color: SurfyColor.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18))))))
+                                    style: Theme.of(context).textTheme.headlineLarge)))))
               ],
             )));
   }

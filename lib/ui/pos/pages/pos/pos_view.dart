@@ -49,7 +49,10 @@ class _PosPageState extends State<PosPage> implements PosView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Text('POS'),
+      ),
       body: Obx(() {
         if (_isLoading.isTrue) {
           return const LoadingWidget(opacity: 0.4);
@@ -83,9 +86,9 @@ class _PosPageState extends State<PosPage> implements PosView {
                     Obx(() => Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text(_inputAmount.value, style: GoogleFonts.sora(color: SurfyColor.blue, fontSize: 36),),
+                        Text(_inputAmount.value, style: Theme.of(context).textTheme.displayLarge?.apply(color: SurfyColor.blue)),
                         const SizedBox(width: 10),
-                        Text(_preference.userCurrencyType.value.name.toUpperCase(), style: GoogleFonts.sora(color: SurfyColor.lightGrey, fontSize: 36),)
+                        Text(_preference.userCurrencyType.value.name.toUpperCase(), style: Theme.of(context).textTheme.displayLarge?.apply(color: SurfyColor.lightGrey))
                       ],
                     ),),
                   ],
