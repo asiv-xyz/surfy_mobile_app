@@ -59,7 +59,11 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(0), child: AppBar()),
+            preferredSize: const Size.fromHeight(30),
+            child: AppBar(
+              backgroundColor: SurfyColor.black,
+            )
+        ),
         body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -86,7 +90,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                         const Image(
                             image: AssetImage('assets/images/surfy_logo.png')),
                         const SizedBox(height: 10),
-                        Text('Nice to see you!', style: Theme.of(context).textTheme.displaySmall)
+                        Text('Nice to see you!', style: Theme.of(context).textTheme.displaySmall?.apply(color: SurfyColor.white))
                       ],
                     )),
                 Positioned(
@@ -98,7 +102,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Login', style: Theme.of(context).textTheme.displaySmall),
+                          Text('Login', style: Theme.of(context).textTheme.displaySmall?.apply(color: SurfyColor.white)),
                           const SizedBox(height: 20,),
                           MaterialButton(
                               padding: EdgeInsets.zero,
