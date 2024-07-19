@@ -237,6 +237,7 @@ class _SurfyAppState extends State<SurfyApp> {
       ),
       // themeMode: ThemeMode.dark,
       themeMode: ThemeMode.light,
+      debugShowCheckedModeBanner: false,
       routerConfig: widget.goRouter,
     );
   }

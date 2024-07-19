@@ -12,21 +12,5 @@ void main() {
     final service = TransactionService();
     final result = await service.getTransactionsByUserId('test_sender');
     print(result);
-
-    // await service.postTransaction(Transaction(
-    //     id: 'test-id',
-    //     transactionHash: 'test-tx-hash',
-    //     sender: 'sender',
-    //     receiver: 'receiver',
-    //     amount: BigInt.from(500),
-    //     senderAddress: '0x12345',
-    //     receiverAddress: '0x54321',
-    //     token: Token.ETHEREUM,
-    //     blockchain: Blockchain.ETHEREUM,
-    //     createdAt: DateTime.now(),
-    //     storeId: null,
-    //     fiat: 1000,
-    //     currencyType: CurrencyType.krw)
-    // );
   });
 }

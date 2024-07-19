@@ -129,8 +129,6 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                 ));
                 _bus.emit(ReloadHistoryEvent());
                 return SizedBox(
-                    width: 500,
-                    height: 500,
                     child: Column(
                       children: [
                         LottieBuilder.asset("assets/images/animation_complete.json"),
@@ -158,8 +156,6 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
               }
 
               return SizedBox(
-                  width: 500,
-                  height: 500,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -173,8 +169,6 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
             });
         } else if (snapshot.hasError) {
           return Container(
-              width: 500,
-              height: 500,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -188,8 +182,6 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
         }
 
         return Container(
-            width: 500,
-            height: 500,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -254,7 +246,7 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
                     }),
                   ],
                 ),
-                Container(
+                SizedBox(
                     width: double.infinity,
                     height: 60,
                     child: Material(

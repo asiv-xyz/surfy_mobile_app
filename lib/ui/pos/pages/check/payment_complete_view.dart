@@ -268,7 +268,7 @@ class _PaymentCompletePageState extends State<PaymentCompletePage>
                             },
                             child: Center(
                                 child: Text('Click to home',
-                                    style: Theme.of(context).textTheme.headlineLarge)))))
+                                    style: Theme.of(context).textTheme.headlineLarge?.apply(color: Theme.of(context).primaryColorLight))))))
               ],
             )));
   }

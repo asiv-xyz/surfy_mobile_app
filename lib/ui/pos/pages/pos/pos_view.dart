@@ -50,8 +50,7 @@ class _PosPageState extends State<PosPage> implements PosView {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 0,
-        title: Text('POS'),
+
       ),
       body: Obx(() {
         if (_isLoading.isTrue) {

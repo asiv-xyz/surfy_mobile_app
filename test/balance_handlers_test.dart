@@ -13,14 +13,16 @@ import 'package:surfy_mobile_app/entity/blockchain/blockchains.dart';
 import 'package:surfy_mobile_app/entity/token/token.dart';
 import 'package:surfy_mobile_app/utils/bitcoin_explorer_service.dart';
 import 'package:surfy_mobile_app/utils/electrum_ssl_service.dart';
+import 'package:surfy_mobile_app/utils/xrpl_http_service.dart';
+import 'package:xrpl_dart/xrpl_dart.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
 
   test('doge test', () async {
-    var n = "2e18";
-    var a = num.parse(n);
-    // var r = BigInt.parse(n);
-    print(a);
+    final syncRpc = XRPLRpc(RPCHttpService(RPCConst.mainetUri, http.Client()));
+    final result = await syncRpc.request(RPCTransactionEntry(txHash: "1E4A84666A07AD091194A20A55A3BCC2598E157E4D98FA58465A60B44256E643"));
+    print(result);
   });
 
   //test('isolate test', () async {
@@ -64,11 +66,4 @@ void main() {
   //   print(balance.toUiString());
   // });
   //
-  // test('set balance', () async {
-  //   final repository = WalletBalancesRepository(walletService: WalletService());
-  //   const ed25519 = "2d6360c5635173ded9fb10873072cbb0d508e90fa72e0957f3e432294c9dc37c0e2c57b64c8ed996d9e02aa23825973ef2496ad225a6f7f1f1e7b2bb5f0175d1";
-  //   const secp256k1 = "2d6360c5635173ded9fb10873072cbb0d508e90fa72e0957f3e432294c9dc37c";
-  //   final result = await repository.getUserWalletBalances([Token.ETHEREUM, Token.USDC, Token.SOLANA, Token.USDT], secp256k1, ed25519);
-  //   print(result);
-  // });
 }
