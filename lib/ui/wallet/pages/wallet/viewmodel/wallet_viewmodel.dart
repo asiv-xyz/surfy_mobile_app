@@ -48,18 +48,18 @@ class WalletViewModel implements EventListener {
 
     await _bus.emit(ReloadWalletEvent());
 
-    final getBalanceJobList = Token.values.map((token) async {
-      final networks = tokens[token]?.supportedBlockchain;
-      final balanceList = networks?.map((network) async {
+    final getBalanceJobList = tokens.values.map((tokenData) async {
+      final networks = tokenData.supportedBlockchain;
+      final balanceList = networks.map((network) async {
         final address = await _getWalletAddressUseCase.getAddress(network);
-        final balance = fromRemote ? await _getWalletBalancesUseCase.getBalanceFromRemote(token, network, address)
-            : await _getWalletBalancesUseCase.getBalance(token, network, address);
+        final balance = fromRemote ? await _getWalletBalancesUseCase.getBalanceFromRemote(tokenData.token, network, address)
+            : await _getWalletBalancesUseCase.getBalance(tokenData.token, network, address);
         return Balance(
-          token: token,
+          token: tokenData.token,
           blockchain: network,
           balance: balance
         );
-      }).toList() ?? [];
+      }).toList();
 
       return await Future.wait(balanceList);
     }).toList();

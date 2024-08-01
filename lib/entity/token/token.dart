@@ -68,6 +68,7 @@ class TokenData {
     required this.decimal,
     required this.cgIdentifier,
     required this.fixedDecimal,
+    required this.enable,
   });
 
   final Token token;
@@ -80,6 +81,7 @@ class TokenData {
   final int decimal;
   final String cgIdentifier;
   final int fixedDecimal;
+  final bool enable;
 }
 
 const Map<Token, TokenData> tokens = {
@@ -101,6 +103,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 18,
     cgIdentifier: "ethereum",
     fixedDecimal: 5,
+    enable: true,
   ),
   Token.USDC: TokenData(
     token: Token.USDC,
@@ -133,6 +136,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 6,
     cgIdentifier: "usd-coin",
     fixedDecimal: 2,
+    enable: true,
   ),
   Token.USDT: TokenData(
     token: Token.USDT,
@@ -155,6 +159,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 6,
     cgIdentifier: "tether",
     fixedDecimal: 2,
+    enable: true,
   ),
   Token.SOLANA: TokenData(
     token: Token.SOLANA,
@@ -170,6 +175,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 9,
     cgIdentifier: "solana",
     fixedDecimal: 2,
+    enable: true,
   ),
   Token.DEGEN: TokenData(
     token: Token.DEGEN,
@@ -185,6 +191,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 18,
     cgIdentifier: "degen-base",
     fixedDecimal: 2,
+    enable: false,
   ),
   Token.FRAX: TokenData(
     token: Token.FRAX,
@@ -198,7 +205,8 @@ const Map<Token, TokenData> tokens = {
     },
     decimal: 18,
     cgIdentifier: "frax",
-    fixedDecimal: 2
+    fixedDecimal: 2,
+    enable: true,
   ),
   Token.DOGE: TokenData(
     token: Token.DOGE,
@@ -216,6 +224,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 8,
     cgIdentifier: "dogecoin",
     fixedDecimal: 2,
+    enable: false,
   ),
   Token.XRP: TokenData(
     token: Token.XRP,
@@ -228,6 +237,7 @@ const Map<Token, TokenData> tokens = {
     decimal: 6,
     cgIdentifier: "ripple",
     fixedDecimal: 4,
+    enable: true,
   ),
 
   Token.BNB: TokenData(
@@ -242,7 +252,8 @@ const Map<Token, TokenData> tokens = {
     },
     decimal: 18,
     cgIdentifier: "binancecoin",
-    fixedDecimal: 3
+    fixedDecimal: 3,
+    enable: true,
   ),
 
   Token.TRON: TokenData(
@@ -255,7 +266,8 @@ const Map<Token, TokenData> tokens = {
     tokenContractAddress: {},
     decimal: 6,
     cgIdentifier: "tron",
-    fixedDecimal: 4
+    fixedDecimal: 4,
+    enable: true,
   )
 };
 

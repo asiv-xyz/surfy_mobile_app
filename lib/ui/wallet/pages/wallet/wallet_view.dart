@@ -71,6 +71,7 @@ class _WalletPageState extends State<WalletPage>
               balance: BigInt.zero,
             );
           }
+
           return _viewModel.observableBalances.value
               .where((t) => t.token == token)
               .where((t) {
@@ -78,9 +79,9 @@ class _WalletPageState extends State<WalletPage>
                     (blockchains[t.blockchain]?.isTestnet ?? true)) {
                   return false;
                 }
-
                 return true;
               }).reduce((prev, curr) {
+                print('reduce, ${prev}, ${curr}');
                 return Balance(
                     token: token,
                     blockchain: prev.blockchain,
@@ -89,7 +90,6 @@ class _WalletPageState extends State<WalletPage>
         })
         .map((balance) => Pair(balance.token, balance.balance))
         .toList();
-
     list.sort((a, b) {
       final fiatA = cryptoAmountToFiat(tokens[a.first]!, a.second, _viewModel.observablePrices.value[a.first]?[_preference.userCurrencyType.value]?.price ?? 0.0);
       final fiatB = cryptoAmountToFiat(tokens[b.first]!, b.second, _viewModel.observablePrices.value[b.first]?[_preference.userCurrencyType.value]?.price ?? 0.0);
@@ -102,7 +102,7 @@ class _WalletPageState extends State<WalletPage>
       }
     });
 
-    return list;
+    return list.where((t) => tokens[t.first]?.enable ?? true).toList();
   }
 
   @override

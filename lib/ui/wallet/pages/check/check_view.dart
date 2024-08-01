@@ -156,6 +156,7 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
               }
 
               return SizedBox(
+                  height: 500,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -181,7 +182,8 @@ class _CheckViewState extends State<CheckView> with SingleTickerProviderStateMix
               ));
         }
 
-        return Container(
+        return SizedBox(
+            height: 500,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
